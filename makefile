@@ -1,5 +1,9 @@
 default: run
 
+run:
+	go run main.go add 
+	# go run main.go add https://github.com/zong-zhe/kpm
+
 build: 
 	go build -o build/kpm main.go
 

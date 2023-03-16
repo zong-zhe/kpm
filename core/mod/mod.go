@@ -52,6 +52,20 @@ func (kclPkg KclPkg) ContainsDepNamed(name string) bool {
 	return ok
 }
 
+func LoadKclPkg(homePath string) (*KclPkg, error) {
+
+	readFile, err := os.OpenFile(homePath, os.O_RDWR, 0644)
+	defer readFile.Close()
+
+	kclPkg := new(KclPkg)
+	_, err = toml.NewDecoder(readFile).Decode(&kclPkg)
+
+	if err != nil {
+		return nil, err
+	}
+	return kclPkg, nil
+}
+
 func genKclMod(kclPkg KclPkg) error {
 	var buf bytes.Buffer
 	err := toml.NewEncoder(&buf).Encode(kclPkg)
@@ -65,26 +79,27 @@ func genKclMod(kclPkg KclPkg) error {
 	return nil
 }
 
+func genKclModLock(kclPkg KclPkg) error {
+	return nil
+}
+
 func (kclPkg KclPkg) AddDeps(dep *pkg.Dependency) error {
 
 	if kclPkg.ContainsDepNamed(dep.GetName()) {
-		reporter.Report("kpm: ", dep.GetName(), "has already exists.")
+		reporter.Report("kpm: '", dep.GetName(), "' has already exists.")
 	}
 
 	genKclMod(kclPkg)
 
-	findOrDownloadDeps(dep)
+	_, err := dep.Download()
 
-	genKclModLock(dep)
+	if err != nil {
+		reporter.ExitWithReport("kpm: failed to download ", dep.GetName())
+	}
 
-	return nil
-}
+	reporter.Report("kpm: '", dep.GetName(), "' added successfully.")
 
+	// genKclModLock(kclPkg)
 
-func findOrDownloadDeps(deps []*pkg.Dependency) error {
-	return nil
-}
-
-func genKclModLock(deps []*pkg.Dependency) error {
 	return nil
 }

@@ -3,32 +3,20 @@
 package ops
 
 import (
-	"net/url"
+	"os"
 
+	mod "kusionstack.io/kpm/core/mod"
 	"kusionstack.io/kpm/core/reporter"
-	"kusionstack.io/kpm/core/store"
 	"kusionstack.io/kpm/gen/pkg"
 )
 
 // KpmInit initializes an empty kcl module.
-func KpmAddGit(gitDep *pkg.GitDependency) error {
-
-	// 在这里拼出来url
-
-	gitUrl, err := url.Parse(depUrl)
-
-	gitUrl.
-
-	gitQuery := u.Query()
-	gitQuery.Add(paramName, paramValue)
- u.RawQuery = q.Encode()
-
+func KpmAdd(dep *pkg.Dependency) error {
+	pwd, err := os.Getwd()
+	kclPkg, err := mod.LoadKclPkg(pwd)
 	if err != nil {
-		reporter.Report("kpm: Invalid git url")
+		reporter.ExitWithReport("kpm: failed to load kcl.mod from", kclPkg.HomePath)
 	}
 
-	// 在这里parse出来名字
-
-	store.GetFromGit(name, gitUrl)
-	return
+	return kclPkg.AddDeps(dep)
 }
