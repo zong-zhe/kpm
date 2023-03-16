@@ -38,20 +38,53 @@ func NewKclPkg(conf conf.Config) KclPkg {
 
 // InitEmptyModule inits an empty kcl module and create a default kcl.mod.
 func (kclPkg KclPkg) InitEmptyModule() error {
-	kclModPath := filepath.Join(kclPkg.HomePath, kclMod)
-	_, err := os.Stat(kclModPath)
+	kclPkg.HomePath = filepath.Join(kclPkg.HomePath, kclMod)
+	_, err := os.Stat(kclPkg.HomePath)
 	if os.IsNotExist(err) {
-		reporter.Report("kpm: creating new kcl.mod:", kclModPath)
-		var buf bytes.Buffer
-		err := toml.NewEncoder(&buf).Encode(kclPkg)
-		if err != nil {
-			return err
-		}
-		err = ioutil.WriteFile(kclModPath, buf.Bytes(), 0644)
-		if err != nil {
-			return err
-		}
-		return nil
+		reporter.Report("kpm: creating new kcl.mod:", kclPkg.HomePath)
+		genKclMod(kclPkg)
 	}
-	return fmt.Errorf("kpm: '%s' already exists", kclModPath)
+	return fmt.Errorf("kpm: '%s' already exists", kclPkg.HomePath)
+}
+
+func (kclPkg KclPkg) ContainsDepNamed(name string) bool {
+	_, ok := kclPkg.Pkg.Dependencies[name]
+	return ok
+}
+
+func genKclMod(kclPkg KclPkg) error {
+	var buf bytes.Buffer
+	err := toml.NewEncoder(&buf).Encode(kclPkg)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(kclPkg.HomePath, buf.Bytes(), 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (kclPkg KclPkg) AddDeps(dep *pkg.Dependency) error {
+
+	if kclPkg.ContainsDepNamed(dep.GetName()) {
+		reporter.Report("kpm: ", dep.GetName(), "has already exists.")
+	}
+
+	genKclMod(kclPkg)
+
+	findOrDownloadDeps(dep)
+
+	genKclModLock(dep)
+
+	return nil
+}
+
+
+func findOrDownloadDeps(deps []*pkg.Dependency) error {
+	return nil
+}
+
+func genKclModLock(deps []*pkg.Dependency) error {
+	return nil
 }
