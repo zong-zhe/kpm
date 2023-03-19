@@ -7,6 +7,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 	command "kusionstack.io/kpm/cmds"
+	"kusionstack.io/kpm/core/reporter"
 )
 
 func main() {
@@ -19,5 +20,8 @@ func main() {
 		command.NewInitCmd(),
 		command.NewAddCmd(),
 	}
-	app.Run(os.Args)
+	err := app.Run(os.Args)
+	if err != nil {
+		reporter.Fatal(err)
+	}
 }

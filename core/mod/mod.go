@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 
 	"github.com/BurntSushi/toml"
 	conf "kusionstack.io/kpm/core/conf"
@@ -27,7 +26,7 @@ type KclPkg struct {
 // NewKclPkg new a kcl package `KclPkg`` based on `Config`.
 func NewKclPkg(conf conf.Config) KclPkg {
 	return KclPkg{
-		HomePath: conf.ExecPath,
+		HomePath: conf.KclModPath,
 		Pkg: &pkg.Package{
 			Name:    conf.Name,
 			Version: conf.Version,
@@ -38,11 +37,10 @@ func NewKclPkg(conf conf.Config) KclPkg {
 
 // InitEmptyModule inits an empty kcl module and create a default kcl.mod.
 func (kclPkg KclPkg) InitEmptyModule() error {
-	kclPkg.HomePath = filepath.Join(kclPkg.HomePath, kclMod)
 	_, err := os.Stat(kclPkg.HomePath)
 	if os.IsNotExist(err) {
 		reporter.Report("kpm: creating new kcl.mod:", kclPkg.HomePath)
-		genKclMod(kclPkg)
+		return genKclMod(kclPkg)
 	}
 	return fmt.Errorf("kpm: '%s' already exists", kclPkg.HomePath)
 }
@@ -59,6 +57,12 @@ func LoadKclPkg(homePath string) (*KclPkg, error) {
 
 	kclPkg := new(KclPkg)
 	_, err = toml.NewDecoder(readFile).Decode(&kclPkg)
+
+	if kclPkg.Pkg.Dependencies == nil {
+		kclPkg.Pkg.Dependencies = make(map[string]*pkg.Dependency)
+	}
+
+	kclPkg.HomePath = homePath
 
 	if err != nil {
 		return nil, err
@@ -83,18 +87,18 @@ func genKclModLock(kclPkg KclPkg) error {
 	return nil
 }
 
-func (kclPkg KclPkg) AddDeps(dep *pkg.Dependency) error {
-
+func (kclPkg KclPkg) AddDeps(conf *conf.Config, dep *pkg.Dependency) error {
 	if kclPkg.ContainsDepNamed(dep.GetName()) {
 		reporter.Report("kpm: '", dep.GetName(), "' has already exists.")
 	}
 
-	genKclMod(kclPkg)
+	_, err := dep.Download(conf)
 
-	_, err := dep.Download()
+	kclPkg.Pkg.Dependencies[dep.GetName()] = dep
+	err = genKclMod(kclPkg)
 
 	if err != nil {
-		reporter.ExitWithReport("kpm: failed to download ", dep.GetName())
+		reporter.ExitWithReport("kpm: failed to update ", kclPkg.HomePath)
 	}
 
 	reporter.Report("kpm: '", dep.GetName(), "' added successfully.")

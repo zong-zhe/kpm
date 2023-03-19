@@ -29,7 +29,7 @@ func NewInitCmd() *cli.Command {
 				reporter.Fatal("kpm: internal bugs, please contact us to fix it")
 			}
 
-			config := conf.NewEmptyConf().SetName(modName).SetExecPath(pwd)
+			config := conf.NewEmptyConf().SetName(modName).SetKclModPath(pwd)
 			err = ops.KpmInit(config)
 
 			if err == nil {

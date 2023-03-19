@@ -1,46 +1,67 @@
 package pkg
 
 import (
-	"net/url"
-	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/go-git/go-git/v5"
+	gogit "github.com/go-git/go-git/v5"
+	"kusionstack.io/kpm/core/conf"
+	"kusionstack.io/kpm/core/git"
+	"kusionstack.io/kpm/core/reporter"
 )
 
-func (dep *Dependency) Download() (string, error) {
+func (dep *Dependency) Download(conf *conf.Config) (string, error) {
 	if d, ok := dep.GetDependency().(*Dependency_Git); ok {
-		return d.Git.Download()
+		return d.Git.Download(conf)
 	}
 	return "", nil
 }
 
-const kpmHome = "KPM_HOME"
-const gitPkg = "git"
-
-func (dep *GitDependency) Download() (string, error) {
+func (dep *GitDependency) Download(conf *conf.Config) (string, error) {
 	repoURL := dep.GetGit()
-	localPath := parseLocalPathFromGitUrl(dep.GetGit())
 
-	_, err := git.PlainClone(localPath, false, &git.CloneOptions{
-		URL:      repoURL,
-		Progress: os.Stdout,
-	})
+	localPath := git.ParseLocalPathFromGitUrl(filepath.Dir(conf.KclModPath), dep.GetGit())
+	repo, err := git.Clone(repoURL, localPath)
 
-	// switch branch
+	if err != nil {
+		reporter.Report("kpm: git clone error:", err)
+		return localPath, err
+	}
+	// checkout branch
 
-	// switch commit
+	err = git.CheckoutBranch(repo, dep.GetBranch())
 
-	// switch tag
+	if err != nil {
+		return localPath, report_checkout_err(repo, err)
+	}
+
+	// checkout commit
+
+	err = git.CheckoutCommit(repo, dep.GetCommit())
+
+	if err != nil {
+		return localPath, report_checkout_err(repo, err)
+	}
+
+	// checkout tag
+
+	err = git.CheckoutTag(repo, dep.GetTag())
+
+	if err != nil {
+		return localPath, report_checkout_err(repo, err)
+	}
 
 	return localPath, err
 }
 
-func parseLocalPathFromGitUrl(gitUrl string) string {
-	parsedUrl, _ := url.Parse(gitUrl)
-	pathWithoutScheme := strings.TrimPrefix(gitUrl, parsedUrl.Scheme+"://")
+func report_checkout_err(repo *gogit.Repository, origin_err error) error {
+	ref, err := repo.Head()
 
-	fileExt := filepath.Ext(pathWithoutScheme)
-	return filepath.Join(kpmHome, filepath.Base(pathWithoutScheme[:len(pathWithoutScheme)-len(fileExt)]))
+	if err != nil {
+		reporter.Fatal("kpm: internal bug, please contact us to fix it.")
+	}
+
+	reporter.Report("kpm: checkout error:", origin_err, ".")
+	reporter.Report("kpm:", ref.Hash().String(), " is used.")
+
+	return origin_err
 }

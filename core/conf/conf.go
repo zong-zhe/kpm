@@ -2,12 +2,16 @@
 
 package conf
 
+import (
+	"path/filepath"
+)
+
 // Config represents some configurations used by kpm.
 type Config struct {
-	Name     string
-	Edition  string
-	Version  string
-	ExecPath string
+	Name       string
+	Edition    string
+	Version    string
+	KclModPath string
 }
 
 const defaultVerion = "0.0.1"
@@ -42,7 +46,11 @@ func (conf Config) SetVersion(version string) Config {
 }
 
 // SetExecPath sets ExecPath for struct Config.
-func (conf Config) SetExecPath(execPath string) Config {
-	conf.ExecPath = execPath
+const kpmHome = "KPM_HOME"
+const gitPkg = "git"
+const modFileName = "kcl.mod"
+
+func (conf Config) SetKclModPath(execPath string) Config {
+	conf.KclModPath = filepath.Join(execPath, modFileName)
 	return conf
 }

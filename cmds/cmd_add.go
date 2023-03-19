@@ -3,7 +3,11 @@
 package command
 
 import (
+	"os"
+
 	"github.com/urfave/cli/v2"
+	"kusionstack.io/kpm/core/conf"
+	"kusionstack.io/kpm/core/git"
 	reporter "kusionstack.io/kpm/core/reporter"
 	"kusionstack.io/kpm/gen/pkg"
 	"kusionstack.io/kpm/ops"
@@ -21,23 +25,35 @@ func NewAddCmd() *cli.Command {
 		},
 		},
 		Action: func(c *cli.Context) error {
-			return addGitDep(c)
+			pwd, err := os.Getwd()
+
+			if err != nil {
+				reporter.Fatal("kpm: internal bugs, please contact us to fix it")
+			}
+
+			gitPath := c.StringSlice("git")
+			if len(gitPath) > 1 {
+				reporter.ExitWithReport("kpm: the argument '--git <URI>' cannot be used multiple times")
+			}
+			if len(gitPath) != 0 {
+				conf := conf.NewEmptyConf().SetKclModPath(pwd)
+				return addGitDep(&conf, git.NewGitOption().SetUrl(gitPath[0]))
+			}
+			return nil
 		},
 	}
 }
 
-func addGitDep(c *cli.Context) error {
-	gitPath := c.StringSlice("git")
-	if len(gitPath) > 1 {
-		reporter.ExitWithReport("kpm: the argument '--git <URI>' cannot be used multiple times")
-	}
+func addGitDep(conf *conf.Config, gitOpt *git.GitOption) error {
+
 	dep := pkg.Dependency{
+		Name: git.ParseRepoNameFromGitUrl(gitOpt.Url()),
 		Dependency: &pkg.Dependency_Git{
 			Git: &pkg.GitDependency{
-				Git: gitPath[0],
+				Git: gitOpt.Url(),
 			},
 		},
 	}
 
-	return ops.KpmAdd(&dep)
+	return ops.KpmAdd(conf, &dep)
 }
