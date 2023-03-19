@@ -16,5 +16,7 @@ func KpmAdd(conf *conf.Config, dep *pkg.Dependency) error {
 		reporter.ExitWithReport("kpm: failed to load kcl.mod from", conf.KclModPath)
 	}
 
+	
+
 	return kclPkg.AddDeps(conf, dep)
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	conf "kusionstack.io/kpm/core/conf"
+	newpkg "kusionstack.io/kpm/core/pkg"
 	"kusionstack.io/kpm/core/reporter"
 	"kusionstack.io/kpm/gen/pkg"
 )
@@ -92,7 +93,7 @@ func (kclPkg KclPkg) AddDeps(conf *conf.Config, dep *pkg.Dependency) error {
 		reporter.Report("kpm: '", dep.GetName(), "' has already exists.")
 	}
 
-	_, err := dep.Download(conf)
+	_, err := newpkg.GetDeps(directDeps, localPath, oldLocks)
 
 	kclPkg.Pkg.Dependencies[dep.GetName()] = dep
 	err = genKclMod(kclPkg)
