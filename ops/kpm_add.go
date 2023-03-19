@@ -4,19 +4,16 @@ package ops
 
 import (
 	conf "kusionstack.io/kpm/core/conf"
-	mod "kusionstack.io/kpm/core/mod"
-	"kusionstack.io/kpm/core/reporter"
 	"kusionstack.io/kpm/gen/pkg"
 )
 
 // KpmInit initializes an empty kcl module.
 func KpmAdd(conf *conf.Config, dep *pkg.Dependency) error {
-	kclPkg, err := mod.LoadKclPkg(conf.KclModPath)
-	if err != nil {
-		reporter.ExitWithReport("kpm: failed to load kcl.mod from", conf.KclModPath)
-	}
+	return nil
+	// kclPkg, err := mod.LoadKclPkg(conf.KclModPath)
+	// if err != nil {
+	// 	reporter.ExitWithReport("kpm: failed to load kcl.mod from", conf.KclModPath)
+	// }
 
-	
-
-	return kclPkg.AddDeps(conf, dep)
+	// return kclPkg.AddDeps(conf, dep)
 }
