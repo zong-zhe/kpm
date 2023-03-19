@@ -11,10 +11,10 @@ import (
 )
 
 type GitOption struct {
-	url    string
-	branch string
-	commit string
-	tag    string
+	Url    string
+	Branch string
+	Commit string
+	Tag    string
 }
 
 func NewGitOption() *GitOption {
@@ -22,27 +22,23 @@ func NewGitOption() *GitOption {
 }
 
 func (opt *GitOption) SetUrl(url string) *GitOption {
-	opt.url = url
+	opt.Url = url
 	return opt
 }
 
 func (opt *GitOption) SetCommit(commit string) *GitOption {
-	opt.commit = commit
+	opt.Commit = commit
 	return opt
 }
 
 func (opt *GitOption) SetBranch(branch string) *GitOption {
-	opt.branch = branch
+	opt.Branch = branch
 	return opt
 }
 
 func (opt *GitOption) SetTag(tag string) *GitOption {
-	opt.tag = tag
+	opt.Tag = tag
 	return opt
-}
-
-func (opt *GitOption) Url() string {
-	return opt.url
 }
 
 func Clone(repoURL string, localPath string) (*git.Repository, error) {

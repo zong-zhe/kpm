@@ -9,7 +9,6 @@ import (
 	"kusionstack.io/kpm/core/conf"
 	"kusionstack.io/kpm/core/git"
 	reporter "kusionstack.io/kpm/core/reporter"
-	"kusionstack.io/kpm/gen/pkg"
 	"kusionstack.io/kpm/ops"
 )
 
@@ -45,15 +44,5 @@ func NewAddCmd() *cli.Command {
 }
 
 func addGitDep(conf *conf.Config, gitOpt *git.GitOption) error {
-
-	dep := pkg.Dependency{
-		Name: git.ParseRepoNameFromGitUrl(gitOpt.Url()),
-		Dependency: &pkg.Dependency_Git{
-			Git: &pkg.GitDependency{
-				Git: gitOpt.Url(),
-			},
-		},
-	}
-
-	return ops.KpmAdd(conf, &dep)
+	return ops.KpmAdd(conf, gitOpt)
 }

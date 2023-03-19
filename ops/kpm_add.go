@@ -3,17 +3,20 @@
 package ops
 
 import (
+	"fmt"
+
 	conf "kusionstack.io/kpm/core/conf"
-	"kusionstack.io/kpm/gen/pkg"
+	"kusionstack.io/kpm/core/git"
+	"kusionstack.io/kpm/core/pkg"
 )
 
 // KpmInit initializes an empty kcl module.
-func KpmAdd(conf *conf.Config, dep *pkg.Dependency) error {
-	return nil
-	// kclPkg, err := mod.LoadKclPkg(conf.KclModPath)
-	// if err != nil {
-	// 	reporter.ExitWithReport("kpm: failed to load kcl.mod from", conf.KclModPath)
-	// }
+func KpmAdd(conf *conf.Config, opts *git.GitOption) error {
+	kclPkg, err := pkg.LoadKclPkg(conf)
 
-	// return kclPkg.AddDeps(conf, dep)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return kclPkg.AddDeps([]git.GitOption{*opts}, conf.KclModPath)
 }

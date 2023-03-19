@@ -4,10 +4,10 @@ package ops
 
 import (
 	conf "kusionstack.io/kpm/core/conf"
+	"kusionstack.io/kpm/core/pkg"
 )
 
 // KpmInit initializes an empty kcl module.
 func KpmInit(conf conf.Config) error {
-	return nil
-	// return mod.NewKclPkg(conf).InitEmptyModule()
+	return pkg.NewKclPkg(conf).InitEmptyPkg()
 }

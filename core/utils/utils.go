@@ -4,8 +4,11 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/otiai10/copy"
 )
 
 // hashDir computes the checksum of a directory by concatenating all files and
@@ -37,4 +40,18 @@ func HashDir(dir string) string {
 	})
 
 	return base64.StdEncoding.EncodeToString(hasher.Sum(nil))
+}
+
+func RenameDir(oldDir string, newDir string) {
+	// 复制目录及其内容到新位置
+	err := copy.Copy(oldDir, newDir)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 删除旧目录
+	err = os.RemoveAll(oldDir)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

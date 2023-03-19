@@ -1,8 +1,10 @@
 default: run
 
-run:
-	# go run main.go add 
+add:
 	go run main.go add -git https://github.com/zong-zhe/kcl1
+
+init:
+	go run main.go init mykcl
 
 build: 
 	go build -o build/kpm main.go

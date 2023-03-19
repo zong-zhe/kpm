@@ -4,9 +4,11 @@
 package mod
 
 import (
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 	gogit "github.com/go-git/go-git/v5"
@@ -88,10 +90,10 @@ func LoadModFile(homePath string) (*ModFile, error) {
 	modFile := new(ModFile)
 	_, err = toml.NewDecoder(readFile).Decode(&modFile)
 
-	modFile.HomePath = homePath
-
-	deps, err := LoadModLockFile(homePath)
-	modFile.Dependencies = *deps
+	modFile.HomePath = filepath.Join(homePath, File)
+	if modFile.Dependencies.Deps == nil {
+		modFile.Dependencies.Deps = make(map[string]Dependency)
+	}
 
 	if err != nil {
 		return nil, err
@@ -99,13 +101,19 @@ func LoadModFile(homePath string) (*ModFile, error) {
 	return modFile, nil
 }
 
-func LoadModLockFile(homePath string) (*Dependencies, error) {
+func LoadModLockFile(homePath string) (*ModLockFile, error) {
 
 	readFile, err := os.OpenFile(filepath.Join(homePath, LockFile), os.O_RDWR, 0644)
 	defer readFile.Close()
 
-	locks := new(Dependencies)
+	locks := new(ModLockFile)
 	_, err = toml.NewDecoder(readFile).Decode(&locks)
+
+	if locks.Dependencies.Deps == nil {
+		locks.Dependencies.Deps = make(map[string]Dependency)
+	}
+
+	locks.HomePath = filepath.Join(homePath, LockFile)
 
 	if err != nil {
 		return nil, err
@@ -115,7 +123,7 @@ func LoadModLockFile(homePath string) (*Dependencies, error) {
 
 // 这个里面要把sum字段屏蔽
 func (mfile *ModFile) Store() error {
-	file, err := os.Create(filepath.Join(mfile.HomePath, File))
+	file, err := os.Create(mfile.HomePath)
 	if err != nil {
 		reporter.ExitWithReport("Error creating file:", err)
 		return err
@@ -130,7 +138,7 @@ func (mfile *ModFile) Store() error {
 }
 
 func (mfile *ModLockFile) Store() error {
-	file, err := os.Create(filepath.Join(mfile.HomePath, LockFile))
+	file, err := os.Create(mfile.HomePath)
 	if err != nil {
 		reporter.ExitWithReport("Error creating file:", err)
 		return err
@@ -155,10 +163,23 @@ func NewModFile(conf *conf.Config, homePath string) *ModFile {
 	}
 }
 
+func NewModLockFile(conf *conf.Config, homePath string) *ModLockFile {
+	return &ModLockFile{
+		HomePath: homePath,
+		Dependencies: Dependencies{
+			Deps: make(map[string]Dependency),
+		},
+	}
+}
+
 func (dep *Dependency) Download(localPath string) (*Dependency, error) {
 	if dep.Source.GitSource != nil {
 		dep.Source.GitSource.Download(localPath)
+
 		dep.Sum = utils.HashDir(filepath.Join(localPath, dep.Name))
+
+		// modfile, _ := LoadModFile(localPath)
+		// utils.RenameDir(localPath, filepath.Join(filepath.Dir(localPath), modfile.Pkg.Name))
 	}
 	return dep, nil
 }
@@ -211,8 +232,23 @@ func reportCheckoutErr(repo *gogit.Repository, origin_err error) error {
 	return origin_err
 }
 
-func ParseUrl(localPath string, url string) *Dependency {
-	return nil
+func ParseOpt(opt *git.GitOption) Dependency {
+
+	gitSource := Git{
+		Url:    opt.Url,
+		Branch: opt.Branch,
+		Commit: opt.Commit,
+		Tag:    opt.Tag,
+	}
+
+	name := ParseRepoNameFromGitUrl(gitSource.Url)
+
+	return Dependency{
+		Name: name,
+		Source: Source{
+			GitSource: &gitSource,
+		},
+	}
 }
 
 func DepEqual(d1, d2 Dependency) bool {
@@ -221,4 +257,17 @@ func DepEqual(d1, d2 Dependency) bool {
 	source := reflect.DeepEqual(d1.Source, d2.Source)
 
 	return name && version && source
+}
+
+func ParseLocalPathFromGitUrl(rootPath string, gitUrl string) string {
+	parsedUrl, _ := url.Parse(gitUrl)
+	pathWithoutScheme := strings.TrimPrefix(gitUrl, parsedUrl.Scheme+"://")
+
+	fileExt := filepath.Ext(pathWithoutScheme)
+	return filepath.Join(rootPath, filepath.Base(pathWithoutScheme[:len(pathWithoutScheme)-len(fileExt)]))
+}
+
+func ParseRepoNameFromGitUrl(gitUrl string) string {
+	name := filepath.Base(gitUrl)
+	return name[:len(name)-len(filepath.Ext(name))]
 }

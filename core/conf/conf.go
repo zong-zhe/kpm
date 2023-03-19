@@ -2,10 +2,6 @@
 
 package conf
 
-import (
-	"path/filepath"
-)
-
 // Config represents some configurations used by kpm.
 type Config struct {
 	Name       string
@@ -45,12 +41,7 @@ func (conf Config) SetVersion(version string) Config {
 	return conf
 }
 
-// SetExecPath sets ExecPath for struct Config.
-const kpmHome = "KPM_HOME"
-const gitPkg = "git"
-const modFileName = "kcl.mod"
-
 func (conf Config) SetKclModPath(execPath string) Config {
-	conf.KclModPath = filepath.Join(execPath, modFileName)
+	conf.KclModPath = execPath
 	return conf
 }

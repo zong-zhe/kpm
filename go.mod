@@ -52,6 +52,7 @@ require (
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/onsi/ginkgo/v2 v2.9.0 // indirect
 	github.com/onsi/gomega v1.27.2 // indirect
+	github.com/otiai10/copy v1.9.0 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/prometheus/common v0.29.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
