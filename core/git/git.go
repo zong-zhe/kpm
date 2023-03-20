@@ -10,37 +10,6 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 )
 
-type GitOption struct {
-	Url    string
-	Branch string
-	Commit string
-	Tag    string
-}
-
-func NewGitOption() *GitOption {
-	return &GitOption{}
-}
-
-func (opt *GitOption) SetUrl(url string) *GitOption {
-	opt.Url = url
-	return opt
-}
-
-func (opt *GitOption) SetCommit(commit string) *GitOption {
-	opt.Commit = commit
-	return opt
-}
-
-func (opt *GitOption) SetBranch(branch string) *GitOption {
-	opt.Branch = branch
-	return opt
-}
-
-func (opt *GitOption) SetTag(tag string) *GitOption {
-	opt.Tag = tag
-	return opt
-}
-
 func Clone(repoURL string, localPath string) (*git.Repository, error) {
 	repo, err := git.PlainClone(localPath, false, &git.CloneOptions{
 		URL:      repoURL,

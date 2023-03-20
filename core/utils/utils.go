@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -31,7 +32,7 @@ func HashDir(dir string) string {
 			return err
 		}
 		defer f.Close()
-
+		fmt.Println(path)
 		if _, err := io.Copy(hasher, f); err != nil {
 			return err
 		}

@@ -5,95 +5,108 @@ import (
 	"os"
 	"path/filepath"
 
-	"kusionstack.io/kpm/core/conf"
-	"kusionstack.io/kpm/core/git"
-	"kusionstack.io/kpm/core/mod"
+	modfile "kusionstack.io/kpm/core/mod"
+	"kusionstack.io/kpm/core/opt"
 	"kusionstack.io/kpm/core/reporter"
 	"kusionstack.io/kpm/core/utils"
 )
 
 type KclPkg struct {
-	modFile  mod.ModFile
-	lockFile mod.ModLockFile
+	modFile  modfile.ModFile
+	lockFile modfile.ModLockFile
 	HomePath string
 }
 
-func NewKclPkg(conf conf.Config) KclPkg {
+func NewKclPkg(opt *opt.InitOptions) KclPkg {
 	return KclPkg{
-		modFile:  *mod.NewModFile(&conf, filepath.Join(conf.KclModPath, mod.File)),
-		lockFile: *mod.NewModLockFile(&conf, filepath.Join(conf.KclModPath, mod.LockFile)),
-		HomePath: conf.KclModPath,
+		modFile:  *modfile.NewModFile(opt, filepath.Join(opt.InitPath, modfile.File)),
+		lockFile: *modfile.NewModLockFile(opt, filepath.Join(opt.InitPath, modfile.LockFile)),
+		HomePath: opt.InitPath,
 	}
 }
 
-func LoadKclPkg(conf *conf.Config) (*KclPkg, error) {
-	modFile, err := mod.LoadModFile(conf.KclModPath)
-	modLockFile, err := mod.LoadModLockFile(conf.KclModPath)
+func LoadKclPkg(pkgPath string) (*KclPkg, error) {
+	modFile, err := modfile.LoadModFile(pkgPath)
+	modLockFile, err := modfile.LoadModLockFile(pkgPath)
 	if err != nil {
 		return nil, err
 	}
 	return &KclPkg{
 		modFile:  *modFile,
 		lockFile: *modLockFile,
-		HomePath: conf.KclModPath,
+		HomePath: pkgPath,
 	}, nil
 }
 
-// InitEmptyModule inits an empty kcl module and create a default kcl.mod.
+// InitEmptyModule inits an empty kcl module and create a default kcl.modfile.
 func (kclPkg KclPkg) InitEmptyPkg() error {
-	_, err := os.Stat(kclPkg.modFile.HomePath)
-	if os.IsNotExist(err) {
-		reporter.Report("kpm: creating new kcl.mod:", kclPkg.HomePath)
-		err := kclPkg.modFile.Store()
-		if err != nil {
-			reporter.Report(err)
-		}
+	err := createFileIfNotExist(kclPkg.modFile.HomePath, "kcl.mod", kclPkg.modFile.Store)
+	if err != nil {
+		return err
 	}
-	_, err = os.Stat(kclPkg.lockFile.HomePath)
-	if os.IsNotExist(err) {
-		reporter.Report("kpm: creating new kcl.mod.lock:", kclPkg.HomePath)
-		err = kclPkg.lockFile.Store()
-		if err != nil {
-			reporter.Report(err)
-		}
+
+	err = createFileIfNotExist(kclPkg.lockFile.HomePath, "kcl.modfile.lock", kclPkg.lockFile.Store)
+	if err != nil {
+		return err
 	}
-	return fmt.Errorf("kpm: '%s' already exists", kclPkg.modFile.HomePath)
+
+	return nil
 }
 
-// InitEmptyModule inits an empty kcl module and create a default kcl.mod.
-func (kclPkg KclPkg) AddDeps(gitOpts []git.GitOption, localpath string) error {
-
-	for _, opt := range gitOpts {
-		d := mod.ParseOpt(&opt)
-		if !mod.DepEqual(kclPkg.modFile.Dependencies.Deps[d.Name], d) {
-			// the dep passed on the cli is different from the jsonnetFile
-			kclPkg.modFile.Dependencies.Deps[d.Name] = d
-
-			// we want to install the passed version (ignore the lock)
-			delete(kclPkg.lockFile.Dependencies.Deps, d.Name)
+func createFileIfNotExist(filePath string, fileName string, storeFunc func() error) error {
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		reporter.Report("kpm: creating new "+fileName+":", filePath)
+		err := storeFunc()
+		if err != nil {
+			reporter.Report("kpm: failed to create "+fileName+",", err)
+			return err
 		}
+	} else {
+		reporter.Report("kpm: '%s' already exists", filePath)
+		return err
+	}
+	return nil
+}
+
+// InitEmptyModule inits an empty kcl module and create a default kcl.modfile.
+func (kclPkg KclPkg) AddDeps(opt *opt.AddOptions) error {
+
+	d := modfile.ParseOpt(&opt.RegistryOpts)
+	if !modfile.DepEqual(kclPkg.modFile.Dependencies.Deps[d.Name], *d) {
+		// the dep passed on the cli is different from the jsonnetFile
+		kclPkg.modFile.Dependencies.Deps[d.Name] = *d
+
+		// we want to install the passed version (ignore the lock)
+		delete(kclPkg.lockFile.Dependencies.Deps, d.Name)
 	}
 
-	changedDeps, _ := getDeps(kclPkg.modFile.Dependencies, kclPkg.lockFile.Dependencies, localpath)
+	changedDeps, err := getDeps(kclPkg.modFile.Dependencies, kclPkg.lockFile.Dependencies, opt.LocalPath)
 
-	fmt.Println(changedDeps)
+	if err != nil {
+		reporter.ExitWithReport("kpm: failed to download dependancies.")
+	}
 
 	for k, v := range changedDeps.Deps {
 		kclPkg.modFile.Dependencies.Deps[k] = v
 		kclPkg.lockFile.Dependencies.Deps[k] = v
 	}
 
-	// store kcl.mod.lock
-	// 这里只有新加入的，需要增量写入
-	kclPkg.modFile.Store()
-	kclPkg.lockFile.Store()
+	err = kclPkg.modFile.Store()
+	if err != nil {
+		return err
+	}
+	err = kclPkg.lockFile.Store()
+	if err != nil {
+		return err
+	}
 
-	return fmt.Errorf("kpm: '%s' already exists", kclPkg.modFile.HomePath)
+	return nil
 }
 
-func getDeps(deps mod.Dependencies, lockDeps mod.Dependencies, localPath string) (*mod.Dependencies, error) {
-	newDeps := mod.Dependencies{
-		Deps: make(map[string]mod.Dependency),
+func getDeps(deps modfile.Dependencies, lockDeps modfile.Dependencies, localPath string) (*modfile.Dependencies, error) {
+	newDeps := modfile.Dependencies{
+		Deps: make(map[string]modfile.Dependency),
 	}
 
 	for _, d := range deps.Deps {
@@ -115,19 +128,17 @@ func getDeps(deps mod.Dependencies, lockDeps mod.Dependencies, localPath string)
 
 		lockedDep, err := d.Download(dir)
 		if err != nil {
-			return nil, nil
+			return nil, fmt.Errorf("checksum mismatch")
 		}
 		if expectedSum != "" && lockedDep.Sum != expectedSum {
 			return nil, fmt.Errorf("checksum mismatch")
 		}
 		newDeps.Deps[d.Name] = *lockedDep
-		// we settled on a new version, add it to the locks for recursion
 		lockDeps.Deps[d.Name] = *lockedDep
 	}
 
 	for _, d := range newDeps.Deps {
-
-		modfile, err := mod.LoadModFile(filepath.Join(localPath, d.Name))
+		modfile, err := modfile.LoadModFile(filepath.Join(localPath, d.Name))
 		if err != nil {
 			if os.IsNotExist(err) {
 				continue
@@ -150,22 +161,9 @@ func getDeps(deps mod.Dependencies, lockDeps mod.Dependencies, localPath string)
 	return &newDeps, nil
 }
 
-// check returns whether the files present at the vendor/ folder match the
-// sha256 sum of the package. local-directory dependencies are not checked as
-// their purpose is to change during development where integrity checking would
-// be a hindrance.
-func check(d mod.Dependency, vendorDir string) bool {
-	// assume a local dependency is intact as long as it exists
-	// if d.Source.LocalSource != nil {
-	// 	x, err := mod.ModFileExists(filepath.Join(vendorDir, d.Name()))
-	// 	if err != nil {
-	// 		return false
-	// 	}
-	// 	return x
-	// }
+func check(d modfile.Dependency, vendorDir string) bool {
 
 	if d.Sum == "" {
-		// no sum available, need to download
 		return false
 	}
 
@@ -173,114 +171,3 @@ func check(d mod.Dependency, vendorDir string) bool {
 	sum := utils.HashDir(dir)
 	return d.Sum == sum
 }
-
-// func LoadKclPkg(homePath string) (*KclPkg, error) {
-
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return kclPkg, nil
-// }
-
-// func genKclModLock(kclPkg KclPkg) error {
-// 	return nil
-// }
-
-// func (kclPkg KclPkg) AddDeps(conf *conf.Config, dep *pkg.Dependency) error {
-// 	if kclPkg.ContainsDepNamed(dep.GetName()) {
-// 		reporter.Report("kpm: '", dep.GetName(), "' has already exists.")
-// 	}
-
-// 	_, err := newpkg.GetDeps(directDeps, localPath, oldLocks)
-
-// 	kclPkg.Pkg.Dependencies[dep.GetName()] = dep
-// 	err = genKclMod(kclPkg)
-
-// 	if err != nil {
-// 		reporter.ExitWithReport("kpm: failed to update ", kclPkg.HomePath)
-// 	}
-
-// 	reporter.Report("kpm: '", dep.GetName(), "' added successfully.")
-
-// 	// genKclModLock(kclPkg)
-
-// 	return nil
-// }
-
-// import (
-// 	"fmt"
-// 	"os"
-// 	"path/filepath"
-
-// 	kclmodfile "kusionstack.io/kpm/core/modfile"
-// )
-
-// func GetDeps(directDeps map[string]kclmodfile.Dependency, localPath string, locks map[string]kclmodfile.Dependency) (map[string]kclmodfile.Dependency, error) {
-// 	deps := make(map[string]kclmodfile.Dependency)
-
-// 	for _, d := range directDeps {
-// 		l, present := locks[d.Name]
-
-// 		// already locked and the integrity is intact
-// 		if present {
-// 			d.Version = locks[d.Name].Version
-
-// 			if check(l, localPath) {
-// 				deps[d.Name] = l
-// 				continue
-// 			}
-// 		}
-// 		expectedSum := locks[d.Name].Sum
-
-// 		// either not present or not intact: download again
-// 		dir := filepath.Join(localPath, d.Name)
-// 		os.RemoveAll(dir)
-
-// 		locked, err := d.Download(localPath)
-// 		if err != nil {
-// 			return nil, fmt.Errorf("err")
-// 		}
-// 		if expectedSum != "" && locked.Sum != expectedSum {
-// 			return nil, fmt.Errorf("checksum mismatch for %s. Expected %s but got %s", d.Name, expectedSum, locked.Sum)
-// 		}
-// 		deps[d.Name] = *locked
-// 		// we settled on a new version, add it to the locks for recursion
-// 		locks[d.Name] = *locked
-// 	}
-
-// 	for _, d := range deps {
-
-// 		f, err := kclmodfile.LoadModFile(filepath.Join(localPath, d.Name, kclmodfile.File))
-// 		if err != nil {
-// 			if os.IsNotExist(err) {
-// 				continue
-// 			}
-// 			return nil, err
-// 		}
-
-// 		nested, err := GetDeps(f.Dependencies, localPath, locks)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-
-// 		for _, d := range nested {
-// 			if _, ok := deps[d.Name]; !ok {
-// 				deps[d.Name] = d
-// 			}
-// 		}
-// 	}
-
-// 	return deps, nil
-// }
-
-// func check(d kclmodfile.Dependency, vendorDir string) bool {
-
-// 	if d.Sum == "" {
-// 		// no sum available, need to download
-// 		return false
-// 	}
-
-// 	dir := filepath.Join(vendorDir, d.Name)
-// 	sum := kclmodfile.HashDir(dir)
-// 	return d.Sum == sum
-// }

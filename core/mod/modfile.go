@@ -1,7 +1,7 @@
 // Copyright 2022 The KCL Authors. All rights reserved.
 
 // Package mod is the core abstraction in kpm for working with a package or module of kcl.
-package mod
+package modfile
 
 import (
 	"net/url"
@@ -12,8 +12,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	gogit "github.com/go-git/go-git/v5"
-	"kusionstack.io/kpm/core/conf"
 	"kusionstack.io/kpm/core/git"
+	"kusionstack.io/kpm/core/opt"
 	"kusionstack.io/kpm/core/reporter"
 	"kusionstack.io/kpm/core/utils"
 )
@@ -83,31 +83,28 @@ func exists(path string) (bool, error) {
 }
 
 func LoadModFile(homePath string) (*ModFile, error) {
-
-	readFile, err := os.OpenFile(filepath.Join(homePath, File), os.O_RDWR, 0644)
-	defer readFile.Close()
-
 	modFile := new(ModFile)
-	_, err = toml.NewDecoder(readFile).Decode(&modFile)
+	err := loadFile(homePath, File, modFile)
+	if err != nil {
+		return nil, err
+	}
 
 	modFile.HomePath = filepath.Join(homePath, File)
+
 	if modFile.Dependencies.Deps == nil {
 		modFile.Dependencies.Deps = make(map[string]Dependency)
 	}
 
-	if err != nil {
-		return nil, err
-	}
 	return modFile, nil
 }
 
 func LoadModLockFile(homePath string) (*ModLockFile, error) {
 
-	readFile, err := os.OpenFile(filepath.Join(homePath, LockFile), os.O_RDWR, 0644)
-	defer readFile.Close()
-
 	locks := new(ModLockFile)
-	_, err = toml.NewDecoder(readFile).Decode(&locks)
+	err := loadFile(homePath, LockFile, locks)
+	if err != nil {
+		return nil, err
+	}
 
 	if locks.Dependencies.Deps == nil {
 		locks.Dependencies.Deps = make(map[string]Dependency)
@@ -115,55 +112,32 @@ func LoadModLockFile(homePath string) (*ModLockFile, error) {
 
 	locks.HomePath = filepath.Join(homePath, LockFile)
 
-	if err != nil {
-		return nil, err
-	}
 	return locks, nil
 }
 
-// 这个里面要把sum字段屏蔽
 func (mfile *ModFile) Store() error {
-	file, err := os.Create(mfile.HomePath)
-	if err != nil {
-		reporter.ExitWithReport("Error creating file:", err)
-		return err
-	}
-	defer file.Close()
-
-	if err := toml.NewEncoder(file).Encode(mfile); err != nil {
-		reporter.ExitWithReport("Error encoding TOML:", err)
-		return err
-	}
-	return nil
+	return storeToFile(mfile.HomePath, mfile)
 }
 
 func (mfile *ModLockFile) Store() error {
-	file, err := os.Create(mfile.HomePath)
-	if err != nil {
-		reporter.ExitWithReport("Error creating file:", err)
-		return err
-	}
-	defer file.Close()
-
-	if err := toml.NewEncoder(file).Encode(mfile); err != nil {
-		reporter.ExitWithReport("Error encoding TOML:", err)
-		return err
-	}
-	return nil
+	return storeToFile(mfile.HomePath, mfile)
 }
 
-func NewModFile(conf *conf.Config, homePath string) *ModFile {
+const defaultVerion = "0.0.1"
+const defaultEdition = "0.0.1"
+
+func NewModFile(opt *opt.InitOptions, homePath string) *ModFile {
 	return &ModFile{
 		HomePath: homePath,
 		Pkg: Package{
-			Name:    conf.Name,
-			Version: conf.Version,
-			Edition: conf.Edition,
+			Name:    opt.Name,
+			Version: defaultVerion,
+			Edition: defaultEdition,
 		},
 	}
 }
 
-func NewModLockFile(conf *conf.Config, homePath string) *ModLockFile {
+func NewModLockFile(opt *opt.InitOptions, homePath string) *ModLockFile {
 	return &ModLockFile{
 		HomePath: homePath,
 		Dependencies: Dependencies{
@@ -175,11 +149,7 @@ func NewModLockFile(conf *conf.Config, homePath string) *ModLockFile {
 func (dep *Dependency) Download(localPath string) (*Dependency, error) {
 	if dep.Source.GitSource != nil {
 		dep.Source.GitSource.Download(localPath)
-
-		dep.Sum = utils.HashDir(filepath.Join(localPath, dep.Name))
-
-		// modfile, _ := LoadModFile(localPath)
-		// utils.RenameDir(localPath, filepath.Join(filepath.Dir(localPath), modfile.Pkg.Name))
+		dep.Sum = utils.HashDir(localPath)
 	}
 	return dep, nil
 }
@@ -192,31 +162,27 @@ func (dep *Git) Download(localPath string) (string, error) {
 		reporter.Report("kpm: git clone error:", err)
 		return localPath, err
 	}
-	// checkout branch
 
-	err = git.CheckoutBranch(repo, dep.Branch)
-
-	if err != nil {
-		return localPath, reportCheckoutErr(repo, err)
-	}
-
-	// checkout commit
-
-	err = git.CheckoutCommit(repo, dep.Commit)
-
-	if err != nil {
-		return localPath, reportCheckoutErr(repo, err)
-	}
-
-	// checkout tag
-
-	err = git.CheckoutTag(repo, dep.Tag)
+	// checkout branch/commit/tag
+	err = checkout(repo, dep.Branch, dep.Commit, dep.Tag)
 
 	if err != nil {
 		return localPath, reportCheckoutErr(repo, err)
 	}
 
 	return localPath, err
+}
+
+func checkout(repo *gogit.Repository, branch string, commit string, tag string) error {
+	var err error = nil
+	if len(branch) != 0 {
+		err = git.CheckoutBranch(repo, branch)
+	} else if len(commit) != 0 {
+		err = git.CheckoutCommit(repo, commit)
+	} else if len(tag) != 0 {
+		err = git.CheckoutTag(repo, tag)
+	}
+	return err
 }
 
 func reportCheckoutErr(repo *gogit.Repository, origin_err error) error {
@@ -232,23 +198,27 @@ func reportCheckoutErr(repo *gogit.Repository, origin_err error) error {
 	return origin_err
 }
 
-func ParseOpt(opt *git.GitOption) Dependency {
+func ParseOpt(opt *opt.RegistryOption) *Dependency {
 
-	gitSource := Git{
-		Url:    opt.Url,
-		Branch: opt.Branch,
-		Commit: opt.Commit,
-		Tag:    opt.Tag,
+	if opt.Git != nil {
+		gitSource := Git{
+			Url:    opt.Git.Url,
+			Branch: opt.Git.Branch,
+			Commit: opt.Git.Commit,
+			Tag:    opt.Git.Tag,
+		}
+
+		name := ParseRepoNameFromGitUrl(gitSource.Url)
+
+		return &Dependency{
+			Name: name,
+			Source: Source{
+				GitSource: &gitSource,
+			},
+		}
 	}
 
-	name := ParseRepoNameFromGitUrl(gitSource.Url)
-
-	return Dependency{
-		Name: name,
-		Source: Source{
-			GitSource: &gitSource,
-		},
-	}
+	return nil
 }
 
 func DepEqual(d1, d2 Dependency) bool {
@@ -270,4 +240,35 @@ func ParseLocalPathFromGitUrl(rootPath string, gitUrl string) string {
 func ParseRepoNameFromGitUrl(gitUrl string) string {
 	name := filepath.Base(gitUrl)
 	return name[:len(name)-len(filepath.Ext(name))]
+}
+
+func storeToFile(filePath string, data interface{}) error {
+	file, err := os.Create(filePath)
+	if err != nil {
+		reporter.ExitWithReport("kpm: failed to create file: ", filePath, err)
+		return err
+	}
+	defer file.Close()
+
+	if err := toml.NewEncoder(file).Encode(data); err != nil {
+		reporter.ExitWithReport("kpm: failed to encode TOML:", err)
+		return err
+	}
+	return nil
+}
+
+func loadFile(homePath string, fileName string, v interface{}) error {
+	readFile, err := os.OpenFile(filepath.Join(homePath, fileName), os.O_RDWR, 0644)
+	if err != nil {
+		reporter.Report("kpm: failed to load", fileName)
+		return err
+	}
+	defer readFile.Close()
+
+	_, err = toml.NewDecoder(readFile).Decode(v)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

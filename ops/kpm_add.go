@@ -3,20 +3,18 @@
 package ops
 
 import (
-	"fmt"
-
-	conf "kusionstack.io/kpm/core/conf"
-	"kusionstack.io/kpm/core/git"
+	"kusionstack.io/kpm/core/opt"
 	"kusionstack.io/kpm/core/pkg"
+	"kusionstack.io/kpm/core/reporter"
 )
 
 // KpmInit initializes an empty kcl module.
-func KpmAdd(conf *conf.Config, opts *git.GitOption) error {
-	kclPkg, err := pkg.LoadKclPkg(conf)
+func KpmAdd(opt *opt.AddOptions, kclPkg *pkg.KclPkg) error {
 
-	if err != nil {
-		fmt.Println(err)
+	if opt.RegistryOpts.Git == nil {
+		reporter.Report("kpm: a value is required for '-git <URI>' but none was supplied")
+		reporter.ExitWithReport("kpm: run 'kpm add help' for more information.")
 	}
 
-	return kclPkg.AddDeps([]git.GitOption{*opts}, conf.KclModPath)
+	return kclPkg.AddDeps(opt)
 }

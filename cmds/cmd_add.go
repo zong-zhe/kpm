@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/urfave/cli/v2"
-	"kusionstack.io/kpm/core/conf"
-	"kusionstack.io/kpm/core/git"
+	"kusionstack.io/kpm/core/opt"
+	"kusionstack.io/kpm/core/pkg"
 	reporter "kusionstack.io/kpm/core/reporter"
 	"kusionstack.io/kpm/ops"
 )
@@ -30,19 +30,32 @@ func NewAddCmd() *cli.Command {
 				reporter.Fatal("kpm: internal bugs, please contact us to fix it")
 			}
 
-			gitPath := c.StringSlice("git")
-			if len(gitPath) > 1 {
+			kclPkg, err := pkg.LoadKclPkg(pwd)
+
+			if err != nil {
+				reporter.Fatal("kpm: could not load `kcl.mod` in `", pwd, "`")
+			}
+
+			gitUrls := c.StringSlice("git")
+			if len(gitUrls) > 1 {
 				reporter.ExitWithReport("kpm: the argument '--git <URI>' cannot be used multiple times")
 			}
-			if len(gitPath) != 0 {
-				conf := conf.NewEmptyConf().SetKclModPath(pwd)
-				return addGitDep(&conf, git.NewGitOption().SetUrl(gitPath[0]))
+
+			if len(gitUrls) != 0 {
+				return addGitDep(&opt.AddOptions{
+					LocalPath: pwd, // todo: should be KPM_HOME
+					RegistryOpts: opt.RegistryOption{
+						&opt.GitOption{
+							Url: gitUrls[0],
+						},
+					},
+				}, kclPkg)
 			}
 			return nil
 		},
 	}
 }
 
-func addGitDep(conf *conf.Config, gitOpt *git.GitOption) error {
-	return ops.KpmAdd(conf, gitOpt)
+func addGitDep(opt *opt.AddOptions, kclPkg *pkg.KclPkg) error {
+	return ops.KpmAdd(opt, kclPkg)
 }
