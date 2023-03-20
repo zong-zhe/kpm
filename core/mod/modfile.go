@@ -36,12 +36,12 @@ type ModFile struct {
 }
 
 type ModLockFile struct {
-	HomePath     string
-	Dependencies Dependencies
+	HomePath string
+	Dependencies
 }
 
 type Dependencies struct {
-	Deps map[string]Dependency
+	Deps map[string]Dependency `toml:"dependencies"`
 }
 
 type Dependency struct {
