@@ -4,6 +4,8 @@
 package modfile
 
 import (
+	"bytes"
+	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -24,19 +26,19 @@ const (
 )
 
 type Package struct {
-	Name    string
-	Edition string
-	Version string
+	Name    string `toml:"name"`
+	Edition string `toml:"edition"`
+	Version string `toml:"version"`
 }
 
 type ModFile struct {
-	HomePath string
-	Pkg      Package
+	HomePath string  `toml:"-"`
+	Pkg      Package `toml:"package"`
 	Dependencies
 }
 
 type ModLockFile struct {
-	HomePath string
+	HomePath string `toml:"-"`
 	Dependencies
 }
 
@@ -44,11 +46,34 @@ type Dependencies struct {
 	Deps map[string]Dependency `toml:"dependencies"`
 }
 
+func (d *Dependencies) MarshalTOML() ([]byte, error) {
+	if d == nil {
+		return nil, nil
+	}
+
+	buff := new(bytes.Buffer)
+	encoder := toml.NewEncoder(buff)
+
+	for _, v := range d.Deps {
+		err := encoder.Encode(struct {
+			Name string
+		}{
+			Name: string(v.Url),
+		})
+
+		if err != nil {
+			return nil, fmt.Errorf("kpm: Internal bug")
+		}
+	}
+
+	return buff.Bytes(), nil
+}
+
 type Dependency struct {
-	Name string
+	Name string `toml:"name"`
 	Source
-	Version string
-	Sum     string
+	Version string `toml:"version"`
+	Sum     string `toml:"sum"`
 }
 
 type Source struct {
@@ -56,10 +81,10 @@ type Source struct {
 }
 
 type Git struct {
-	Url    string
-	Branch string
-	Commit string
-	Tag    string
+	Url    string `toml:"url"`
+	Branch string `toml:"branch"`
+	Commit string `toml:"commit"`
+	Tag    string `toml:"tag"`
 }
 
 func ModFileExists(path string) (bool, error) {

@@ -60,6 +60,7 @@ require (
 	github.com/skeema/knownhosts v1.1.0 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/srikrsna/protoc-gen-gotag v0.6.2 // indirect
+	github.com/thoas/go-funk v0.9.3 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
