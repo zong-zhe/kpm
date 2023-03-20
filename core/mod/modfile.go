@@ -30,9 +30,9 @@ type Package struct {
 }
 
 type ModFile struct {
-	HomePath     string
-	Pkg          Package
-	Dependencies Dependencies
+	HomePath string
+	Pkg      Package
+	Dependencies
 }
 
 type ModLockFile struct {
@@ -45,14 +45,14 @@ type Dependencies struct {
 }
 
 type Dependency struct {
-	Name    string
-	Source  Source
+	Name string
+	Source
 	Version string
 	Sum     string
 }
 
 type Source struct {
-	GitSource *Git
+	*Git
 }
 
 type Git struct {
@@ -147,8 +147,8 @@ func NewModLockFile(opt *opt.InitOptions, homePath string) *ModLockFile {
 }
 
 func (dep *Dependency) Download(localPath string) (*Dependency, error) {
-	if dep.Source.GitSource != nil {
-		dep.Source.GitSource.Download(localPath)
+	if dep.Source.Git != nil {
+		dep.Source.Git.Download(localPath)
 		dep.Sum = utils.HashDir(localPath)
 	}
 	return dep, nil
@@ -213,7 +213,7 @@ func ParseOpt(opt *opt.RegistryOption) *Dependency {
 		return &Dependency{
 			Name: name,
 			Source: Source{
-				GitSource: &gitSource,
+				Git: &gitSource,
 			},
 		}
 	}
