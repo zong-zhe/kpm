@@ -110,6 +110,10 @@ func getDeps(deps modfile.Dependencies, lockDeps modfile.Dependencies, localPath
 	}
 
 	for _, d := range deps.Deps {
+		if len(d.Name) == 0 {
+			reporter.ExitWithReport("kpm: invalid dependencies.")
+			return nil, fmt.Errorf("kpm: invalid dependencies.")
+		}
 		l, present := lockDeps.Deps[d.Name]
 
 		// already locked and the integrity is intact
