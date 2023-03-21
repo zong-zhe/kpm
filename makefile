@@ -7,7 +7,7 @@ init:
 	go run main.go init mykcl
 
 build: 
-	go build -o build/kpm main.go
+	go build -o /Users/shijun/go/bin/kpm main.go
 
 test: 
 	go test -v ./...	

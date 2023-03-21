@@ -3,6 +3,7 @@
 package command
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/urfave/cli/v2"
@@ -26,6 +27,12 @@ func NewAddCmd() *cli.Command {
 		Action: func(c *cli.Context) error {
 			pwd, err := os.Getwd()
 
+			kpmHome := os.Getenv("KPM_HOME")
+			if kpmHome == "" {
+				fmt.Println("kpm: KPM_HOME environment variable is not set")
+				fmt.Println("kpm: `add` will be downloaded to directory: ", pwd)
+			}
+
 			if err != nil {
 				reporter.Fatal("kpm: internal bugs, please contact us to fix it")
 			}
@@ -43,9 +50,9 @@ func NewAddCmd() *cli.Command {
 
 			if len(gitUrls) != 0 {
 				return addGitDep(&opt.AddOptions{
-					LocalPath: pwd, // todo: should be KPM_HOME
+					LocalPath: kpmHome, // todo: should be KPM_HOME
 					RegistryOpts: opt.RegistryOption{
-						&opt.GitOption{
+						Git: &opt.GitOption{
 							Url: gitUrls[0],
 						},
 					},
