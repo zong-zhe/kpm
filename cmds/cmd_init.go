@@ -30,8 +30,8 @@ func NewInitCmd() *cli.Command {
 			}
 
 			err = ops.KpmInit(&opt.InitOptions{
-				modName,
-				pwd,
+				Name:     modName,
+				InitPath: pwd,
 			})
 
 			if err == nil {

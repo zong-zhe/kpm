@@ -63,7 +63,7 @@ func createFileIfNotExist(filePath string, fileName string, storeFunc func() err
 			return err
 		}
 	} else {
-		reporter.Report("kpm: '%s' already exists", filePath)
+		reporter.Report("kpm: '" + filePath + "' already exists")
 		return err
 	}
 	return nil
@@ -166,7 +166,6 @@ func getDeps(deps modfile.Dependencies, lockDeps modfile.Dependencies, localPath
 }
 
 func check(d modfile.Dependency, vendorDir string) bool {
-
 	if d.Sum == "" {
 		return false
 	}

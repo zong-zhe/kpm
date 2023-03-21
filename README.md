@@ -2,57 +2,43 @@
 KCL Package Manager
 
 ```
-package main
-
 import (
-	"bytes"
-	"fmt"
-
-	"github.com/BurntSushi/toml"
+ "bytes"
+ "fmt"
+ "github.com/BurntSushi/toml"
 )
 
-type Config struct {
-	Name string
-	Age  int
-	Map  map[string]string
+// 定义一个结构体类型
+type Person struct {
+ Name string
+ Age int
+ Gender string `toml:"sex"`
 }
 
-// MarshalTOML 实现了 toml.Marshaler 接口，以自定义 Config 的 TOML 编码。
-func (c Config) MarshalTOML() ([]byte, error) {
-	// 创建一个缓冲区以保存编码后的数据
-	var buf bytes.Buffer
-
-	// 将 Name 和 Age 字段编码为 TOML 并写入缓冲区
-	if err := toml.NewEncoder(&buf).Encode(struct {
-		Name string
-		Age  int
-		Map  string
-	}{
-		Name: c.Name,
-		Age:  c.Age,
-		Map:  "getMapValues(c.Map)",
-	}); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
+// 实现自定义序列化
+func (p *Person) MarshalTOML() ([]byte, error) {
+ // 创建一个buffer
+ buffer := new(bytes.Buffer)
+ // 向buffer中写入自定义的TOML格式数据
+ fmt.Fprintf(buffer, "name = %q
+", p.Name)
+ fmt.Fprintf(buffer, "age = %d
+", p.Age)
+ fmt.Fprintf(buffer, "sex = %q
+", p.Gender)
+ // 返回buffer中的数据
+ return buffer.Bytes(), nil
 }
 
+// 测试代码
 func main() {
-	config := Config{
-		Name: "Tom",
-		Age:  25,
-		Map: map[string]string{
-			"key1": "value1",
-			"key2": "value2",
-		},
-	}
-	data, err := config.MarshalTOML()
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-	fmt.Println(string(data))
+ // 创建Person结构体实例
+ person := Person{"Tom",20, "male"}
+ // 序列化Person结构体实例为TOML格式数据
+ data, _ := toml.Marshal(&person)
+ // 输出序列化结果
+ fmt.Println(string(data))
 }
+
 
 ```
