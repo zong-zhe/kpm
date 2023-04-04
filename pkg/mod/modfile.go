@@ -2,6 +2,7 @@
 package modfile
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -37,9 +38,10 @@ type Dependencies struct {
 }
 
 type Dependency struct {
-	Name    string `toml:"name,omitempty"`
-	Version string `toml:"version,omitempty"`
-	Sum     string `toml:"sum,omitempty"`
+	modFile ModFile `toml:"-"`
+	Name    string  `toml:"name,omitempty"`
+	Version string  `toml:"version,omitempty"`
+	Sum     string  `toml:"sum,omitempty"`
 	Source
 }
 
@@ -57,8 +59,7 @@ func (dep *Dependency) Download(localPath string) (*Dependency, error) {
 
 // Download will download the kcl package to localPath from git url.
 func (dep *Git) Download(localPath string) (string, error) {
-	repoURL := dep.Url
-	_, err := git.Clone(repoURL, localPath)
+	_, err := git.Clone(dep.Url, dep.Tag, localPath)
 
 	if err != nil {
 		reporter.Report("kpm: git clone error:", err)
@@ -206,20 +207,23 @@ func ParseOpt(opt *opt.RegistryOptions) *Dependency {
 			Tag:    opt.Git.Tag,
 		}
 
-		name := ParseRepoNameFromGitUrl(gitSource.Url)
+		name := ParseRepoNameFromGitSource(gitSource)
 
 		return &Dependency{
 			Name: name,
 			Source: Source{
 				Git: &gitSource,
 			},
+			Version: gitSource.Tag,
 		}
 	}
 	return nil
 }
 
-// ParseRepoNameFromGitUrl will extract the kcl package name from the git url.
-func ParseRepoNameFromGitUrl(gitUrl string) string {
-	name := filepath.Base(gitUrl)
-	return name[:len(name)-len(filepath.Ext(name))]
+const PKG_NAME_PATTERN = "%s_%s"
+
+// ParseRepoNameFromGitSource will extract the kcl package name from the git url.
+func ParseRepoNameFromGitSource(gitSrc Git) string {
+	name := filepath.Base(gitSrc.Url)
+	return fmt.Sprintf(PKG_NAME_PATTERN, name[:len(name)-len(filepath.Ext(name))], gitSrc.Tag)
 }
