@@ -3,6 +3,7 @@ package modfile
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -38,10 +39,9 @@ type Dependencies struct {
 }
 
 type Dependency struct {
-	modFile ModFile `toml:"-"`
-	Name    string  `toml:"name,omitempty"`
-	Version string  `toml:"version,omitempty"`
-	Sum     string  `toml:"sum,omitempty"`
+	Name    string `toml:"name,omitempty"`
+	Version string `toml:"version,omitempty"`
+	Sum     string `toml:"sum,omitempty"`
 	Source
 }
 
@@ -154,7 +154,7 @@ func NewModFile(opts *opt.InitOptions) *ModFile {
 }
 
 // StoreToFile will store 'data' into toml file under 'filePath'.
-func StoreToFile(filePath string, data interface{}) error {
+func StoreToFile(filePath string, data TOML) error {
 	file, err := os.Create(filePath)
 	if err != nil {
 		reporter.ExitWithReport("kpm: failed to create file: ", filePath, err)
@@ -162,8 +162,16 @@ func StoreToFile(filePath string, data interface{}) error {
 	}
 	defer file.Close()
 
-	if err := toml.NewEncoder(file).Encode(data); err != nil {
-		reporter.ExitWithReport("kpm: failed to encode TOML:", err)
+	tomlData := data.MarshalTOML()
+
+	file, err = os.Create(filePath)
+
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	if _, err := io.WriteString(file, tomlData); err != nil {
 		return err
 	}
 	return nil
@@ -176,7 +184,6 @@ func loadFile(homePath string, fileName string, file interface{}) error {
 		return err
 	}
 	defer readFile.Close()
-
 	_, err = toml.NewDecoder(readFile).Decode(file)
 	if err != nil {
 		return err

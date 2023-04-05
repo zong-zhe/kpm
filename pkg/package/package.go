@@ -118,7 +118,7 @@ func (kclPkg KclPkg) AddDeps(opt *opt.AddOptions) error {
 // LockDepsVersion locks the dependencies of the current kcl package into kcl.mod.lock.
 func (kclPkg KclPkg) LockDepsVersion() error {
 	fullPath := filepath.Join(kclPkg.HomePath, modfile.MOD_LOCK_FILE)
-	return modfile.StoreToFile(fullPath, kclPkg.Dependencies)
+	return modfile.StoreToFile(fullPath, &kclPkg.Dependencies)
 }
 
 func getDeps(deps modfile.Dependencies, lockDeps modfile.Dependencies, localPath string) (*modfile.Dependencies, error) {
