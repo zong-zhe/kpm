@@ -1,0 +1,33 @@
+name: Build and Release
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.18
+
+    - name: Build kpm binary
+      run: |
+        go build -o kpm kpm.go
+        chmod +x kpm
+
+    - name: Zip kpm binary
+      run: zip kpm.zip kpm
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: kpm-v0.0.1-alpha.1-${{ matrix.os }}
+        path: ./kpm.zip
