@@ -201,3 +201,20 @@ func GetAbsKpmHome() (string, error) {
 
 	return kpmHome, nil
 }
+
+// CreateSymlink will create symbolic link named 'newName' for 'oldName',
+// and if the symbolic link already exists, it will be deleted and recreated.
+func CreateSymlink(oldName, newName string) error {
+	if DirExists(oldName) {
+		err := os.Remove(oldName)
+		if err != nil {
+			return errors.InternalBug
+		}
+	}
+
+	err := os.Symlink(oldName, newName)
+	if err != nil {
+		return err
+	}
+	return nil
+}

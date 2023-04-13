@@ -32,6 +32,7 @@ func NewRunCmd() *cli.Command {
 			&cli.BoolFlag{
 				Name:  "vendor",
 				Usage: "run in vendor mode",
+				Value: true,
 			},
 		},
 		Action: func(c *cli.Context) error {

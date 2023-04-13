@@ -63,6 +63,11 @@ func (kclPkg *KclPkg) LocalVendorPath() string {
 	return filepath.Join(kclPkg.HomePath, "vendor")
 }
 
+// Return the full vendor path.
+func (kclPkg *KclPkg) LocalVendorCachePath() string {
+	return filepath.Join(kclPkg.LocalVendorPath(), ".kpm")
+}
+
 // CompileWithEntryFile will call 'kclvm_cli' to compile the current kcl package and its dependent packages.
 func (kclPkg *KclPkg) CompileWithEntryFile(kpmHome string, kclvmCompiler *runner.CompileCmd) (string, error) {
 
@@ -325,8 +330,8 @@ func (kclPkg *KclPkg) PackageKclPkg(kpmHome string, tarPath string) error {
 // Vendor all dependencies to the 'vendor' in current pacakge.
 func (kclPkg *KclPkg) VendorDeps(cachePath string) error {
 	// Mkdir the dir "vendor".
-	vendorPath := kclPkg.LocalVendorPath()
-	err := os.MkdirAll(vendorPath, 0755)
+	vendorCachePath := kclPkg.LocalVendorCachePath()
+	err := os.MkdirAll(vendorCachePath, 0755)
 	if err != nil {
 		return errors.InternalBug
 	}
@@ -343,9 +348,11 @@ func (kclPkg *KclPkg) VendorDeps(cachePath string) error {
 		if len(d.Name) == 0 {
 			return errors.InvalidDependency
 		}
-		vendorFullPath := filepath.Join(vendorPath, d.FullName)
+		vendorFullPath := filepath.Join(vendorCachePath, d.FullName)
+		linkFullPath := filepath.Join(kclPkg.LocalVendorPath(), d.Name)
 		// If the package already exists in the 'vendor', do nothing.
-		if utils.DirExists(vendorFullPath) && check(d, vendorPath) {
+		if utils.DirExists(vendorFullPath) && check(d, vendorCachePath) {
+			utils.CreateSymlink(vendorFullPath, linkFullPath)
 			continue
 		} else {
 			// If not in the 'vendor', check the global cache.
@@ -353,6 +360,7 @@ func (kclPkg *KclPkg) VendorDeps(cachePath string) error {
 			if utils.DirExists(cacheFullPath) && check(d, cachePath) {
 				// If there is, copy it into the 'vendor' directory.
 				err := copy.Copy(cacheFullPath, vendorFullPath)
+				utils.CreateSymlink(vendorFullPath, linkFullPath)
 				if err != nil {
 					return errors.FailedToVendorDependency
 				}
