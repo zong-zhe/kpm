@@ -61,7 +61,9 @@ func TestHashDir(t *testing.T) {
 	}
 
 	_ = CreateFileIfNotExist(tp.FilePath, tp.TestStore)
-	assert.Equal(t, HashDir(filepath.Dir(tp.FilePath)), "n4bQgYhMfWWaL+qgxVrQFaO/TxsrC4Is0V1sFbDwCgg=")
+	res, err := HashDir(filepath.Dir(tp.FilePath))
+	assert.Equal(t, err, nil)
+	assert.Equal(t, res, "n4bQgYhMfWWaL+qgxVrQFaO/TxsrC4Is0V1sFbDwCgg=")
 }
 
 func TestTarDir(t *testing.T) {
