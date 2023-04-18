@@ -10,6 +10,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 	"kusionstack.io/kpm/pkg/errors"
+	"kusionstack.io/kpm/pkg/oci"
 	"kusionstack.io/kpm/pkg/opt"
 	pkg "kusionstack.io/kpm/pkg/package"
 	"kusionstack.io/kpm/pkg/reporter"
@@ -25,10 +26,15 @@ func NewRunCmd() *cli.Command {
 		Usage:  "compile kcl package.",
 		Flags: []cli.Flag{
 			// The kcl package tar executed.
-			&cli.StringFlag{
-				Name:  "tar",
-				Usage: "The kcl package tar will be executed",
-			},
+			// &cli.StringFlag{
+			// 	Name:  "tar",
+			// 	Usage: "The kcl package tar will be executed",
+			// },
+			// The kcl package oci url.
+			// &cli.StringFlag{
+			// 	Name:  "oci",
+			// 	Usage: "The kcl package tar from oci url will be executed",
+			// },
 			// The entry kcl file.
 			&cli.StringFlag{
 				Name:  "input",
@@ -43,60 +49,114 @@ func NewRunCmd() *cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
+			if c.NArg() == 0 {
+				reporter.Report("kpm: The package to be compiled must be specified.")
+				reporter.ExitWithReport("kpm: run 'kpm run help' for more information.")
+			}
+			pkgWillBeCompiled := c.Args().First()
 
-			tarPath := c.String("tar")
-			compileResult := ""
-
-			// If a tar package specified by "--tar" to run
-			if len(tarPath) != 0 {
-				absTarPath, err := absTarPath(tarPath)
+			err := runTar(pkgWillBeCompiled, c.String("input"), c.Bool("vendor"))
+			if err != nil {
+				err = runOci(pkgWillBeCompiled, c.String("input"), c.Bool("vendor"))
 				if err != nil {
-					return err
-				}
-				// Extract the tar package to a directory with the same name.
-				// e.g.
-				// 'xxx/xxx/xxx/test.tar' will be extracted to the directory 'xxx/xxx/xxx/test'.
-				destDir := strings.TrimSuffix(absTarPath, filepath.Ext(absTarPath))
-				err = utils.UnTarDir(absTarPath, destDir)
-				if err != nil {
-					return err
-				}
-
-				// The directory after extracting the tar package is taken as the root directory of the package,
-				// and kclvm is called to compile the kcl program under the 'destDir'.
-				// e.g.
-				// if the tar path is 'xxx/xxx/xxx/test.tar',
-				// the 'xxx/xxx/xxx/test' will be taken as the root path of the kcl package to compile.
-				compileResult, compileErr := runPkgInPath(destDir, c.String("input"), c.Bool("vendor"))
-				// After compiling the kcl program, clean up the contents extracted from the tar package.
-				if utils.DirExists(destDir) {
-					err = os.RemoveAll(destDir)
+					err = runPkg(c.String("input"), c.Bool("vendor"))
 					if err != nil {
-						return err
+						return nil
 					}
 				}
-				if compileErr != nil {
-					return compileErr
-				}
-				fmt.Print(compileResult)
-			} else {
-				// If no tar packages specified by "--tar" to run
-				// kpm will take the current directory ($PWD) as the root of the kcl package and compile.
-				pwd, err := os.Getwd()
-
-				if err != nil {
-					reporter.ExitWithReport("kpm: internal bug: failed to load working directory")
-				}
-
-				compileResult, err = runPkgInPath(pwd, c.String("input"), c.Bool("vendor"))
-				if err != nil {
-					return err
-				}
-				fmt.Print(compileResult)
 			}
 			return nil
 		},
 	}
+}
+
+// runTar will compile the kcl package from a kcl package tar.
+func runTar(tarPath, entryFile string, vendorMode bool) error {
+	absTarPath, err := absTarPath(tarPath)
+	if err != nil {
+		return err
+	}
+	// Extract the tar package to a directory with the same name.
+	// e.g.
+	// 'xxx/xxx/xxx/test.tar' will be extracted to the directory 'xxx/xxx/xxx/test'.
+	destDir := strings.TrimSuffix(absTarPath, filepath.Ext(absTarPath))
+	err = utils.UnTarDir(absTarPath, destDir)
+	if err != nil {
+		return err
+	}
+
+	// The directory after extracting the tar package is taken as the root directory of the package,
+	// and kclvm is called to compile the kcl program under the 'destDir'.
+	// e.g.
+	// if the tar path is 'xxx/xxx/xxx/test.tar',
+	// the 'xxx/xxx/xxx/test' will be taken as the root path of the kcl package to compile.
+	compileResult, compileErr := runPkgInPath(destDir, entryFile, vendorMode)
+	// After compiling the kcl program, clean up the contents extracted from the tar package.
+	if utils.DirExists(destDir) {
+		err = os.RemoveAll(destDir)
+		if err != nil {
+			return err
+		}
+	}
+	if compileErr != nil {
+		return compileErr
+	}
+	fmt.Print(compileResult)
+	return nil
+}
+
+// runOci will compile the kcl package from an OCI reference.
+func runOci(ociRef, entryFile string, vendorMode bool) error {
+	ociOpts, err := opt.ParseOciOptionFromString(ociRef)
+
+	if err != nil {
+		return err
+	}
+
+	pwd, err := os.Getwd()
+
+	if err != nil {
+		return errors.InternalBug
+	}
+
+	localPath := ociOpts.AddStoragePathSuffix(pwd)
+	localTarPath, err := oci.Pull(localPath, ociOpts.Reg, ociOpts.Repo, ociOpts.Tag)
+
+	if err != nil {
+		return err
+	}
+
+	err = runTar(localTarPath, entryFile, vendorMode)
+	if err != nil {
+		return err
+	}
+
+	if utils.DirExists(localPath) {
+		err = os.RemoveAll(localPath)
+		if err != nil {
+			return errors.InternalBug
+		}
+	}
+
+	return nil
+}
+
+// runPkg will compile current kcl package.
+func runPkg(entryFile string, vendorMode bool) error {
+	// If no tar packages specified by "--tar" to run
+	// kpm will take the current directory ($PWD) as the root of the kcl package and compile.
+	pwd, err := os.Getwd()
+
+	if err != nil {
+		reporter.ExitWithReport("kpm: internal bug: failed to load working directory")
+	}
+
+	compileResult, err := runPkgInPath(pwd, entryFile, vendorMode)
+	if err != nil {
+		return err
+	}
+	fmt.Print(compileResult)
+	return nil
 }
 
 // runPkgInPath will load the 'KclPkg' from path 'pkgPath'.
@@ -123,11 +183,6 @@ func runPkgInPath(pkgPath, entryFilePath string, vendorMode bool) (string, error
 	err = kclPkg.ValidateKpmHome(kpmHome)
 	if err != nil {
 		return "", err
-	}
-
-	if len(entryFilePath) == 0 {
-		reporter.Report("kpm: a compiler entry file need to specified by using '--input'")
-		reporter.ExitWithReport("kpm: run 'kpm run help' for more information.")
 	}
 
 	// Calculate the absolute path of entry file described by '--input'.
@@ -180,18 +235,14 @@ func absTarPath(tarPath string) (string, error) {
 // If the full path of 'pkgPath/inputPath' exists, it will be returned.
 // If not, getAbsInputPath returns 'entry file not found' error.
 func getAbsInputPath(pkgPath string, inputPath string) (string, error) {
-	absInput, err := filepath.Abs(inputPath)
+
+	absPath, err := filepath.Abs(filepath.Join(pkgPath, inputPath))
 	if err != nil {
-		return "", errors.InternalBug
+		return "", err
 	}
 
-	if utils.DirExists(absInput) {
-		return absInput, nil
-	}
-
-	absInput = filepath.Join(pkgPath, inputPath)
-	if utils.DirExists(absInput) {
-		return absInput, nil
+	if utils.DirExists(absPath) {
+		return absPath, nil
 	}
 
 	return "", errors.EntryFileNotFound

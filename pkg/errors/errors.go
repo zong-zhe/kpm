@@ -17,7 +17,10 @@ var InvalidInitOptions = errors.New("kpm: invalid 'kpm init' argument, you must 
 // Invalid 'kpm add'
 var InvalidAddOptionsWithoutRegistry = errors.New("kpm: invalid 'kpm add' argument, you must provide a registry url for the package.")
 var InvalidAddOptionsInvalidGitUrl = errors.New("kpm: invalid 'kpm add' argument, you must provide a Git Url for the package.")
-var InvalidAddOptionsInvalidGitTag = errors.New("kpm: invalid 'kpm add' argument, you must provide a Git Tag for the package.")
+var InvalidAddOptionsInvalidTag = errors.New("kpm: invalid 'kpm add' argument, you must provide a Tag for the package.")
+
+var InvalidAddOptionsInvalidOciReg = errors.New("kpm: invalid 'kpm add' argument, you must provide a Reg for the package.")
+var InvalidAddOptionsInvalidOciRepo = errors.New("kpm: invalid 'kpm add' argument, you must provide a Repo for the package.")
 
 // Invalid 'kpm run'
 var InvalidRunOptionsWithoutEntryFiles = errors.New("kpm: invalid 'kpm run' argument, you must provide an entry file.")
@@ -29,3 +32,7 @@ var InvalidKclPacakgeTar = errors.New("kpm: the '--tar' path is an invalid *.tar
 
 // Invalid KPM_HOME
 var InvalidKpmHomeInCurrentPkg = errors.New("kpm: environment variable KPM_HOME cannot be set to the same path as the current KCL package.")
+
+// Invalid OCI
+var InvalidOciRef = errors.New("kpm: invalid oci reference.")
+var FailedPullFromOci = errors.New("kpm: failed to pull kcl package tar from oci.")
