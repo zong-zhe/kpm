@@ -13,11 +13,13 @@ import (
 	"github.com/moby/term"
 	"github.com/urfave/cli/v2"
 	"kusionstack.io/kpm/pkg/reporter"
+	"kusionstack.io/kpm/pkg/settings"
 	"oras.land/oras-go/pkg/auth"
+	dockerauth "oras.land/oras-go/pkg/auth/docker"
 )
 
 // NewRegistryCmd new a Command for `kpm registry`.
-func NewRegCmd() *cli.Command {
+func NewRegCmd(settings *settings.Settings) *cli.Command {
 	return &cli.Command{
 		Hidden: false,
 		Name:   "registry",
@@ -54,7 +56,13 @@ func NewRegCmd() *cli.Command {
 						return err
 					}
 
-					err = login("ghcr.io", username, password)
+					if c.NArg() == 0 {
+						reporter.Report("kpm: registry must be specified.")
+						reporter.ExitWithReport("kpm: run 'kpm registry help' for more information.")
+					}
+					registry := c.Args().First()
+
+					err = login(registry, username, password, settings)
 					if err != nil {
 						return err
 					}
@@ -66,16 +74,26 @@ func NewRegCmd() *cli.Command {
 	}
 }
 
-func login(hostname, username, password string) error {
-	authorizerLoginOpts := []auth.LoginOption{
-		auth.WithLoginHostname(hostname),
-		auth.WithLoginUsername(username),
-		auth.WithLoginSecret(password),
-	}
+func login(hostname, username, password string, setting *settings.Settings) error {
 
-	if err := client.LoginWithOpts(authorizerLoginOpts...); err != nil {
+	authClient, err := dockerauth.NewClientWithDockerFallback(setting.CredentialsFile)
+
+	if err != nil {
 		return err
 	}
+
+	err = authClient.LoginWithOpts(
+		[]auth.LoginOption{
+			auth.WithLoginHostname(hostname),
+			auth.WithLoginUsername(username),
+			auth.WithLoginSecret(password),
+		}...,
+	)
+
+	if err != nil {
+		return err
+	}
+
 	reporter.Report("Login Succeeded")
 	return nil
 }

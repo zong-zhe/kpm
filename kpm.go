@@ -8,10 +8,12 @@ import (
 	"github.com/urfave/cli/v2"
 	"kusionstack.io/kpm/pkg/cmd"
 	"kusionstack.io/kpm/pkg/reporter"
+	"kusionstack.io/kpm/pkg/settings"
 )
 
 func main() {
 	reporter.InitReporter()
+	setting := settings.Init()
 	app := cli.NewApp()
 	app.Name = "kpm"
 	app.Usage = "kpm is a kcl package manager"
@@ -22,7 +24,7 @@ func main() {
 		cmd.NewAddCmd(),
 		cmd.NewPkgCmd(),
 		cmd.NewRunCmd(),
-		cmd.NewRegCmd(),
+		cmd.NewRegCmd(&setting),
 	}
 	err := app.Run(os.Args)
 	if err != nil {
