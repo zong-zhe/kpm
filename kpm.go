@@ -13,7 +13,10 @@ import (
 
 func main() {
 	reporter.InitReporter()
-	setting := settings.Init()
+	setting, err := settings.Init()
+	if err != nil {
+		reporter.Fatal(err)
+	}
 	app := cli.NewApp()
 	app.Name = "kpm"
 	app.Usage = "kpm is a kcl package manager"
@@ -24,9 +27,9 @@ func main() {
 		cmd.NewAddCmd(),
 		cmd.NewPkgCmd(),
 		cmd.NewRunCmd(),
-		cmd.NewRegCmd(&setting),
+		cmd.NewRegCmd(setting),
 	}
-	err := app.Run(os.Args)
+	err = app.Run(os.Args)
 	if err != nil {
 		reporter.Fatal(err)
 	}

@@ -4,6 +4,7 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -50,8 +51,7 @@ func NewRegCmd(settings *settings.Settings) *cli.Command {
 				},
 				Action: func(c *cli.Context) error {
 					username, password, err := getUsernamePassword(c.String("username"), c.String("password"), c.Bool("password-stdin"))
-					fmt.Printf("username: %v\n", username)
-					fmt.Printf("password: %v\n", password)
+
 					if err != nil {
 						return err
 					}
@@ -63,6 +63,25 @@ func NewRegCmd(settings *settings.Settings) *cli.Command {
 					registry := c.Args().First()
 
 					err = login(registry, username, password, settings)
+					if err != nil {
+						return err
+					}
+
+					return nil
+				},
+			},
+			{
+				Name:  "logout",
+				Usage: "logout from a registry",
+				Action: func(c *cli.Context) error {
+
+					if c.NArg() == 0 {
+						reporter.Report("kpm: registry must be specified.")
+						reporter.ExitWithReport("kpm: run 'kpm registry help' for more information.")
+					}
+					registry := c.Args().First()
+
+					err := logout(registry, settings)
 					if err != nil {
 						return err
 					}
@@ -95,6 +114,22 @@ func login(hostname, username, password string, setting *settings.Settings) erro
 	}
 
 	reporter.Report("Login Succeeded")
+	return nil
+}
+
+func logout(hostname string, setting *settings.Settings) error {
+	authClient, err := dockerauth.NewClientWithDockerFallback(setting.CredentialsFile)
+
+	if err != nil {
+		return err
+	}
+
+	err = authClient.Logout(context.Background(), hostname)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
