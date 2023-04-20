@@ -22,6 +22,7 @@ func main() {
 		cmd.NewAddCmd(),
 		cmd.NewPkgCmd(),
 		cmd.NewRunCmd(),
+		cmd.NewRegCmd(),
 	}
 	err := app.Run(os.Args)
 	if err != nil {
