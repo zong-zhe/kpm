@@ -25,20 +25,14 @@ func NewRunCmd() *cli.Command {
 		Name:   "run",
 		Usage:  "compile kcl package.",
 		Flags: []cli.Flag{
-			// The kcl package tar executed.
-			// &cli.StringFlag{
-			// 	Name:  "tar",
-			// 	Usage: "The kcl package tar will be executed",
-			// },
-			// The kcl package oci url.
-			// &cli.StringFlag{
-			// 	Name:  "oci",
-			// 	Usage: "The kcl package tar from oci url will be executed",
-			// },
 			// The entry kcl file.
 			&cli.StringFlag{
 				Name:  "input",
 				Usage: "a kcl file as the compile entry file",
+			},
+			&cli.StringFlag{
+				Name:  "tag",
+				Usage: "the tag for oci repo",
 			},
 			// '--vendor' will trigger the vendor mode
 			// In the vendor mode, the package search path is the subdirectory 'vendor' in current package.
@@ -55,16 +49,23 @@ func NewRunCmd() *cli.Command {
 			}
 			pkgWillBeCompiled := c.Args().First()
 
+			// 'kpm run <package source>' compile the kcl package from the <package source>.
 			err := runTar(pkgWillBeCompiled, c.String("input"), c.Bool("vendor"))
 			if err != nil {
-				err = runOci(pkgWillBeCompiled, c.String("input"), c.Bool("vendor"))
+				err = runOci(pkgWillBeCompiled, c.String("tag"), c.String("input"), c.Bool("vendor"))
 				if err != nil {
-					err = runPkg(c.String("input"), c.Bool("vendor"))
-					if err != nil {
-						return nil
-					}
+					return err
 				}
 			}
+
+			// 'kpm run' compile the current package undor '$pwd'.
+			if len(pkgWillBeCompiled) == 0 {
+				err = runPkg(c.String("input"), c.Bool("vendor"))
+				if err != nil {
+					return nil
+				}
+			}
+
 			return nil
 		},
 	}
@@ -91,13 +92,7 @@ func runTar(tarPath, entryFile string, vendorMode bool) error {
 	// if the tar path is 'xxx/xxx/xxx/test.tar',
 	// the 'xxx/xxx/xxx/test' will be taken as the root path of the kcl package to compile.
 	compileResult, compileErr := runPkgInPath(destDir, entryFile, vendorMode)
-	// After compiling the kcl program, clean up the contents extracted from the tar package.
-	if utils.DirExists(destDir) {
-		err = os.RemoveAll(destDir)
-		if err != nil {
-			return err
-		}
-	}
+
 	if compileErr != nil {
 		return compileErr
 	}
@@ -106,8 +101,8 @@ func runTar(tarPath, entryFile string, vendorMode bool) error {
 }
 
 // runOci will compile the kcl package from an OCI reference.
-func runOci(ociRef, entryFile string, vendorMode bool) error {
-	ociOpts, err := opt.ParseOciOptionFromString(ociRef)
+func runOci(ociRef, version, entryFile string, vendorMode bool) error {
+	ociOpts, err := opt.ParseOciOptionFromString(ociRef, version)
 
 	if err != nil {
 		return err

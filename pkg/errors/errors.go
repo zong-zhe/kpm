@@ -36,3 +36,5 @@ var InvalidKpmHomeInCurrentPkg = errors.New("kpm: environment variable KPM_HOME 
 // Invalid OCI
 var InvalidOciRef = errors.New("kpm: invalid oci reference.")
 var FailedPullFromOci = errors.New("kpm: failed to pull kcl package tar from oci.")
+var NotOciUrl = errors.New("kpm: url is not an oci url.")
+var IsOciRef = errors.New("kpm: oci ref is not an url.")

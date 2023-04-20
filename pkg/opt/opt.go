@@ -4,6 +4,7 @@ package opt
 
 import (
 	"fmt"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -95,8 +96,34 @@ const OCI_SEPARATOR = ":"
 // ParseOciOptionFromString will parser '<repo_name>:<repo_tag>' into an 'OciOptions' with an OCI registry.
 // the default OCI registry is 'docker.io'.
 // if the 'ociUrl' is only '<repo_name>', ParseOciOptionFromString will take 'latest' as the default tag.
-func ParseOciOptionFromString(ociUrl string) (*OciOptions, error) {
-	oci_address := strings.Split(ociUrl, OCI_SEPARATOR)
+func ParseOciOptionFromString(oci string, tag string) (*OciOptions, error) {
+	ociOpt, err := ParseOciUrl(oci)
+	if err == errors.IsOciRef {
+		ociOpt, err = ParseOciRef(oci)
+		if err != nil {
+			return nil, err
+		}
+		if len(tag) != 0 {
+			reporter.Report("kpm: kpm get version from oci reference '<repo_name>:<repo_tag>'")
+			reporter.Report("kpm: arg '--tag' is invalid for oci reference")
+		}
+	} else if err == errors.NotOciUrl {
+		return nil, err
+	} else {
+		if len(tag) == 0 {
+			reporter.Report("kpm: using default tag: latest")
+			ociOpt.Tag = GetDefaultOCITag()
+		} else {
+			ociOpt.Tag = tag
+		}
+	}
+	return ociOpt, nil
+}
+
+// ParseOciRef will parse 'repoName:repoTag' into OciOptions,
+// with default registry host 'docker.io'.
+func ParseOciRef(ociRef string) (*OciOptions, error) {
+	oci_address := strings.Split(ociRef, OCI_SEPARATOR)
 	if len(oci_address) == 1 {
 		reporter.Report("kpm: using default tag: latest")
 		return &OciOptions{
@@ -113,6 +140,25 @@ func ParseOciOptionFromString(ociUrl string) (*OciOptions, error) {
 	} else {
 		return nil, errors.InvalidOciRef
 	}
+}
+
+// ParseOciUrl will parse 'oci://hostName/repoName:repoTag' into OciOptions without tag.
+func ParseOciUrl(ociUrl string) (*OciOptions, error) {
+	u, err := url.Parse(ociUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(u.Scheme) != 0 && u.Scheme != "oci" {
+		return nil, errors.NotOciUrl
+	} else if len(u.Scheme) == 0 {
+		return nil, errors.IsOciRef
+	}
+
+	return &OciOptions{
+		Reg:  u.Host,
+		Repo: u.Path,
+	}, nil
 }
 
 // AddStoragePathSuffix will take 'Registry/Repo/Tag' as a path suffix.
