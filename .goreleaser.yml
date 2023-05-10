@@ -4,8 +4,8 @@ before:
   hooks:
     # You may remove this if you don't use go modules.
     - go mod tidy
-    - bash -c "VERSION=$(git describe --tags)"
-    - bash -c "LDFLAGS=\"-X main.version=$VERSION\""
+    - export VERSION=$(git describe --tags)
+    - export LDFLAGS="-X main.version=$VERSION"
 builds:
   - id: kpm
     main: ./kpm.go
