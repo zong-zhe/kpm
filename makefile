@@ -1,5 +1,6 @@
 VERSION := $(shell git describe --tags)
 LDFLAGS := -X main.version=$(VERSION)
+go build -ldflags "$(LDFLAGS)" kpm.go
 
 build:
 	go build -ldflags "$(LDFLAGS)" kpm.go
