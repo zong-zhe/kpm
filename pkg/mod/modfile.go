@@ -8,9 +8,12 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
+	"kusionstack.io/kpm/pkg/errors"
 	"kusionstack.io/kpm/pkg/git"
+	"kusionstack.io/kpm/pkg/oci"
 	"kusionstack.io/kpm/pkg/opt"
 	"kusionstack.io/kpm/pkg/reporter"
+	"kusionstack.io/kpm/pkg/settings"
 	"kusionstack.io/kpm/pkg/utils"
 )
 
@@ -55,26 +58,35 @@ type Dependency struct {
 }
 
 // Download will download the kcl package to localPath from registory.
-func (dep *Dependency) Download(localPath string) (*Dependency, error) {
+func (dep *Dependency) Download(localPath string, settings *settings.Settings) (*Dependency, error) {
 	if dep.Source.Git != nil {
 		_, err := dep.Source.Git.Download(localPath)
 		if err != nil {
 			return nil, err
 		}
+	}
 
-		dep.Sum, err = utils.HashDir(localPath)
-		if err != nil {
-			return nil, err
-		}
-		dep.LocalFullPath = localPath
-		// Creating symbolic links in a global cache is not an optimal solution.
-		// This allows kclvm to locate the package by default.
-		// This feature is unstable and will be removed soon.
-		err = utils.CreateSymlink(dep.LocalFullPath, filepath.Join(filepath.Dir(localPath), dep.Name))
+	if dep.Source.Oci != nil {
+		_, err := dep.Source.Oci.Download(localPath, settings)
 		if err != nil {
 			return nil, err
 		}
 	}
+
+	var err error
+	dep.Sum, err = utils.HashDir(localPath)
+	if err != nil {
+		return nil, err
+	}
+	dep.LocalFullPath = localPath
+	// Creating symbolic links in a global cache is not an optimal solution.
+	// This allows kclvm to locate the package by default.
+	// This feature is unstable and will be removed soon.
+	err = utils.CreateSymlink(dep.LocalFullPath, filepath.Join(filepath.Dir(localPath), dep.Name))
+	if err != nil {
+		return nil, err
+	}
+
 	return dep, nil
 }
 
@@ -90,9 +102,36 @@ func (dep *Git) Download(localPath string) (string, error) {
 	return localPath, err
 }
 
+func (dep *Oci) Download(localPath string, setting *settings.Settings) (string, error) {
+	err := oci.Pull(localPath, dep.Reg, dep.Repo, dep.Tag, setting)
+	if err != nil {
+		return "", err
+	}
+
+	matches, err := filepath.Glob(filepath.Join(localPath, "*.tar"))
+	if err != nil || len(matches) != 1 {
+		return "", errors.FailedPullFromOci
+	}
+
+	tarPath := matches[0]
+	err = utils.UnTarDir(tarPath, localPath)
+	if err != nil {
+		return "", err
+	}
+
+	return localPath, nil
+}
+
 // Source is the package source from registry.
 type Source struct {
 	*Git
+	*Oci
+}
+
+type Oci struct {
+	Reg  string `toml:"reg,omitempty"`
+	Repo string `toml:"repo,omitempty"`
+	Tag  string `toml:"tag,omitempty"`
 }
 
 // Git is the package source from git registry.
@@ -236,6 +275,22 @@ func ParseOpt(opt *opt.RegistryOptions) *Dependency {
 				Git: &gitSource,
 			},
 			Version: gitSource.Tag,
+		}
+	}
+	if opt.Oci != nil {
+		ociSource := Oci{
+			Reg:  opt.Oci.Reg,
+			Repo: filepath.Join(opt.Oci.Repo, opt.Oci.PkgName),
+			Tag:  opt.Git.Tag,
+		}
+
+		return &Dependency{
+			Name:     opt.Oci.PkgName,
+			FullName: opt.Oci.PkgName + "_" + opt.Oci.Tag,
+			Source: Source{
+				Oci: &ociSource,
+			},
+			Version: opt.Oci.Tag,
 		}
 	}
 	return nil

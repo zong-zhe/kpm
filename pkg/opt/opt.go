@@ -45,6 +45,7 @@ func (opts *AddOptions) Validate() error {
 
 type RegistryOptions struct {
 	Git *GitOptions
+	Oci *OciOptions
 }
 
 type GitOptions struct {
@@ -75,9 +76,10 @@ func GetDefaultOCITag() string {
 }
 
 type OciOptions struct {
-	Reg  string
-	Repo string
-	Tag  string
+	Reg     string
+	Repo    string
+	Tag     string
+	PkgName string
 }
 
 func (opts *OciOptions) Validate() error {

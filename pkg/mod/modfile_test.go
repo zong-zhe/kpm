@@ -87,7 +87,7 @@ func TestParseOpt(t *testing.T) {
 	assert.Equal(t, dep.Url, "test.git")
 	assert.Equal(t, dep.Branch, "test_branch")
 	assert.Equal(t, dep.Commit, "test_commit")
-	assert.Equal(t, dep.Tag, "test_tag")
+	assert.Equal(t, dep.Git.Tag, "test_tag")
 }
 
 func TestLoadModFileNotExist(t *testing.T) {

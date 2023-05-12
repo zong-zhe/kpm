@@ -28,7 +28,7 @@ func TestMarshalTOML(t *testing.T) {
 		Name:     "MyKcl1",
 		FullName: "MyKcl1_v0.0.2",
 		Source: Source{
-			&Git{
+			Git: &Git{
 				Url: "https://github.com/test/MyKcl1.git",
 				Tag: "v0.0.2",
 			},
@@ -69,7 +69,7 @@ func TestMarshalLockToml(t *testing.T) {
 		Version:  "v0.0.2",
 		Sum:      "hjkasdahjksdasdhjk",
 		Source: Source{
-			&Git{
+			Git: &Git{
 				Url: "https://github.com/test/MyKcl1.git",
 				Tag: "v0.0.2",
 			},

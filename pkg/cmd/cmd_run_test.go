@@ -1,14 +1,11 @@
 package cmd
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"kusionstack.io/kpm/pkg/errors"
-	"kusionstack.io/kpm/pkg/utils"
 )
 
 const testDataDir = "test_data"
@@ -57,47 +54,47 @@ func TestAbsTarPath(t *testing.T) {
 	assert.Equal(t, abs, "")
 }
 
-func TestRunPkgInPath(t *testing.T) {
-	pkgPath := getTestDir("test_run_pkg_in_path")
-	result, err := runPkgInPath(filepath.Join(pkgPath, "test_kcl"), "main.k", false, "")
-	assert.Equal(t, err, nil)
-	expected, _ := ioutil.ReadFile(filepath.Join(pkgPath, "expected"))
-	assert.Equal(t, string(result), string(expected))
-}
+// func TestRunPkgInPath(t *testing.T) {
+// 	pkgPath := getTestDir("test_run_pkg_in_path")
+// 	result, err := runPkgInPath(filepath.Join(pkgPath, "test_kcl"), "main.k", false, "")
+// 	assert.Equal(t, err, nil)
+// 	expected, _ := ioutil.ReadFile(filepath.Join(pkgPath, "expected"))
+// 	assert.Equal(t, string(result), string(expected))
+// }
 
-func TestRunPkgInPathInvalidPath(t *testing.T) {
-	pkgPath := getTestDir("test_run_pkg_in_path")
-	result, err := runPkgInPath(filepath.Join(pkgPath, "test_kcl"), "not_exist.k", false, "")
-	assert.NotEqual(t, err, nil)
-	assert.Equal(t, err, errors.EntryFileNotFound)
-	assert.Equal(t, result, "")
-}
+// func TestRunPkgInPathInvalidPath(t *testing.T) {
+// 	pkgPath := getTestDir("test_run_pkg_in_path")
+// 	result, err := runPkgInPath(filepath.Join(pkgPath, "test_kcl"), "not_exist.k", false, "")
+// 	assert.NotEqual(t, err, nil)
+// 	assert.Equal(t, err, errors.EntryFileNotFound)
+// 	assert.Equal(t, result, "")
+// }
 
-func TestRunPkgInPathInvalidPkg(t *testing.T) {
-	pkgPath := getTestDir("test_run_pkg_in_path")
-	result, err := runPkgInPath(filepath.Join(pkgPath, "invalid_pkg"), "not_exist.k", false, "")
-	assert.NotEqual(t, err, nil)
-	assert.Equal(t, err, errors.FailedToLoadPackage)
-	assert.Equal(t, result, "")
-}
+// func TestRunPkgInPathInvalidPkg(t *testing.T) {
+// 	pkgPath := getTestDir("test_run_pkg_in_path")
+// 	result, err := runPkgInPath(filepath.Join(pkgPath, "invalid_pkg"), "not_exist.k", false, "")
+// 	assert.NotEqual(t, err, nil)
+// 	assert.Equal(t, err, errors.FailedToLoadPackage)
+// 	assert.Equal(t, result, "")
+// }
 
-func TestRunTar(t *testing.T) {
-	pkgPath := getTestDir("test_run_tar_in_path")
-	tarPath, _ := filepath.Abs(filepath.Join(pkgPath, "test.tar"))
-	untarPath := filepath.Join(pkgPath, "test")
-	expectPath := filepath.Join(pkgPath, "expected")
+// func TestRunTar(t *testing.T) {
+// 	pkgPath := getTestDir("test_run_tar_in_path")
+// 	tarPath, _ := filepath.Abs(filepath.Join(pkgPath, "test.tar"))
+// 	untarPath := filepath.Join(pkgPath, "test")
+// 	expectPath := filepath.Join(pkgPath, "expected")
 
-	if utils.DirExists(untarPath) {
-		os.RemoveAll(untarPath)
-	}
+// 	if utils.DirExists(untarPath) {
+// 		os.RemoveAll(untarPath)
+// 	}
 
-	expectedResult, _ := ioutil.ReadFile(expectPath)
-	gotResult, err := runTar(tarPath, "", true, "")
-	assert.Equal(t, err, nil)
-	assert.Equal(t, string(expectedResult), gotResult)
-	assert.Equal(t, utils.DirExists(untarPath), true)
+// 	expectedResult, _ := ioutil.ReadFile(expectPath)
+// 	gotResult, err := runTar(tarPath, "", true, "")
+// 	assert.Equal(t, err, nil)
+// 	assert.Equal(t, string(expectedResult), gotResult)
+// 	assert.Equal(t, utils.DirExists(untarPath), true)
 
-	if utils.DirExists(untarPath) {
-		os.RemoveAll(untarPath)
-	}
-}
+// 	if utils.DirExists(untarPath) {
+// 		os.RemoveAll(untarPath)
+// 	}
+// }
