@@ -107,7 +107,7 @@ func NewAddCmd(settings *settings.Settings) *cli.Command {
 			if err != nil {
 				return err
 			}
-			reporter.Report("kpm: add dependency '", *gitUrl, "'", "with tag '", *gitTag, "' successfully.")
+			// reporter.Report("kpm: add dependency '", *gitUrl, "'", "with tag '", *gitTag, "' successfully.")
 			return nil
 		},
 	}

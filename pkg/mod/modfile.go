@@ -281,7 +281,7 @@ func ParseOpt(opt *opt.RegistryOptions) *Dependency {
 		ociSource := Oci{
 			Reg:  opt.Oci.Reg,
 			Repo: filepath.Join(opt.Oci.Repo, opt.Oci.PkgName),
-			Tag:  opt.Git.Tag,
+			Tag:  opt.Oci.Tag,
 		}
 
 		return &Dependency{
