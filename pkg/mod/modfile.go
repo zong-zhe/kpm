@@ -131,7 +131,7 @@ type Source struct {
 type Oci struct {
 	Reg  string `toml:"reg,omitempty"`
 	Repo string `toml:"repo,omitempty"`
-	Tag  string `toml:"tag,omitempty"`
+	Tag  string `toml:"oci_tag,omitempty"`
 }
 
 // Git is the package source from git registry.
@@ -139,7 +139,7 @@ type Git struct {
 	Url    string `toml:"url,omitempty"`
 	Branch string `toml:"branch,omitempty"`
 	Commit string `toml:"commit,omitempty"`
-	Tag    string `toml:"tag,omitempty"`
+	Tag    string `toml:"git_tag,omitempty"`
 }
 
 // ModFileExists returns whether a 'kcl.mod' file exists in the path.
