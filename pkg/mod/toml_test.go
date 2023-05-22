@@ -35,6 +35,18 @@ func TestMarshalTOML(t *testing.T) {
 		},
 	}
 
+	ociDep := Dependency{
+		Name:     "MyOciKcl1",
+		FullName: "MyOciKcl1_0.0.1",
+		Version:  "0.0.1",
+		Source: Source{
+			Oci: &Oci{
+				Tag: "0.0.1",
+			},
+		},
+	}
+
+	modfile.Dependencies.Deps["MyOciKcl1_0.0.1"] = ociDep
 	modfile.Dependencies.Deps["MyKcl1_v0.0.2"] = dep
 
 	expected_data, _ := ioutil.ReadFile(filepath.Join(getTestDir(testTomlDir), "expected.toml"))
@@ -53,13 +65,19 @@ func TestUnMarshalTOML(t *testing.T) {
 	assert.Equal(t, modfile.Pkg.Name, "MyKcl")
 	assert.Equal(t, modfile.Pkg.Edition, "v0.0.1")
 	assert.Equal(t, modfile.Pkg.Version, "v0.0.1")
-	assert.Equal(t, len(modfile.Dependencies.Deps), 1)
+	assert.Equal(t, len(modfile.Dependencies.Deps), 2)
 	assert.NotEqual(t, modfile.Dependencies.Deps["MyKcl1"], nil)
 	assert.Equal(t, modfile.Dependencies.Deps["MyKcl1"].Name, "MyKcl1")
 	assert.Equal(t, modfile.Dependencies.Deps["MyKcl1"].FullName, "MyKcl1_v0.0.2")
 	assert.NotEqual(t, modfile.Dependencies.Deps["MyKcl1"].Source.Git, nil)
 	assert.Equal(t, modfile.Dependencies.Deps["MyKcl1"].Source.Git.Url, "https://github.com/test/MyKcl1.git")
 	assert.Equal(t, modfile.Dependencies.Deps["MyKcl1"].Source.Git.Tag, "v0.0.2")
+
+	assert.NotEqual(t, modfile.Dependencies.Deps["MyOciKcl1"], nil)
+	assert.Equal(t, modfile.Dependencies.Deps["MyOciKcl1"].Name, "MyOciKcl1")
+	assert.Equal(t, modfile.Dependencies.Deps["MyOciKcl1"].FullName, "MyOciKcl1_0.0.1")
+	assert.NotEqual(t, modfile.Dependencies.Deps["MyOciKcl1"].Source.Oci, nil)
+	assert.Equal(t, modfile.Dependencies.Deps["MyOciKcl1"].Source.Oci.Tag, "0.0.1")
 }
 
 func TestMarshalLockToml(t *testing.T) {
@@ -76,11 +94,26 @@ func TestMarshalLockToml(t *testing.T) {
 		},
 	}
 
+	ociDep := Dependency{
+		Name:     "MyOciKcl1",
+		FullName: "MyOciKcl1_0.0.1",
+		Version:  "0.0.1",
+		Sum:      "hjkasdahjksdasdhjk",
+		Source: Source{
+			Oci: &Oci{
+				Reg:  "test_reg",
+				Repo: "test_repo",
+				Tag:  "0.0.1",
+			},
+		},
+	}
+
 	deps := Dependencies{
 		make(map[string]Dependency),
 	}
 
 	deps.Deps[dep.Name] = dep
+	deps.Deps[ociDep.Name] = ociDep
 	tomlStr, _ := deps.MarshalLockTOML()
 	expected_data, _ := ioutil.ReadFile(filepath.Join(getTestDir(testTomlDir), "expected_lock.toml"))
 	expected_toml := string(expected_data)
