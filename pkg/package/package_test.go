@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -11,6 +12,7 @@ import (
 	"kusionstack.io/kpm/pkg/errors"
 	modfile "kusionstack.io/kpm/pkg/mod"
 	"kusionstack.io/kpm/pkg/opt"
+	"kusionstack.io/kpm/pkg/settings"
 	"kusionstack.io/kpm/pkg/utils"
 )
 
@@ -420,42 +422,42 @@ func TestLoadKclPkgFromTar(t *testing.T) {
 	assert.Equal(t, err, nil)
 }
 
-// func TestResolveMetadataInJsonStr(t *testing.T) {
-// 	testDir := getTestDir("resolve_metadata")
-// 	pkg, err := LoadKclPkg(testDir)
-// 	assert.Equal(t, err, nil)
+func TestResolveMetadataInJsonStr(t *testing.T) {
+	testDir := getTestDir("resolve_metadata")
+	pkg, err := LoadKclPkg(testDir)
+	assert.Equal(t, err, nil)
 
-// 	globalPkgPath, _ := env.GetAbsPkgPath()
-// 	res, err := pkg.ResolveDepsMetadataInJsonStr(globalPkgPath, true)
-// 	assert.Equal(t, err, nil)
+	globalPkgPath, _ := env.GetAbsPkgPath()
+	res, err := pkg.ResolveDepsMetadataInJsonStr(globalPkgPath, true, &settings.Settings{})
+	assert.Equal(t, err, nil)
 
-// 	expectedStr := fmt.Sprintf("{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"%s\"}}}", filepath.Join(globalPkgPath, "konfig_v0.0.1"))
-// 	assert.Equal(t, res, expectedStr)
+	expectedStr := fmt.Sprintf("{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"%s\"}}}", filepath.Join(globalPkgPath, "konfig_v0.0.1"))
+	assert.Equal(t, res, expectedStr)
 
-// 	vendorDir := filepath.Join(testDir, "vendor")
-// 	if utils.DirExists(vendorDir) {
-// 		err = os.RemoveAll(vendorDir)
-// 		assert.Equal(t, err, nil)
-// 	}
-// 	pkg.SetVendorMode(true)
-// 	res, err = pkg.ResolveDepsMetadataInJsonStr(globalPkgPath, true)
-// 	assert.Equal(t, err, nil)
-// 	assert.Equal(t, utils.DirExists(vendorDir), true)
-// 	assert.Equal(t, utils.DirExists(filepath.Join(vendorDir, "konfig_v0.0.1")), true)
+	vendorDir := filepath.Join(testDir, "vendor")
+	if utils.DirExists(vendorDir) {
+		err = os.RemoveAll(vendorDir)
+		assert.Equal(t, err, nil)
+	}
+	pkg.SetVendorMode(true)
+	res, err = pkg.ResolveDepsMetadataInJsonStr(globalPkgPath, true, &settings.Settings{})
+	assert.Equal(t, err, nil)
+	assert.Equal(t, utils.DirExists(vendorDir), true)
+	assert.Equal(t, utils.DirExists(filepath.Join(vendorDir, "konfig_v0.0.1")), true)
 
-// 	expectedStr = fmt.Sprintf("{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"%s\"}}}", filepath.Join(vendorDir, "konfig_v0.0.1"))
-// 	assert.Equal(t, res, expectedStr)
-// 	if utils.DirExists(vendorDir) {
-// 		err = os.RemoveAll(vendorDir)
-// 		assert.Equal(t, err, nil)
-// 	}
+	expectedStr = fmt.Sprintf("{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"%s\"}}}", filepath.Join(vendorDir, "konfig_v0.0.1"))
+	assert.Equal(t, res, expectedStr)
+	if utils.DirExists(vendorDir) {
+		err = os.RemoveAll(vendorDir)
+		assert.Equal(t, err, nil)
+	}
 
-// 	pkg, err = LoadKclPkg(testDir)
-// 	assert.Equal(t, err, nil)
-// 	res, err = pkg.ResolveDepsMetadataInJsonStr("not_exist", false)
-// 	assert.Equal(t, err, nil)
-// 	assert.Equal(t, utils.DirExists(vendorDir), false)
-// 	assert.Equal(t, utils.DirExists(filepath.Join(vendorDir, "konfig_v0.0.1")), false)
-// 	expectedStr = "{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"\"}}}"
-// 	assert.Equal(t, res, expectedStr)
-// }
+	pkg, err = LoadKclPkg(testDir)
+	assert.Equal(t, err, nil)
+	res, err = pkg.ResolveDepsMetadataInJsonStr("not_exist", false, &settings.Settings{})
+	assert.Equal(t, err, nil)
+	assert.Equal(t, utils.DirExists(vendorDir), false)
+	assert.Equal(t, utils.DirExists(filepath.Join(vendorDir, "konfig_v0.0.1")), false)
+	expectedStr = "{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"\"}}}"
+	assert.Equal(t, res, expectedStr)
+}
