@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"kusionstack.io/kpm/pkg/env"
 	"kusionstack.io/kpm/pkg/utils"
 )
 
@@ -23,19 +24,20 @@ func getTestDir(subDir string) string {
 }
 
 func TestSettingInit(t *testing.T) {
-	home, _ := os.UserHomeDir()
+	kpmHome, err := env.GetAbsPkgPath()
+	assert.Equal(t, err, nil)
 	settings, err := Init()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, settings.CredentialsFile, filepath.Join(home, CONFIG_JSON_PATH))
+	assert.Equal(t, settings.CredentialsFile, filepath.Join(kpmHome, CONFIG_JSON_PATH))
 }
 
 func TestGetFullJsonPath(t *testing.T) {
 	path, err := GetFullJsonPath("test.json")
 	assert.Equal(t, err, nil)
 
-	userHome, err := os.UserHomeDir()
+	kpmHome, err := env.GetAbsPkgPath()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, path, filepath.Join(userHome, "test.json"))
+	assert.Equal(t, path, filepath.Join(kpmHome, "test.json"))
 }
 
 func TestDefaultKpmConf(t *testing.T) {
@@ -54,7 +56,10 @@ func TestLoadOrCreateDefaultKpmJson(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, utils.DirExists(kpmPath), false)
 
-	loadOrCreateDefaultKpmJson()
+	kpmConf, err := loadOrCreateDefaultKpmJson()
+	assert.Equal(t, kpmConf.DefaultOciRegistry, "ghcr.io")
+	assert.Equal(t, kpmConf.DefaultOciRepo, "KusionStack")
+	assert.Equal(t, err, nil)
 	assert.Equal(t, utils.DirExists(kpmPath), true)
 
 	expectedJson, err := ioutil.ReadFile(testDir)
