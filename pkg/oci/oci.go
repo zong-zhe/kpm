@@ -95,7 +95,7 @@ func Pull(localPath, hostName, repoName, tag string, settings *settings.Settings
 	}
 
 	// 3. Copy from the remote repository to the file store
-	if !strings.HasPrefix(tag, OCI_VERSION_PREFFIX) {
+	if !strings.HasPrefix(tag, OCI_VERSION_PREFFIX) && tag != "latest" {
 		tag = OCI_VERSION_PREFFIX + tag
 	}
 

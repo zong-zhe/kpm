@@ -139,6 +139,10 @@ const DEFAULT_REPO = "zong-zhe"
 func parseOciRegistryOptions(c *cli.Context) (*opt.RegistryOptions, error) {
 	ociPkgRef := c.Args().First()
 	name, version := parseNameAndVersion(ociPkgRef)
+	if len(version) == 0 {
+		reporter.Report("kpm: default version 'latest' of the package will be downloaded.")
+		version = opt.DEFAULT_OCI_TAG
+	}
 
 	return &opt.RegistryOptions{
 		Oci: &opt.OciOptions{
