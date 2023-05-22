@@ -64,9 +64,6 @@ func TestHashDir(t *testing.T) {
 	res, err := HashDir(filepath.Dir(tp.FilePath))
 	assert.Equal(t, err, nil)
 	assert.Equal(t, res, "n4bQgYhMfWWaL+qgxVrQFaO/TxsrC4Is0V1sFbDwCgg=")
-
-	res, _ = HashDir("/Users/zongz/Workspace/kusionstack/KCLVM/kclvm/tools/src/LSP/src/test_data/test_vendor/kcl4_v0.0.1")
-	assert.Equal(t, res, "")
 }
 
 func TestTarDir(t *testing.T) {

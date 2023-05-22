@@ -89,7 +89,7 @@ func (source *Source) MarshalTOML() string {
 	}
 
 	if source.Oci != nil {
-		ociToml := source.Oci.MarshalToml()
+		ociToml := source.Oci.MarshalTOML()
 		if len(ociToml) != 0 {
 			sb.WriteString(ociToml)
 		}
@@ -114,7 +114,7 @@ func (git *Git) MarshalTOML() string {
 	return sb.String()
 }
 
-func (oci *Oci) MarshalToml() string {
+func (oci *Oci) MarshalTOML() string {
 	var sb strings.Builder
 	if len(oci.Tag) != 0 {
 		sb.WriteString(fmt.Sprintf(`"%s"`, oci.Tag))

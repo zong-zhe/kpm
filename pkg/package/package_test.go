@@ -75,7 +75,7 @@ func TestInitEmptyPkg(t *testing.T) {
 	assert.Equal(t, testKclPkg.modFile.Pkg.Edition, "0.0.1")
 }
 
-func TestUpdataKclModAndLock(t *testing.T) {
+func TestUpdateKclModAndLock(t *testing.T) {
 	testDir := initTestDir("test_data_add_deps")
 	// Init an empty package
 	kclPkg := NewKclPkg(&opt.InitOptions{
@@ -98,6 +98,23 @@ func TestUpdataKclModAndLock(t *testing.T) {
 		},
 	}
 
+	oci_dep := modfile.Dependency{
+		Name:     "oci_name",
+		FullName: "test_version",
+		Version:  "test_version",
+		Sum:      "test_sum",
+		Source: modfile.Source{
+			Oci: &modfile.Oci{
+				Reg:  "test_reg",
+				Repo: "test_repo",
+				Tag:  "test_tag",
+			},
+		},
+	}
+
+	kclPkg.Dependencies.Deps["oci_test"] = oci_dep
+	kclPkg.modFile.Dependencies.Deps["oci_test"] = oci_dep
+
 	kclPkg.Dependencies.Deps["test"] = dep
 	kclPkg.modFile.Dependencies.Deps["test"] = dep
 
@@ -118,8 +135,8 @@ func TestUpdataKclModAndLock(t *testing.T) {
 	if gotKclMod, err := ioutil.ReadFile(filepath.Join(testDir, "kcl.mod")); os.IsNotExist(err) {
 		t.Errorf("failed to find kcl.mod.")
 	} else {
-		assert.Equal(t, len(kclPkg.Dependencies.Deps), 1)
-		assert.Equal(t, len(kclPkg.modFile.Deps), 1)
+		assert.Equal(t, len(kclPkg.Dependencies.Deps), 2)
+		assert.Equal(t, len(kclPkg.modFile.Deps), 2)
 		expectKclMod, _ := ioutil.ReadFile(filepath.Join(expectDir, "kcl.mod"))
 		assert.Equal(t, string(gotKclMod), string(expectKclMod))
 	}
@@ -127,8 +144,8 @@ func TestUpdataKclModAndLock(t *testing.T) {
 	if gotKclModLock, err := ioutil.ReadFile(filepath.Join(testDir, "kcl.mod.lock")); os.IsNotExist(err) {
 		t.Errorf("failed to find kcl.mod.lock.")
 	} else {
-		assert.Equal(t, len(kclPkg.Dependencies.Deps), 1)
-		assert.Equal(t, len(kclPkg.modFile.Deps), 1)
+		assert.Equal(t, len(kclPkg.Dependencies.Deps), 2)
+		assert.Equal(t, len(kclPkg.modFile.Deps), 2)
 		expectKclModLock, _ := ioutil.ReadFile(filepath.Join(expectDir, "kcl.mod.lock"))
 		assert.Equal(t, string(gotKclModLock), string(expectKclModLock))
 	}
@@ -432,7 +449,12 @@ func TestResolveMetadataInJsonStr(t *testing.T) {
 	res, err := pkg.ResolveDepsMetadataInJsonStr(globalPkgPath, true, &settings.Settings{})
 	assert.Equal(t, err, nil)
 
-	expectedStr := fmt.Sprintf("{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"%s\"}}}", filepath.Join(globalPkgPath, "konfig_v0.0.1"))
+	expectedStr := fmt.Sprintf(
+		"{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"%s\"},\"oci_konfig\":{\"name\":\"oci_konfig\",\"manifest_path\":\"%s\"}}}",
+		filepath.Join(globalPkgPath, "konfig_v0.0.1"),
+		filepath.Join(globalPkgPath, "oci_konfig_0.0.1"),
+	)
+
 	assert.Equal(t, res, expectedStr)
 
 	vendorDir := filepath.Join(testDir, "vendor")
@@ -446,7 +468,12 @@ func TestResolveMetadataInJsonStr(t *testing.T) {
 	assert.Equal(t, utils.DirExists(vendorDir), true)
 	assert.Equal(t, utils.DirExists(filepath.Join(vendorDir, "konfig_v0.0.1")), true)
 
-	expectedStr = fmt.Sprintf("{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"%s\"}}}", filepath.Join(vendorDir, "konfig_v0.0.1"))
+	expectedStr = fmt.Sprintf(
+		"{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"%s\"},\"oci_konfig\":{\"name\":\"oci_konfig\",\"manifest_path\":\"%s\"}}}",
+		filepath.Join(vendorDir, "konfig_v0.0.1"),
+		filepath.Join(vendorDir, "oci_konfig_0.0.1"),
+	)
+
 	assert.Equal(t, res, expectedStr)
 	if utils.DirExists(vendorDir) {
 		err = os.RemoveAll(vendorDir)
@@ -459,6 +486,6 @@ func TestResolveMetadataInJsonStr(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, utils.DirExists(vendorDir), false)
 	assert.Equal(t, utils.DirExists(filepath.Join(vendorDir, "konfig_v0.0.1")), false)
-	expectedStr = "{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"\"}}}"
+	expectedStr = "{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"\"},\"oci_konfig\":{\"name\":\"oci_konfig\",\"manifest_path\":\"\"}}}"
 	assert.Equal(t, res, expectedStr)
 }

@@ -143,8 +143,8 @@ func parseOciRegistryOptions(c *cli.Context, settings *settings.Settings) (*opt.
 
 	return &opt.RegistryOptions{
 		Oci: &opt.OciOptions{
-			Reg:     settings.DefauleOciRegistry(),
-			Repo:    settings.DefauleOciRepo(),
+			Reg:     settings.DefaultOciRegistry(),
+			Repo:    settings.DefaultOciRepo(),
 			PkgName: name,
 			Tag:     version,
 		},

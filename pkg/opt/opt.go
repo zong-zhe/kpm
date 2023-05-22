@@ -140,13 +140,13 @@ func ParseOciRef(ociRef string, settings *settings.Settings) (*OciOptions, error
 	if len(oci_address) == 1 {
 		reporter.Report("kpm: using default tag: latest")
 		return &OciOptions{
-			Reg:  settings.DefauleOciRegistry(),
+			Reg:  settings.DefaultOciRegistry(),
 			Repo: oci_address[0],
 			Tag:  GetDefaultOCITag(),
 		}, nil
 	} else if len(oci_address) == 2 {
 		return &OciOptions{
-			Reg:  settings.DefauleOciRegistry(),
+			Reg:  settings.DefaultOciRegistry(),
 			Repo: oci_address[0],
 			Tag:  oci_address[1],
 		}, nil

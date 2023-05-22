@@ -5,4 +5,12 @@
     version = "v0.0.1"
     sum = "XFvHdBAoY/+qpJWmj8cjwOwZO8a3nX/7SE35cTxQOFU="
     url = "https://github.com/awesome-kusion/konfig.git"
-    tag = "v0.0.1"
+    git_tag = "v0.0.1"
+  [dependencies.oci_konfig]
+    name = "oci_konfig"
+    full_name = "oci_konfig_0.0.1"
+    version = "0.0.1"
+    sum = "sLr3e6W4RPrXYyswdOSiKqkHes1QHX2tk6SwxAPDqqo="
+    reg = "ghcr.io"
+    repo = "awesome-kusion/oci_konfig"
+    oci_tag = "0.0.1"
