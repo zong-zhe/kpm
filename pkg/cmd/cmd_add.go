@@ -55,7 +55,7 @@ func NewAddCmd(settings *settings.Settings) *cli.Command {
 				return err
 			}
 
-			addOpts, err := parseAddOptions(c, globalPkgPath)
+			addOpts, err := parseAddOptions(c, globalPkgPath, settings)
 			if err != nil {
 				return err
 			}
@@ -89,7 +89,7 @@ func onlyOnceOption(c *cli.Context, name string) (*string, error) {
 	}
 }
 
-func parseAddOptions(c *cli.Context, localPath string) (*opt.AddOptions, error) {
+func parseAddOptions(c *cli.Context, localPath string, settings *settings.Settings) (*opt.AddOptions, error) {
 	if c.NArg() == 0 {
 		gitOpts, err := parseGitRegistryOptions(c)
 		if err != nil {
@@ -100,7 +100,7 @@ func parseAddOptions(c *cli.Context, localPath string) (*opt.AddOptions, error) 
 			RegistryOpts: *gitOpts,
 		}, nil
 	} else {
-		ociReg, err := parseOciRegistryOptions(c)
+		ociReg, err := parseOciRegistryOptions(c, settings)
 		if err != nil {
 			return nil, err
 		}
@@ -133,10 +133,7 @@ func parseGitRegistryOptions(c *cli.Context) (*opt.RegistryOptions, error) {
 	}, nil
 }
 
-const DEFAULT_REG = "ghcr.io"
-const DEFAULT_REPO = "zong-zhe"
-
-func parseOciRegistryOptions(c *cli.Context) (*opt.RegistryOptions, error) {
+func parseOciRegistryOptions(c *cli.Context, settings *settings.Settings) (*opt.RegistryOptions, error) {
 	ociPkgRef := c.Args().First()
 	name, version := parseNameAndVersion(ociPkgRef)
 	if len(version) == 0 {
@@ -146,8 +143,8 @@ func parseOciRegistryOptions(c *cli.Context) (*opt.RegistryOptions, error) {
 
 	return &opt.RegistryOptions{
 		Oci: &opt.OciOptions{
-			Reg:     DEFAULT_REG,
-			Repo:    DEFAULT_REPO,
+			Reg:     settings.DefauleOciRegistry(),
+			Repo:    settings.DefauleOciRepo(),
 			PkgName: name,
 			Tag:     version,
 		},

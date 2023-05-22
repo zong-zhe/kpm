@@ -110,7 +110,7 @@ const KCL_PKG_TAR = "*.tar"
 
 // runOci will compile the kcl package from an OCI reference.
 func runOci(ociRef, version, entryFile string, vendorMode bool, settings *settings.Settings, kclArgs string) (string, error) {
-	ociOpts, err := opt.ParseOciOptionFromString(ociRef, version)
+	ociOpts, err := opt.ParseOciOptionFromString(ociRef, version, settings)
 
 	if err != nil {
 		return "", err
