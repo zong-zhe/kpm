@@ -220,10 +220,10 @@ func (kclPkg *KclPkg) AddDeps(opt *opt.AddOptions, settings *settings.Settings) 
 	if err != nil {
 		return err
 	}
-	// err = kclPkg.UpdateModAndLockFile()
-	// if err != nil {
-	// 	return err
-	// }
+	err = kclPkg.UpdateModAndLockFile()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -1,0 +1,9 @@
+[dependencies]
+  [dependencies.k8s]
+    name = "k8s"
+    full_name = "k8s_0.0.1"
+    version = "0.0.1"
+    sum = "ZEBT6WJRnjjkrynOVAnA56ekhPKqbbhSla368x6xsp0="
+    reg = "ghcr.io"
+    repo = "zong-zhe/k8s"
+    tag = "0.0.1"

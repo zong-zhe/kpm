@@ -37,8 +37,8 @@ func (opts *AddOptions) Validate() error {
 		return errors.InternalBug
 	} else if opts.RegistryOpts.Git != nil {
 		return opts.RegistryOpts.Git.Validate()
-	} else if opts.RegistryOpts.Git == nil {
-		return errors.InvalidAddOptionsWithoutRegistry
+	} else if opts.RegistryOpts.Oci != nil {
+		return opts.RegistryOpts.Oci.Validate()
 	}
 	return nil
 }
@@ -83,7 +83,6 @@ type OciOptions struct {
 }
 
 func (opts *OciOptions) Validate() error {
-	opts.Reg = GetOCIReg()
 	if len(opts.Repo) == 0 {
 		return errors.InvalidAddOptionsInvalidOciRepo
 	} else if len(opts.Tag) == 0 {

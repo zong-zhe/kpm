@@ -5,6 +5,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/urfave/cli/v2"
 	"kusionstack.io/kpm/pkg/env"
@@ -33,13 +34,6 @@ func NewAddCmd(settings *settings.Settings) *cli.Command {
 
 		Action: func(c *cli.Context) error {
 
-			if c.NArg() == 0 {
-				reporter.Report("kpm: module name must be specified.")
-				reporter.ExitWithReport("kpm: run 'kpm init help' for more information.")
-			}
-
-			pkgName := c.Args().First()
-
 			pwd, err := os.Getwd()
 
 			if err != nil {
@@ -61,53 +55,21 @@ func NewAddCmd(settings *settings.Settings) *cli.Command {
 				return err
 			}
 
-			gitUrl, err := onlyOnceOption(c, "git")
-
-			if err != nil {
-				return nil
-			}
-
-			gitTag, err := onlyOnceOption(c, "tag")
-
+			addOpts, err := parseAddOptions(c, globalPkgPath)
 			if err != nil {
 				return err
 			}
 
-			var addOpts opt.AddOptions
-			if gitUrl != nil {
-				addOpts = opt.AddOptions{
-					LocalPath: globalPkgPath,
-					RegistryOpts: opt.RegistryOptions{
-						Git: &opt.GitOptions{
-							Url: *gitUrl,
-							Tag: *gitTag,
-						},
-					},
-				}
-			} else {
-				addOpts = opt.AddOptions{
-					LocalPath: globalPkgPath,
-					RegistryOpts: opt.RegistryOptions{
-						Oci: &opt.OciOptions{
-							Reg:     "ghcr.io",
-							Repo:    "zong-zhe",
-							PkgName: pkgName,
-							Tag:     "v0.0.1",
-						},
-					},
-				}
-			}
-
-			// err = addOpts.Validate()
-			// if err != nil {
-			// 	return err
-			// }
-
-			err = addGitDep(&addOpts, kclPkg, settings)
+			err = addOpts.Validate()
 			if err != nil {
 				return err
 			}
-			// reporter.Report("kpm: add dependency '", *gitUrl, "'", "with tag '", *gitTag, "' successfully.")
+
+			err = kclPkg.AddDeps(addOpts, settings)
+			if err != nil {
+				return err
+			}
+			reporter.Report("kpm: add dependency successfully.")
 			return nil
 		},
 	}
@@ -127,11 +89,76 @@ func onlyOnceOption(c *cli.Context, name string) (*string, error) {
 	}
 }
 
-func addGitDep(opt *opt.AddOptions, kclPkg *pkg.KclPkg, settings *settings.Settings) error {
-	// if opt.RegistryOpts.Git == nil {
-	// 	reporter.Report("kpm: a value is required for '-git <URI>' but none was supplied")
-	// 	reporter.ExitWithReport("kpm: run 'kpm add help' for more information.")
-	// }
+func parseAddOptions(c *cli.Context, localPath string) (*opt.AddOptions, error) {
+	if c.NArg() == 0 {
+		gitOpts, err := parseGitRegistryOptions(c)
+		if err != nil {
+			return nil, err
+		}
+		return &opt.AddOptions{
+			LocalPath:    localPath,
+			RegistryOpts: *gitOpts,
+		}, nil
+	} else {
+		ociReg, err := parseOciRegistryOptions(c)
+		if err != nil {
+			return nil, err
+		}
+		return &opt.AddOptions{
+			LocalPath:    localPath,
+			RegistryOpts: *ociReg,
+		}, nil
+	}
 
-	return kclPkg.AddDeps(opt, settings)
+}
+
+func parseGitRegistryOptions(c *cli.Context) (*opt.RegistryOptions, error) {
+	gitUrl, err := onlyOnceOption(c, "git")
+
+	if err != nil {
+		return nil, nil
+	}
+
+	gitTag, err := onlyOnceOption(c, "tag")
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &opt.RegistryOptions{
+		Git: &opt.GitOptions{
+			Url: *gitUrl,
+			Tag: *gitTag,
+		},
+	}, nil
+}
+
+const DEFAULT_REG = "ghcr.io"
+const DEFAULT_REPO = "zong-zhe"
+
+func parseOciRegistryOptions(c *cli.Context) (*opt.RegistryOptions, error) {
+	ociPkgRef := c.Args().First()
+	name, version := parseNameAndVersion(ociPkgRef)
+
+	return &opt.RegistryOptions{
+		Oci: &opt.OciOptions{
+			Reg:     DEFAULT_REG,
+			Repo:    DEFAULT_REPO,
+			PkgName: name,
+			Tag:     version,
+		},
+	}, nil
+}
+
+func parseNameAndVersion(s string) (string, string) {
+	parts := strings.Split(s, "@")
+	if len(parts) == 1 {
+		return parts[0], ""
+	}
+
+	if len(parts) > 2 {
+		return "", ""
+	}
+
+	return parts[0], parts[1]
 }
