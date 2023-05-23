@@ -129,7 +129,7 @@ func TestUnmarshalLockToml(t *testing.T) {
 	expected_toml := string(expected_data)
 	_ = deps.UnmarshalLockTOML(expected_toml)
 
-	assert.Equal(t, len(deps.Deps), 1)
+	assert.Equal(t, len(deps.Deps), 2)
 	assert.NotEqual(t, deps.Deps["MyKcl1"], nil)
 	assert.Equal(t, deps.Deps["MyKcl1"].Name, "MyKcl1")
 	assert.Equal(t, deps.Deps["MyKcl1"].FullName, "MyKcl1_v0.0.2")
@@ -138,4 +138,14 @@ func TestUnmarshalLockToml(t *testing.T) {
 	assert.NotEqual(t, deps.Deps["MyKcl1"].Source.Git, nil)
 	assert.Equal(t, deps.Deps["MyKcl1"].Source.Git.Url, "https://github.com/test/MyKcl1.git")
 	assert.Equal(t, deps.Deps["MyKcl1"].Source.Git.Tag, "v0.0.2")
+
+	assert.NotEqual(t, deps.Deps["MyOciKcl1"], nil)
+	assert.Equal(t, deps.Deps["MyOciKcl1"].Name, "MyOciKcl1")
+	assert.Equal(t, deps.Deps["MyOciKcl1"].FullName, "MyOciKcl1_0.0.1")
+	assert.Equal(t, deps.Deps["MyOciKcl1"].Version, "0.0.1")
+	assert.Equal(t, deps.Deps["MyOciKcl1"].Sum, "hjkasdahjksdasdhjk")
+	assert.NotEqual(t, deps.Deps["MyOciKcl1"].Source.Oci, nil)
+	assert.Equal(t, deps.Deps["MyOciKcl1"].Source.Oci.Reg, "test_reg")
+	assert.Equal(t, deps.Deps["MyOciKcl1"].Source.Oci.Repo, "test_repo")
+	assert.Equal(t, deps.Deps["MyOciKcl1"].Source.Oci.Tag, "0.0.1")
 }
