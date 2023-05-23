@@ -416,18 +416,29 @@ func TestLoadKclPkgFromTar(t *testing.T) {
 	assert.Equal(t, kclPkg.modFile.Pkg.Edition, "0.0.1")
 	assert.Equal(t, kclPkg.modFile.Pkg.Version, "0.0.3")
 
-	assert.Equal(t, len(kclPkg.modFile.Deps), 1)
+	assert.Equal(t, len(kclPkg.modFile.Deps), 2)
 	assert.Equal(t, kclPkg.modFile.Deps["konfig"].Name, "konfig")
 	assert.Equal(t, kclPkg.modFile.Deps["konfig"].FullName, "konfig_v0.0.1")
 	assert.Equal(t, kclPkg.modFile.Deps["konfig"].Git.Url, "https://github.com/awesome-kusion/konfig.git")
 	assert.Equal(t, kclPkg.modFile.Deps["konfig"].Git.Tag, "v0.0.1")
 
-	assert.Equal(t, len(kclPkg.Deps), 1)
+	assert.Equal(t, kclPkg.modFile.Deps["oci_konfig"].Name, "oci_konfig")
+	assert.Equal(t, kclPkg.modFile.Deps["oci_konfig"].FullName, "oci_konfig_0.0.1")
+	assert.Equal(t, kclPkg.modFile.Deps["oci_konfig"].Oci.Tag, "0.0.1")
+
+	assert.Equal(t, len(kclPkg.Deps), 2)
 	assert.Equal(t, kclPkg.Deps["konfig"].Name, "konfig")
 	assert.Equal(t, kclPkg.Deps["konfig"].FullName, "konfig_v0.0.1")
 	assert.Equal(t, kclPkg.Deps["konfig"].Git.Url, "https://github.com/awesome-kusion/konfig.git")
 	assert.Equal(t, kclPkg.Deps["konfig"].Git.Tag, "v0.0.1")
 	assert.Equal(t, kclPkg.Deps["konfig"].Sum, "XFvHdBAoY/+qpJWmj8cjwOwZO8a3nX/7SE35cTxQOFU=")
+
+	assert.Equal(t, kclPkg.Deps["oci_konfig"].Name, "oci_konfig")
+	assert.Equal(t, kclPkg.Deps["oci_konfig"].FullName, "oci_konfig_0.0.1")
+	assert.Equal(t, kclPkg.Deps["oci_konfig"].Oci.Reg, "ghcr.io")
+	assert.Equal(t, kclPkg.Deps["oci_konfig"].Oci.Repo, "awesome-kusion/oci_konfig")
+	assert.Equal(t, kclPkg.Deps["oci_konfig"].Oci.Tag, "0.0.1")
+	assert.Equal(t, kclPkg.Deps["oci_konfig"].Sum, "sLr3e6W4RPrXYyswdOSiKqkHes1QHX2tk6SwxAPDqqo=")
 
 	assert.Equal(t, kclPkg.GetPkgTag(), "0.0.3")
 	assert.Equal(t, kclPkg.GetOciPkgTag(), "v0.0.3")
