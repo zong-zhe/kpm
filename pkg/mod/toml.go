@@ -204,6 +204,7 @@ func (dep *Dependency) UnmarshalModTOML(data interface{}) error {
 	if err != nil {
 		return err
 	}
+
 	dep.Source = source
 	var version string
 	if source.Git != nil {

@@ -25,6 +25,10 @@ type KpmConf struct {
 const DEFAULT_REGISTRY = "ghcr.io"
 const DEFAULT_REPO = "KusionStack"
 
+// This is a singleton that loads kpm settings from 'kpm.json'
+// and is only initialized on the first call by 'Init()' or 'GetSettings()'
+var kpm_settings *Settings = nil
+
 // DefaultKpmConf create a default configuration for kpm.
 func DefaultKpmConf() KpmConf {
 	return KpmConf{
@@ -62,20 +66,35 @@ func GetFullJsonPath(jsonFileName string) (string, error) {
 // Init returns default kpm settings load from '$KCL_PKG_PATH/.kpm/config/kpm.json'
 // and '$KCL_PKG_PATH/.kpm/config/config.json'.
 func Init() (*Settings, error) {
-	credentialsFile, err := GetFullJsonPath(CONFIG_JSON_PATH)
-	if err != nil {
-		return nil, err
-	}
+	if kpm_settings == nil {
+		credentialsFile, err := GetFullJsonPath(CONFIG_JSON_PATH)
+		if err != nil {
+			return nil, err
+		}
 
-	conf, err := loadOrCreateDefaultKpmJson()
-	if err != nil {
-		return nil, err
-	}
+		conf, err := loadOrCreateDefaultKpmJson()
+		if err != nil {
+			return nil, err
+		}
 
-	return &Settings{
-		CredentialsFile: credentialsFile,
-		Conf:            *conf,
-	}, nil
+		kpm_settings = &Settings{
+			CredentialsFile: credentialsFile,
+			Conf:            *conf,
+		}
+
+		return kpm_settings, nil
+	} else {
+		return kpm_settings, nil
+	}
+}
+
+// GetSettings will return the kpm setting singleton.
+func GetSettings() (*Settings, error) {
+	if kpm_settings == nil {
+		return Init()
+	} else {
+		return kpm_settings, nil
+	}
 }
 
 // loadOrCreateDefaultKpmJson will load the 'kpm.json' file from '$KCL_PKG_PATH/.kpm/config',

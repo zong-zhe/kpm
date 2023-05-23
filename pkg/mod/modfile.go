@@ -40,9 +40,24 @@ type ModFile struct {
 	Dependencies
 }
 
+func (modFile *ModFile) FillDependenciesInfo() error {
+	return modFile.fillAllDepsInfo()
+}
+
 // 'Dependencies' is dependencies section of 'kcl.mod'.
 type Dependencies struct {
 	Deps map[string]Dependency `json:"packages" toml:"dependencies,omitempty"`
+}
+
+func (deps *Dependencies) fillAllDepsInfo() error {
+	for k, v := range deps.Deps {
+		err := v.FillDepInfo()
+		if err != nil {
+			return err
+		}
+		deps.Deps[k] = v
+	}
+	return nil
 }
 
 type Dependency struct {
@@ -55,6 +70,18 @@ type Dependency struct {
 	// In non-vendor mode is "$KCL_PKG_PATH"
 	LocalFullPath string `json:"manifest_path" toml:"-"`
 	Source        `json:"-"`
+}
+
+func (dep *Dependency) FillDepInfo() error {
+	if dep.Source.Oci != nil {
+		settings, err := settings.GetSettings()
+		if err != nil {
+			return err
+		}
+		dep.Source.Oci.Reg = settings.DefaultOciRegistry()
+		dep.Source.Oci.Repo = filepath.Join(settings.DefaultOciRepo(), dep.Name)
+	}
+	return nil
 }
 
 // Download will download the kcl package to localPath from registory.
@@ -165,6 +192,7 @@ func LoadModFile(homePath string) (*ModFile, error) {
 	if modFile.Dependencies.Deps == nil {
 		modFile.Dependencies.Deps = make(map[string]Dependency)
 	}
+	modFile.FillDependenciesInfo()
 
 	return modFile, nil
 }

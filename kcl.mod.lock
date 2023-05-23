@@ -1,0 +1,23 @@
+[dependencies]
+  [dependencies.kcl4]
+    name = "kcl4"
+    full_name = "kcl4_v0.0.2"
+    version = "v0.0.2"
+    sum = "YVd42UPYsXw4OeUVHN49HAhxaVU5r4UY2cREEzsdLAo="
+    url = "https://github.com/zong-zhe/kcl4.git"
+    git_tag = "v0.0.2"
+  [dependencies.konfig]
+    name = "konfig"
+    full_name = "konfig_v0.0.1"
+    version = "v0.0.1"
+    sum = "XFvHdBAoY/+qpJWmj8cjwOwZO8a3nX/7SE35cTxQOFU="
+    url = "https://github.com/awesome-kusion/konfig.git"
+    git_tag = "v0.0.1"
+  [dependencies.oci_konfig]
+    name = "oci_konfig"
+    full_name = "oci_konfig_0.0.1"
+    version = "0.0.1"
+    sum = "sLr3e6W4RPrXYyswdOSiKqkHes1QHX2tk6SwxAPDqqo="
+    reg = "ghcr.io"
+    repo = "awesome-kusion/oci_konfig"
+    oci_tag = "0.0.1"
