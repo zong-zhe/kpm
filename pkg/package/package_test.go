@@ -378,10 +378,11 @@ func TestValidateKpmHome(t *testing.T) {
 		Name:     "test_name",
 		InitPath: "test_home_path",
 	})
-
+	oldValue := os.Getenv(env.PKG_PATH)
 	os.Setenv(env.PKG_PATH, "test_home_path")
 	err := kclPkg.ValidateKpmHome(os.Getenv(env.PKG_PATH))
 	assert.Equal(t, err, errors.InvalidKpmHomeInCurrentPkg)
+	os.Setenv(env.PKG_PATH, oldValue)
 }
 
 func TestPackageCurrentPkgPath(t *testing.T) {

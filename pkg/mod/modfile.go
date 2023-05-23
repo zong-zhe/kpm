@@ -192,7 +192,10 @@ func LoadModFile(homePath string) (*ModFile, error) {
 	if modFile.Dependencies.Deps == nil {
 		modFile.Dependencies.Deps = make(map[string]Dependency)
 	}
-	modFile.FillDependenciesInfo()
+	err = modFile.FillDependenciesInfo()
+	if err != nil {
+		return nil, err
+	}
 
 	return modFile, nil
 }
