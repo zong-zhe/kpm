@@ -479,9 +479,8 @@ func TestResolveMetadataInJsonStr(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	expectedStr := fmt.Sprintf(
-		"{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"%s\"},\"oci_konfig\":{\"name\":\"oci_konfig\",\"manifest_path\":\"%s\"}}}",
+		"{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"%s\"}}}",
 		filepath.Join(globalPkgPath, "konfig_v0.0.1"),
-		filepath.Join(globalPkgPath, "oci_konfig_0.0.1"),
 	)
 
 	assert.Equal(t, res, expectedStr)
@@ -498,9 +497,8 @@ func TestResolveMetadataInJsonStr(t *testing.T) {
 	assert.Equal(t, utils.DirExists(filepath.Join(vendorDir, "konfig_v0.0.1")), true)
 
 	expectedStr = fmt.Sprintf(
-		"{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"%s\"},\"oci_konfig\":{\"name\":\"oci_konfig\",\"manifest_path\":\"%s\"}}}",
+		"{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"%s\"}}}",
 		filepath.Join(vendorDir, "konfig_v0.0.1"),
-		filepath.Join(vendorDir, "oci_konfig_0.0.1"),
 	)
 
 	assert.Equal(t, res, expectedStr)
@@ -515,6 +513,6 @@ func TestResolveMetadataInJsonStr(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, utils.DirExists(vendorDir), false)
 	assert.Equal(t, utils.DirExists(filepath.Join(vendorDir, "konfig_v0.0.1")), false)
-	expectedStr = "{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"\"},\"oci_konfig\":{\"name\":\"oci_konfig\",\"manifest_path\":\"\"}}}"
+	expectedStr = "{\"packages\":{\"konfig\":{\"name\":\"konfig\",\"manifest_path\":\"\"}}}"
 	assert.Equal(t, res, expectedStr)
 }
