@@ -224,7 +224,7 @@ func TestVendorDeps(t *testing.T) {
 
 	mykclVendorPath := filepath.Join(filepath.Join(testDir, "my_kcl"), "vendor")
 	assert.Equal(t, utils.DirExists(mykclVendorPath), false)
-	err := kclPkg.VendorDeps(kpm_home, &settings.Settings{})
+	err := kclPkg.VendorDeps(kpm_home)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, utils.DirExists(mykclVendorPath), true)
 	assert.Equal(t, utils.DirExists(filepath.Join(mykclVendorPath, "kcl1")), true)
@@ -475,7 +475,7 @@ func TestResolveMetadataInJsonStr(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	globalPkgPath, _ := env.GetAbsPkgPath()
-	res, err := pkg.ResolveDepsMetadataInJsonStr(globalPkgPath, true, &settings.Settings{})
+	res, err := pkg.ResolveDepsMetadataInJsonStr(globalPkgPath, true)
 	assert.Equal(t, err, nil)
 
 	expectedStr := fmt.Sprintf(
@@ -492,7 +492,7 @@ func TestResolveMetadataInJsonStr(t *testing.T) {
 		assert.Equal(t, err, nil)
 	}
 	pkg.SetVendorMode(true)
-	res, err = pkg.ResolveDepsMetadataInJsonStr(globalPkgPath, true, &settings.Settings{})
+	res, err = pkg.ResolveDepsMetadataInJsonStr(globalPkgPath, true)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, utils.DirExists(vendorDir), true)
 	assert.Equal(t, utils.DirExists(filepath.Join(vendorDir, "konfig_v0.0.1")), true)
@@ -511,7 +511,7 @@ func TestResolveMetadataInJsonStr(t *testing.T) {
 
 	pkg, err = LoadKclPkg(testDir)
 	assert.Equal(t, err, nil)
-	res, err = pkg.ResolveDepsMetadataInJsonStr("not_exist", false, &settings.Settings{})
+	res, err = pkg.ResolveDepsMetadataInJsonStr("not_exist", false)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, utils.DirExists(vendorDir), false)
 	assert.Equal(t, utils.DirExists(filepath.Join(vendorDir, "konfig_v0.0.1")), false)

@@ -10,11 +10,10 @@ import (
 	"kusionstack.io/kpm/pkg/env"
 	"kusionstack.io/kpm/pkg/errors"
 	pkg "kusionstack.io/kpm/pkg/package"
-	"kusionstack.io/kpm/pkg/settings"
 )
 
 // NewMetadataCmd new a Command for `kpm metadata`.
-func NewMetadataCmd(settings *settings.Settings) *cli.Command {
+func NewMetadataCmd() *cli.Command {
 	return &cli.Command{
 		Hidden: false,
 		Name:   "metadata",
@@ -59,7 +58,7 @@ func NewMetadataCmd(settings *settings.Settings) *cli.Command {
 			}
 
 			autoUpdate := c.Bool(FLAG_UPDATE)
-			jsonStr, err := kclPkg.ResolveDepsMetadataInJsonStr(globalPkgPath, autoUpdate, settings)
+			jsonStr, err := kclPkg.ResolveDepsMetadataInJsonStr(globalPkgPath, autoUpdate)
 			if err != nil {
 				return err
 			}

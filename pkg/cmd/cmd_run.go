@@ -127,7 +127,7 @@ func runOci(ociRef, version, entryFile string, vendorMode bool, settings *settin
 	localPath := ociOpts.AddStoragePathSuffix(tmpDir)
 
 	// 2. Pull the tar.
-	err = oci.Pull(localPath, ociOpts.Reg, ociOpts.Repo, ociOpts.Tag, settings)
+	err = oci.Pull(localPath, ociOpts.Reg, ociOpts.Repo, ociOpts.Tag)
 
 	if err != nil {
 		return "", err

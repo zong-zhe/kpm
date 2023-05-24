@@ -100,7 +100,7 @@ func (kclPkg *KclPkg) CompileWithEntryFile(kpmHome string, kclvmCompiler *runner
 // if can’t find it, re-download the dependency and remember the local path.
 func (kclPkg *KclPkg) ResolveDeps(kpmHome string, settings *settings.Settings) (map[string]string, error) {
 
-	err := kclPkg.ResolveDepsMetadata(kpmHome, true, settings)
+	err := kclPkg.ResolveDepsMetadata(kpmHome, true)
 	if err != nil {
 		return nil, err
 	}
@@ -116,11 +116,11 @@ func (kclPkg *KclPkg) ResolveDeps(kpmHome string, settings *settings.Settings) (
 // ResolveDepsMetadata will calculate the local storage path of the external package,
 // and check whether the package exists locally.
 // If the package does not exist, it will re-download to the local.
-func (kclPkg *KclPkg) ResolveDepsMetadata(kpmHome string, update bool, settings *settings.Settings) error {
+func (kclPkg *KclPkg) ResolveDepsMetadata(kpmHome string, update bool) error {
 	var searchPath string
 	if kclPkg.IsVendorMode() {
 		// In the vendor mode, the search path is the vendor subdirectory of the current package.
-		err := kclPkg.VendorDeps(kpmHome, settings)
+		err := kclPkg.VendorDeps(kpmHome)
 		if err != nil {
 			return err
 		}
@@ -146,20 +146,20 @@ func (kclPkg *KclPkg) ResolveDepsMetadata(kpmHome string, update bool, settings 
 			} else {
 				// Otherwise, re-vendor it.
 				if kclPkg.IsVendorMode() {
-					err := kclPkg.VendorDeps(kpmHome, settings)
+					err := kclPkg.VendorDeps(kpmHome)
 					if err != nil {
 						return err
 					}
 				} else {
 					// Or, re-download it.
-					err := kclPkg.DownloadDep(&d, kpmHome, settings)
+					err := kclPkg.DownloadDep(&d, kpmHome)
 					if err != nil {
 						return err
 					}
 				}
 				// After re-downloading or re-vendoring,
 				// re-resolving is required to update the dependent paths.
-				err := kclPkg.ResolveDepsMetadata(kpmHome, update, settings)
+				err := kclPkg.ResolveDepsMetadata(kpmHome, update)
 				if err != nil {
 					return err
 				}
@@ -174,10 +174,10 @@ func (kclPkg *KclPkg) ResolveDepsMetadata(kpmHome string, update bool, settings 
 // ResolveDepsMetadataInJsonStr will calculate the local storage path of the external package,
 // and check whether the package exists locally. If the package does not exist, it will re-download to the local.
 // Finally, the calculated metadata of the dependent packages is serialized into a json string and returned.
-func (kclPkg *KclPkg) ResolveDepsMetadataInJsonStr(kpmHome string, update bool, settings *settings.Settings) (string, error) {
+func (kclPkg *KclPkg) ResolveDepsMetadataInJsonStr(kpmHome string, update bool) (string, error) {
 	// 1. Calculate the dependency path, check whether the dependency exists
 	// and re-download the dependency that does not exist.
-	err := kclPkg.ResolveDepsMetadata(kpmHome, update, settings)
+	err := kclPkg.ResolveDepsMetadata(kpmHome, update)
 	if err != nil {
 		return "", err
 	}
@@ -213,10 +213,10 @@ func (kclPkg KclPkg) InitEmptyPkg() error {
 }
 
 // AddDeps will add the dependencies to current kcl package and update kcl.mod and kcl.mod.lock.
-func (kclPkg *KclPkg) AddDeps(opt *opt.AddOptions, settings *settings.Settings) error {
+func (kclPkg *KclPkg) AddDeps(opt *opt.AddOptions) error {
 	// Get the name and version of the repository from the input arguments.
 	d := modfile.ParseOpt(&opt.RegistryOpts)
-	err := kclPkg.DownloadDep(d, opt.LocalPath, settings)
+	err := kclPkg.DownloadDep(d, opt.LocalPath)
 	if err != nil {
 		return err
 	}
@@ -228,7 +228,7 @@ func (kclPkg *KclPkg) AddDeps(opt *opt.AddOptions, settings *settings.Settings) 
 }
 
 // DownloadDep will download the corresponding dependency.
-func (kclPkg *KclPkg) DownloadDep(d *modfile.Dependency, localPath string, settings *settings.Settings) error {
+func (kclPkg *KclPkg) DownloadDep(d *modfile.Dependency, localPath string) error {
 
 	if !reflect.DeepEqual(kclPkg.modFile.Dependencies.Deps[d.Name], *d) {
 		// the dep passed on the cli is different from the kcl.mod.
@@ -236,7 +236,7 @@ func (kclPkg *KclPkg) DownloadDep(d *modfile.Dependency, localPath string, setti
 	}
 
 	// download all the dependencies.
-	changedDeps, err := getDeps(kclPkg.modFile.Dependencies, kclPkg.Dependencies, localPath, settings)
+	changedDeps, err := getDeps(kclPkg.modFile.Dependencies, kclPkg.Dependencies, localPath)
 
 	if err != nil {
 		return errors.FailedDownloadError
@@ -281,7 +281,7 @@ func (kclPkg *KclPkg) LockDepsVersion() error {
 
 // getDeps will recursively download all dependencies to the 'localPath' directory,
 // and return the dependencies that need to be updated to kcl.mod and kcl.mod.lock.
-func getDeps(deps modfile.Dependencies, lockDeps modfile.Dependencies, localPath string, settings *settings.Settings) (*modfile.Dependencies, error) {
+func getDeps(deps modfile.Dependencies, lockDeps modfile.Dependencies, localPath string) (*modfile.Dependencies, error) {
 	newDeps := modfile.Dependencies{
 		Deps: make(map[string]modfile.Dependency),
 	}
@@ -311,7 +311,7 @@ func getDeps(deps modfile.Dependencies, lockDeps modfile.Dependencies, localPath
 		os.RemoveAll(dir)
 
 		// download dependencies
-		lockedDep, err := d.Download(dir, settings)
+		lockedDep, err := d.Download(dir)
 		if err != nil {
 			return nil, errors.FailedDownloadError
 		}
@@ -336,7 +336,7 @@ func getDeps(deps modfile.Dependencies, lockDeps modfile.Dependencies, localPath
 		}
 
 		// Download the dependencies.
-		nested, err := getDeps(modfile.Dependencies, lockDeps, localPath, settings)
+		nested, err := getDeps(modfile.Dependencies, lockDeps, localPath)
 		if err != nil {
 			return nil, err
 		}
@@ -382,7 +382,7 @@ func (kclPkg *KclPkg) PackageCurrentPkgPath(settings *settings.Settings) (string
 		return "", err
 	}
 
-	err = kclPkg.PackageKclPkg(globalPkgPath, kclPkg.DefaultTarPath(), settings)
+	err = kclPkg.PackageKclPkg(globalPkgPath, kclPkg.DefaultTarPath())
 
 	if err != nil {
 		reporter.ExitWithReport("kpm: failed to package pkg " + kclPkg.GetPkgName() + ".")
@@ -399,7 +399,7 @@ func (kclPkg *KclPkg) DefaultTarPath() string {
 }
 
 // PkgCurrentPackageIntoTarPath will package the current kcl package into 'tarPath'.
-func (kclPkg *KclPkg) PackageToTarball(tarPath string, settings *settings.Settings) error {
+func (kclPkg *KclPkg) PackageToTarball(tarPath string) error {
 
 	globalPkgPath, err := env.GetAbsPkgPath()
 	if err != nil {
@@ -411,7 +411,7 @@ func (kclPkg *KclPkg) PackageToTarball(tarPath string, settings *settings.Settin
 		return err
 	}
 
-	err = kclPkg.PackageKclPkg(globalPkgPath, tarPath, settings)
+	err = kclPkg.PackageKclPkg(globalPkgPath, tarPath)
 
 	if err != nil {
 		reporter.ExitWithReport("kpm: failed to package pkg " + kclPkg.GetPkgName() + ".")
@@ -422,9 +422,9 @@ func (kclPkg *KclPkg) PackageToTarball(tarPath string, settings *settings.Settin
 
 // PackageKclPkg will save all dependencies to the 'vendor' in current pacakge
 // and package the current package into tar
-func (kclPkg *KclPkg) PackageKclPkg(kpmHome string, tarPath string, settings *settings.Settings) error {
+func (kclPkg *KclPkg) PackageKclPkg(kpmHome string, tarPath string) error {
 	// Vendor all the dependencies into the current kcl package.
-	err := kclPkg.VendorDeps(kpmHome, settings)
+	err := kclPkg.VendorDeps(kpmHome)
 	if err != nil {
 		return errors.FailedToVendorDependency
 	}
@@ -438,7 +438,7 @@ func (kclPkg *KclPkg) PackageKclPkg(kpmHome string, tarPath string, settings *se
 }
 
 // Vendor all dependencies to the 'vendor' in current pacakge.
-func (kclPkg *KclPkg) VendorDeps(cachePath string, settings *settings.Settings) error {
+func (kclPkg *KclPkg) VendorDeps(cachePath string) error {
 	// Mkdir the dir "vendor".
 	vendorPath := kclPkg.LocalVendorPath()
 	err := os.MkdirAll(vendorPath, 0755)
@@ -473,12 +473,12 @@ func (kclPkg *KclPkg) VendorDeps(cachePath string, settings *settings.Settings) 
 				}
 			} else {
 				// re-download if not.
-				err = kclPkg.DownloadDep(&d, cachePath, settings)
+				err = kclPkg.DownloadDep(&d, cachePath)
 				if err != nil {
 					return errors.FailedToVendorDependency
 				}
 				// re-vendor again with new kcl.mod and kcl.mod.lock
-				err = kclPkg.VendorDeps(cachePath, settings)
+				err = kclPkg.VendorDeps(cachePath)
 				if err != nil {
 					return errors.FailedToVendorDependency
 				}

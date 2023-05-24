@@ -16,7 +16,7 @@ import (
 )
 
 // NewAddCmd new a Command for `kpm add`.
-func NewAddCmd(settings *settings.Settings) *cli.Command {
+func NewAddCmd() *cli.Command {
 	return &cli.Command{
 		Hidden: false,
 		Name:   "add",
@@ -55,7 +55,7 @@ func NewAddCmd(settings *settings.Settings) *cli.Command {
 				return err
 			}
 
-			addOpts, err := parseAddOptions(c, globalPkgPath, settings)
+			addOpts, err := parseAddOptions(c, globalPkgPath)
 			if err != nil {
 				return err
 			}
@@ -65,7 +65,7 @@ func NewAddCmd(settings *settings.Settings) *cli.Command {
 				return err
 			}
 
-			err = kclPkg.AddDeps(addOpts, settings)
+			err = kclPkg.AddDeps(addOpts)
 			if err != nil {
 				return err
 			}
@@ -90,7 +90,8 @@ func onlyOnceOption(c *cli.Context, name string) (*string, error) {
 }
 
 // parseAddOptions will parse the user cli inputs.
-func parseAddOptions(c *cli.Context, localPath string, settings *settings.Settings) (*opt.AddOptions, error) {
+func parseAddOptions(c *cli.Context, localPath string) (*opt.AddOptions, error) {
+	// parse from 'kpm add -git https://xxx/xxx.git -tag v0.0.1'.
 	if c.NArg() == 0 {
 		gitOpts, err := parseGitRegistryOptions(c)
 		if err != nil {
@@ -101,7 +102,8 @@ func parseAddOptions(c *cli.Context, localPath string, settings *settings.Settin
 			RegistryOpts: *gitOpts,
 		}, nil
 	} else {
-		ociReg, err := parseOciRegistryOptions(c, settings)
+		// parse from 'kpm add xxx:0.0.1'.
+		ociReg, err := parseOciRegistryOptions(c)
 		if err != nil {
 			return nil, err
 		}
@@ -136,12 +138,17 @@ func parseGitRegistryOptions(c *cli.Context) (*opt.RegistryOptions, error) {
 }
 
 // parseOciRegistryOptions will parse the oci registry information from user cli inputs.
-func parseOciRegistryOptions(c *cli.Context, settings *settings.Settings) (*opt.RegistryOptions, error) {
+func parseOciRegistryOptions(c *cli.Context) (*opt.RegistryOptions, error) {
 	ociPkgRef := c.Args().First()
 	name, version := parseOciPkgNameAndVersion(ociPkgRef)
 	if len(version) == 0 {
 		reporter.Report("kpm: default version 'latest' of the package will be downloaded.")
 		version = opt.DEFAULT_OCI_TAG
+	}
+
+	settings, err := settings.GetSettings()
+	if err != nil {
+		return nil, err
 	}
 
 	return &opt.RegistryOptions{

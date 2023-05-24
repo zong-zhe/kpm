@@ -85,7 +85,7 @@ func (dep *Dependency) FillDepInfo() error {
 }
 
 // Download will download the kcl package to localPath from registory.
-func (dep *Dependency) Download(localPath string, settings *settings.Settings) (*Dependency, error) {
+func (dep *Dependency) Download(localPath string) (*Dependency, error) {
 	reporter.Report("kpm: adding dependency", dep.Name, "with", dep.Version)
 	if dep.Source.Git != nil {
 		_, err := dep.Source.Git.Download(localPath)
@@ -95,7 +95,7 @@ func (dep *Dependency) Download(localPath string, settings *settings.Settings) (
 	}
 
 	if dep.Source.Oci != nil {
-		_, err := dep.Source.Oci.Download(localPath, settings)
+		_, err := dep.Source.Oci.Download(localPath)
 		if err != nil {
 			return nil, err
 		}
@@ -130,8 +130,8 @@ func (dep *Git) Download(localPath string) (string, error) {
 	return localPath, err
 }
 
-func (dep *Oci) Download(localPath string, setting *settings.Settings) (string, error) {
-	err := oci.Pull(localPath, dep.Reg, dep.Repo, dep.Tag, setting)
+func (dep *Oci) Download(localPath string) (string, error) {
+	err := oci.Pull(localPath, dep.Reg, dep.Repo, dep.Tag)
 	if err != nil {
 		return "", err
 	}

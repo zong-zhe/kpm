@@ -10,12 +10,11 @@ import (
 	"kusionstack.io/kpm/pkg/errors"
 	pkg "kusionstack.io/kpm/pkg/package"
 	"kusionstack.io/kpm/pkg/reporter"
-	"kusionstack.io/kpm/pkg/settings"
 	"kusionstack.io/kpm/pkg/utils"
 )
 
 // NewPkgCmd new a Command for `kpm pkg`.
-func NewPkgCmd(settings *settings.Settings) *cli.Command {
+func NewPkgCmd() *cli.Command {
 	return &cli.Command{
 		Hidden: false,
 		Name:   "pkg",
@@ -55,7 +54,7 @@ func NewPkgCmd(settings *settings.Settings) *cli.Command {
 				}
 			}
 			// The method for packaging kcl package should be a member method of KclPkg.
-			return kclPkg.PackageToTarball(filepath.Join(tarPath, kclPkg.GetPkgTarName()), settings)
+			return kclPkg.PackageToTarball(filepath.Join(tarPath, kclPkg.GetPkgTarName()))
 		},
 	}
 }

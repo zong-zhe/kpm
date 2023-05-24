@@ -26,14 +26,14 @@ func main() {
 	app.UsageText = "kpm  <command> [arguments]..."
 	app.Commands = []*cli.Command{
 		cmd.NewInitCmd(),
-		cmd.NewAddCmd(setting),
-		cmd.NewPkgCmd(setting),
-		cmd.NewMetadataCmd(setting),
+		cmd.NewAddCmd(),
+		cmd.NewPkgCmd(),
+		cmd.NewMetadataCmd(),
 		cmd.NewRunCmd(setting),
 		cmd.NewLoginCmd(setting),
 		cmd.NewLogoutCmd(setting),
 		cmd.NewPushCmd(setting),
-		cmd.NewPullCmd(setting),
+		cmd.NewPullCmd(),
 	}
 	err = app.Run(os.Args)
 	if err != nil {
