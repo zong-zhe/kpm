@@ -230,7 +230,7 @@ func TestVendorDeps(t *testing.T) {
 	assert.Equal(t, utils.DirExists(filepath.Join(mykclVendorPath, "kcl1")), true)
 	assert.Equal(t, utils.DirExists(filepath.Join(mykclVendorPath, "kcl2")), true)
 
-	maps, err := kclPkg.ResolveDeps(kpm_home, &settings.Settings{})
+	maps, err := kclPkg.ResolveDeps(kpm_home)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, len(maps), 2)
 
@@ -284,13 +284,13 @@ func TestResolveDepsVendorMode(t *testing.T) {
 	mySearchPath := filepath.Join(home_path, "vendor")
 	assert.Equal(t, utils.DirExists(mySearchPath), false)
 
-	maps, err := kclPkg.ResolveDeps(kpm_home, &settings.Settings{})
+	maps, err := kclPkg.ResolveDeps(kpm_home)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, len(maps), 2)
 	checkDepsMapInSearchPath(t, depKcl1, mySearchPath, maps)
 
 	kclPkg.SetVendorMode(false)
-	maps, err = kclPkg.ResolveDeps(kpm_home, &settings.Settings{})
+	maps, err = kclPkg.ResolveDeps(kpm_home)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, len(maps), 2)
 	checkDepsMapInSearchPath(t, depKcl1, kpm_home, maps)
@@ -355,7 +355,7 @@ func TestCompileWithEntryFile(t *testing.T) {
 	compileOpts.EntryFiles = append(compileOpts.EntryFiles, entry_file)
 	cmd, err := runner.NewCompileCmd(compileOpts)
 	assert.Equal(t, err, nil)
-	result, err := kclPkg.CompileWithEntryFile(kpm_home, cmd, &settings.Settings{})
+	result, err := kclPkg.CompileWithEntryFile(kpm_home, cmd)
 	assert.Equal(t, utils.DirExists(filepath.Join(vendor_path, "kcl1")), true)
 	assert.Equal(t, utils.DirExists(filepath.Join(vendor_path, "kcl2")), true)
 	assert.Equal(t, err, nil)
@@ -366,7 +366,7 @@ func TestCompileWithEntryFile(t *testing.T) {
 	assert.Equal(t, utils.DirExists(vendor_path), false)
 	cmd, err = runner.NewCompileCmd(compileOpts)
 	assert.Equal(t, err, nil)
-	result, err = kclPkg.CompileWithEntryFile(kpm_home, cmd, &settings.Settings{})
+	result, err = kclPkg.CompileWithEntryFile(kpm_home, cmd)
 	assert.Equal(t, utils.DirExists(vendor_path), false)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, result, "c1: 1\nc2: 2\n")

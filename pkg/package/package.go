@@ -79,9 +79,9 @@ func (kclPkg *KclPkg) LocalVendorPath() string {
 }
 
 // CompileWithEntryFile will call 'kclvm_cli' to compile the current kcl package and its dependent packages.
-func (kclPkg *KclPkg) CompileWithEntryFile(kpmHome string, kclvmCompiler *runner.CompileCmd, settings *settings.Settings) (string, error) {
+func (kclPkg *KclPkg) CompileWithEntryFile(kpmHome string, kclvmCompiler *runner.CompileCmd) (string, error) {
 
-	pkgMap, err := kclPkg.ResolveDeps(kpmHome, settings)
+	pkgMap, err := kclPkg.ResolveDeps(kpmHome)
 	if err != nil {
 		return "", err
 	}
@@ -98,7 +98,7 @@ func (kclPkg *KclPkg) CompileWithEntryFile(kpmHome string, kclvmCompiler *runner
 // look for the package in the $KCL_PKG_PATH or kcl package vendor subdirectory,
 // if find it, ResolveDeps will remember the local path of the dependency,
 // if can’t find it, re-download the dependency and remember the local path.
-func (kclPkg *KclPkg) ResolveDeps(kpmHome string, settings *settings.Settings) (map[string]string, error) {
+func (kclPkg *KclPkg) ResolveDeps(kpmHome string) (map[string]string, error) {
 
 	err := kclPkg.ResolveDepsMetadata(kpmHome, true)
 	if err != nil {
