@@ -3,7 +3,6 @@ package oci
 import (
 	"context"
 	"path/filepath"
-	"strings"
 
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"kusionstack.io/kpm/pkg/errors"
@@ -65,8 +64,6 @@ func Logout(hostname string, setting *settings.Settings) error {
 	return nil
 }
 
-const OCI_VERSION_PREFFIX = "v"
-
 // Pull will pull the oci artifacts from oci registry to local path.
 func Pull(localPath, hostName, repoName, tag string, settings *settings.Settings) error {
 	// 0. Create a file store
@@ -92,11 +89,6 @@ func Pull(localPath, hostName, repoName, tag string, settings *settings.Settings
 		Client:     retry.DefaultClient,
 		Cache:      remoteauth.DefaultCache,
 		Credential: remoteauth.StaticCredential(repo.Reference.Host(), *credential),
-	}
-
-	// 3. Copy from the remote repository to the file store
-	if !strings.HasPrefix(tag, OCI_VERSION_PREFFIX) && tag != "latest" {
-		tag = OCI_VERSION_PREFFIX + tag
 	}
 
 	_, err = oras.Copy(ctx, repo, tag, fs, tag, oras.DefaultCopyOptions)

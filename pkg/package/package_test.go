@@ -391,10 +391,9 @@ func TestPackageCurrentPkgPath(t *testing.T) {
 	kclPkg, err := LoadKclPkg(testDir)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, kclPkg.GetPkgTag(), "0.0.1")
-	assert.Equal(t, kclPkg.GetOciPkgTag(), "v0.0.1")
 	assert.Equal(t, kclPkg.GetPkgName(), "test_tar")
-	assert.Equal(t, kclPkg.GetPkgFullName(), "test_tar-v0.0.1")
-	assert.Equal(t, kclPkg.GetPkgTarName(), "test_tar-v0.0.1.tar")
+	assert.Equal(t, kclPkg.GetPkgFullName(), "test_tar-0.0.1")
+	assert.Equal(t, kclPkg.GetPkgTarName(), "test_tar-0.0.1.tar")
 
 	assert.Equal(t, utils.DirExists(filepath.Join(testDir, kclPkg.GetPkgTarName())), false)
 
@@ -442,18 +441,36 @@ func TestLoadKclPkgFromTar(t *testing.T) {
 	assert.Equal(t, kclPkg.Deps["oci_konfig"].Sum, "sLr3e6W4RPrXYyswdOSiKqkHes1QHX2tk6SwxAPDqqo=")
 
 	assert.Equal(t, kclPkg.GetPkgTag(), "0.0.3")
-	assert.Equal(t, kclPkg.GetOciPkgTag(), "v0.0.3")
 	assert.Equal(t, kclPkg.GetPkgName(), "kcl1")
-	assert.Equal(t, kclPkg.GetPkgFullName(), "kcl1-v0.0.3")
-	assert.Equal(t, kclPkg.GetPkgTarName(), "kcl1-v0.0.3.tar")
+	assert.Equal(t, kclPkg.GetPkgFullName(), "kcl1-0.0.3")
+	assert.Equal(t, kclPkg.GetPkgTarName(), "kcl1-0.0.3.tar")
 
 	assert.Equal(t, utils.DirExists(filepath.Join(testDir, "kcl1-v0.0.3")), true)
 	err = os.RemoveAll(filepath.Join(testDir, "kcl1-v0.0.3"))
 	assert.Equal(t, err, nil)
 }
 
+func prepareKpmHomeInPath(path string) {
+	dirPath := filepath.Join(filepath.Join(path, ".kpm"), "config")
+	_ = os.MkdirAll(dirPath, 0755)
+
+	filePath := filepath.Join(dirPath, "kpm.json")
+
+	_ = ioutil.WriteFile(filePath, []byte("{\"DefaultOciRegistry\":\"ghcr.io\",\"DefaultOciRepo\":\"awesome-kusion\"}"), 0644)
+}
+
 func TestResolveMetadataInJsonStr(t *testing.T) {
+	originalValue := os.Getenv(env.PKG_PATH)
+	defer os.Setenv(env.PKG_PATH, originalValue)
+
 	testDir := getTestDir("resolve_metadata")
+
+	testHomePath := filepath.Join(filepath.Dir(testDir), "test_home_path")
+	prepareKpmHomeInPath(testHomePath)
+	defer os.RemoveAll(testHomePath)
+
+	os.Setenv(env.PKG_PATH, testHomePath)
+
 	pkg, err := LoadKclPkg(testDir)
 	assert.Equal(t, err, nil)
 

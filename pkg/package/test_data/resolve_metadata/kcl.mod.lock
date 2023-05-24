@@ -10,7 +10,7 @@
     name = "oci_konfig"
     full_name = "oci_konfig_0.0.1"
     version = "0.0.1"
-    sum = "sLr3e6W4RPrXYyswdOSiKqkHes1QHX2tk6SwxAPDqqo="
+    sum = "s7W6LnT9VQWpE8hMhGX7d7HvX1SvLwNtcy5jpfSGEE0="
     reg = "ghcr.io"
     repo = "awesome-kusion/oci_konfig"
     oci_tag = "0.0.1"
