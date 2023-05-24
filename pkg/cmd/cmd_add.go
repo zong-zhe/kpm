@@ -89,6 +89,7 @@ func onlyOnceOption(c *cli.Context, name string) (*string, error) {
 	}
 }
 
+// parseAddOptions will parse the user cli inputs.
 func parseAddOptions(c *cli.Context, localPath string, settings *settings.Settings) (*opt.AddOptions, error) {
 	if c.NArg() == 0 {
 		gitOpts, err := parseGitRegistryOptions(c)
@@ -112,6 +113,7 @@ func parseAddOptions(c *cli.Context, localPath string, settings *settings.Settin
 
 }
 
+// parseGitRegistryOptions will parse the git registry information from user cli inputs.
 func parseGitRegistryOptions(c *cli.Context) (*opt.RegistryOptions, error) {
 	gitUrl, err := onlyOnceOption(c, "git")
 
@@ -133,6 +135,7 @@ func parseGitRegistryOptions(c *cli.Context) (*opt.RegistryOptions, error) {
 	}, nil
 }
 
+// parseOciRegistryOptions will parse the oci registry information from user cli inputs.
 func parseOciRegistryOptions(c *cli.Context, settings *settings.Settings) (*opt.RegistryOptions, error) {
 	ociPkgRef := c.Args().First()
 	name, version := parseOciPkgNameAndVersion(ociPkgRef)
@@ -151,8 +154,10 @@ func parseOciRegistryOptions(c *cli.Context, settings *settings.Settings) (*opt.
 	}, nil
 }
 
+// parseOciPkgNameAndVersion will parse package name and version
+// from string "<pkg_name>:<pkg_version>".
 func parseOciPkgNameAndVersion(s string) (string, string) {
-	parts := strings.Split(s, "@")
+	parts := strings.Split(s, ":")
 	if len(parts) == 1 {
 		return parts[0], ""
 	}

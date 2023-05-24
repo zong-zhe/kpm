@@ -86,6 +86,7 @@ func (dep *Dependency) FillDepInfo() error {
 
 // Download will download the kcl package to localPath from registory.
 func (dep *Dependency) Download(localPath string, settings *settings.Settings) (*Dependency, error) {
+	reporter.Report("kpm: adding dependency", dep.Name, "with", dep.Version)
 	if dep.Source.Git != nil {
 		_, err := dep.Source.Git.Download(localPath)
 		if err != nil {
