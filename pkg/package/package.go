@@ -14,7 +14,6 @@ import (
 	"kusionstack.io/kpm/pkg/opt"
 	"kusionstack.io/kpm/pkg/reporter"
 	"kusionstack.io/kpm/pkg/runner"
-	"kusionstack.io/kpm/pkg/settings"
 	"kusionstack.io/kpm/pkg/utils"
 )
 
@@ -371,7 +370,7 @@ func check(dep modfile.Dependency, newDepPath string) bool {
 // And the tar will be named "<package_name>-<package_version>.tar"
 // <package_name> is the package name specified in kcl.mod.
 // <package_version> is the package version specified in kcl.mod.
-func (kclPkg *KclPkg) PackageCurrentPkgPath(settings *settings.Settings) (string, error) {
+func (kclPkg *KclPkg) PackageCurrentPkgPath() (string, error) {
 	globalPkgPath, err := env.GetAbsPkgPath()
 	if err != nil {
 		return "", err

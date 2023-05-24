@@ -85,7 +85,7 @@ func pushCurrentPackage(ociUrl string, settings *settings.Settings) (string, err
 	reporter.Report("kpm: the current package '" + kclPkg.GetPkgName() + "' will be pushed.")
 
 	// 2. Package the current kcl package into default tar path.
-	tarPath, err := kclPkg.PackageCurrentPkgPath(settings)
+	tarPath, err := kclPkg.PackageCurrentPkgPath()
 	if err != nil {
 		return tarPath, err
 	}

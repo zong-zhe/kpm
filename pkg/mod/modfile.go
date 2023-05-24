@@ -40,24 +40,21 @@ type ModFile struct {
 	Dependencies
 }
 
+// FillDependenciesInfo will fill registry information for all dependencies in a kcl.mod.
 func (modFile *ModFile) FillDependenciesInfo() error {
-	return modFile.fillAllDepsInfo()
+	for k, v := range modFile.Deps {
+		err := v.FillDepInfo()
+		if err != nil {
+			return err
+		}
+		modFile.Deps[k] = v
+	}
+	return nil
 }
 
 // 'Dependencies' is dependencies section of 'kcl.mod'.
 type Dependencies struct {
 	Deps map[string]Dependency `json:"packages" toml:"dependencies,omitempty"`
-}
-
-func (deps *Dependencies) fillAllDepsInfo() error {
-	for k, v := range deps.Deps {
-		err := v.FillDepInfo()
-		if err != nil {
-			return err
-		}
-		deps.Deps[k] = v
-	}
-	return nil
 }
 
 type Dependency struct {
@@ -72,6 +69,7 @@ type Dependency struct {
 	Source        `json:"-"`
 }
 
+// FillDepInfo will fill registry information for a dependency.
 func (dep *Dependency) FillDepInfo() error {
 	if dep.Source.Oci != nil {
 		settings, err := settings.GetSettings()

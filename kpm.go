@@ -29,7 +29,7 @@ func main() {
 		cmd.NewAddCmd(),
 		cmd.NewPkgCmd(),
 		cmd.NewMetadataCmd(),
-		cmd.NewRunCmd(setting),
+		cmd.NewRunCmd(),
 		cmd.NewLoginCmd(setting),
 		cmd.NewLogoutCmd(setting),
 		cmd.NewPushCmd(setting),

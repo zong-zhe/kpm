@@ -92,10 +92,10 @@ const OCI_SEPARATOR = ":"
 // ParseOciOptionFromString will parser '<repo_name>:<repo_tag>' into an 'OciOptions' with an OCI registry.
 // the default OCI registry is 'docker.io'.
 // if the 'ociUrl' is only '<repo_name>', ParseOciOptionFromString will take 'latest' as the default tag.
-func ParseOciOptionFromString(oci string, tag string, settings *settings.Settings) (*OciOptions, error) {
+func ParseOciOptionFromString(oci string, tag string) (*OciOptions, error) {
 	ociOpt, err := ParseOciUrl(oci)
 	if err == errors.IsOciRef {
-		ociOpt, err = ParseOciRef(oci, settings)
+		ociOpt, err = ParseOciRef(oci)
 		if err != nil {
 			return nil, err
 		}
@@ -135,8 +135,12 @@ func ParseOciOptionFromOciUrl(url, tag string) (*OciOptions, error) {
 
 // ParseOciRef will parse 'repoName:repoTag' into OciOptions,
 // with default registry host 'docker.io'.
-func ParseOciRef(ociRef string, settings *settings.Settings) (*OciOptions, error) {
+func ParseOciRef(ociRef string) (*OciOptions, error) {
 	oci_address := strings.Split(ociRef, OCI_SEPARATOR)
+	settings, err := settings.GetSettings()
+	if err != nil {
+		return nil, err
+	}
 	if len(oci_address) == 1 {
 		reporter.Report("kpm: using default tag: latest")
 		return &OciOptions{

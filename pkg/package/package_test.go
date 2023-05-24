@@ -13,7 +13,6 @@ import (
 	modfile "kusionstack.io/kpm/pkg/mod"
 	"kusionstack.io/kpm/pkg/opt"
 	"kusionstack.io/kpm/pkg/runner"
-	"kusionstack.io/kpm/pkg/settings"
 	"kusionstack.io/kpm/pkg/utils"
 )
 
@@ -397,7 +396,7 @@ func TestPackageCurrentPkgPath(t *testing.T) {
 
 	assert.Equal(t, utils.DirExists(filepath.Join(testDir, kclPkg.GetPkgTarName())), false)
 
-	path, err := kclPkg.PackageCurrentPkgPath(&settings.Settings{})
+	path, err := kclPkg.PackageCurrentPkgPath()
 	assert.Equal(t, err, nil)
 	assert.Equal(t, path, filepath.Join(testDir, kclPkg.GetPkgTarName()))
 	assert.Equal(t, utils.DirExists(filepath.Join(testDir, kclPkg.GetPkgTarName())), true)

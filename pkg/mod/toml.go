@@ -266,7 +266,7 @@ func (git *Git) UnmarshalModTOML(data interface{}) error {
 func (oci *Oci) UnmarshalModTOML(data interface{}) error {
 	meta, ok := data.(string)
 	if !ok {
-		return fmt.Errorf("expected map[string]interface{}, got %T", data)
+		return fmt.Errorf("expected string, got %T", data)
 	}
 
 	oci.Tag = meta
