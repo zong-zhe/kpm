@@ -57,6 +57,8 @@ func TestMarshalTOML(t *testing.T) {
 	fmt.Printf("expected_toml: '%q'\n", expected_toml)
 	fmt.Printf("reversed_expected_toml: '%q'\n", reversed_expected_toml)
 	fmt.Printf("modfile: '%q'\n", modfile.MarshalTOML())
+	fmt.Printf("expected_toml == modfile.MarshalTOML(): '%t'\n", expected_toml == modfile.MarshalTOML())
+	fmt.Printf("reversed_expected_toml == modfile.MarshalTOML(): '%t'\n", reversed_expected_toml == modfile.MarshalTOML())
 	assert.Equal(t, (expected_toml == modfile.MarshalTOML()) || (reversed_expected_toml == modfile.MarshalTOML()), true)
 }
 
