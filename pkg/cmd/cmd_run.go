@@ -79,6 +79,9 @@ func NewRunCmd() *cli.Command {
 
 // runTar will compile the kcl package from a kcl package tar.
 func runTar(tarPath, entryFile string, vendorMode bool, kclArgs string) (string, error) {
+	fmt.Printf("tarPath: %v\n", tarPath)
+	fmt.Printf("entryFile: %v\n", entryFile)
+	fmt.Printf("kclArgs: %v\n", kclArgs)
 	absTarPath, err := absTarPath(tarPath)
 	if err != nil {
 		return "", err
@@ -116,14 +119,14 @@ func runOci(ociRef, version, entryFile string, vendorMode bool, kclArgs string) 
 	}
 
 	// 1. Create the temporary directory to pull the tar.
-	tmpDir, err := os.MkdirTemp("", "")
-	if err != nil {
-		return "", errors.InternalBug
-	}
-	// clean the temp dir.
-	defer os.RemoveAll(tmpDir)
+	// tmpDir, err := os.MkdirTemp("", "")
+	// if err != nil {
+	// 	return "", errors.InternalBug
+	// }
+	// // clean the temp dir.
+	// defer os.RemoveAll(tmpDir)
 
-	localPath := ociOpts.AddStoragePathSuffix(tmpDir)
+	localPath := ociOpts.AddStoragePathSuffix("")
 
 	// 2. Pull the tar.
 	err = oci.Pull(localPath, ociOpts.Reg, ociOpts.Repo, ociOpts.Tag)
