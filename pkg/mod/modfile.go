@@ -35,25 +35,49 @@ type ModFile struct {
 	// Whether the current package uses the vendor mode
 	// In the vendor mode, kpm will look for the package in the vendor subdirectory
 	// in the current package directory.
-	VendorMode bool `toml:"-"`
-	Dependencies
+	VendorMode   bool         `toml:"-"`
+	Profiles     Profile      `toml:"profiles"`
+	Dependencies Dependencies `toml:"dependencies"`
+}
+
+// Profile is the profile section of 'kcl.mod'.
+// It is used to specify the compilation options of the current package.
+type Profile struct {
+	Entries     []string `toml:"entries"`
+	Options     []string `toml:"options"`
+	Overrides   []string `toml:"overrides"`
+	DisableNone bool     `toml:"disable_none"`
+	SortKey     bool     `toml:"sort_key"`
+	Settings    []string `toml:"settings"`
+}
+
+// NewProfile will create a new profile.
+func NewProfile() Profile {
+	return Profile{
+		Entries:     []string{},
+		Options:     []string{},
+		Overrides:   []string{},
+		DisableNone: false,
+		SortKey:     false,
+		Settings:    []string{},
+	}
 }
 
 // FillDependenciesInfo will fill registry information for all dependencies in a kcl.mod.
 func (modFile *ModFile) FillDependenciesInfo() error {
-	for k, v := range modFile.Deps {
+	for k, v := range modFile.Dependencies.Deps {
 		err := v.FillDepInfo()
 		if err != nil {
 			return err
 		}
-		modFile.Deps[k] = v
+		modFile.Dependencies.Deps[k] = v
 	}
 	return nil
 }
 
 // 'Dependencies' is dependencies section of 'kcl.mod'.
 type Dependencies struct {
-	Deps map[string]Dependency `json:"packages" toml:"dependencies,omitempty"`
+	Deps map[string]Dependency
 }
 
 type Dependency struct {

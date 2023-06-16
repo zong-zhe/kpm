@@ -36,6 +36,8 @@ func (mod *ModFile) MarshalTOML() string {
 	sb.WriteString(mod.Pkg.MarshalTOML())
 	sb.WriteString(NEWLINE)
 	sb.WriteString(mod.Dependencies.MarshalTOML())
+	sb.WriteString(NEWLINE)
+	sb.WriteString(mod.Profiles.MarshalTOML())
 	return sb.String()
 }
 
@@ -122,8 +124,24 @@ func (oci *Oci) MarshalTOML() string {
 	return sb.String()
 }
 
+const PROFILE_PATTERN = "[profile]"
+
+func (p *Profile) MarshalTOML() string {
+	var sb strings.Builder
+	sb.WriteString(PROFILE_PATTERN)
+	sb.WriteString(NEWLINE)
+	var buf bytes.Buffer
+	if err := toml.NewEncoder(&buf).Encode(p); err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	sb.WriteString(buf.String())
+	return sb.String()
+}
+
 const PACKAGE_FLAG = "package"
 const DEPS_FLAG = "dependencies"
+const PROFILES_FLAG = "profile"
 
 func (mod *ModFile) UnmarshalTOML(data interface{}) error {
 	meta, ok := data.(map[string]interface{})
@@ -151,6 +169,19 @@ func (mod *ModFile) UnmarshalTOML(data interface{}) error {
 		mod.Dependencies = deps
 	}
 
+	if v, ok := meta[PROFILES_FLAG]; ok {
+		p := NewProfile()
+		var buf bytes.Buffer
+		if err := toml.NewEncoder(&buf).Encode(v); err != nil {
+			return err
+		}
+		err := toml.Unmarshal(buf.Bytes(), &p)
+
+		if err != nil {
+			return err
+		}
+		mod.Profiles = p
+	}
 	return nil
 }
 
