@@ -14,6 +14,11 @@ type Compiler struct {
 	kclOpts *opt.KclOptions
 }
 
+// AddKclArg will add a kcl argument to the compiler.
+func (compiler *Compiler) AddKclArg(arg string) {
+	compiler.kclOpts.KclCliArgs += " " + arg
+}
+
 // NewCompiler will create a new compiler.
 func NewCompiler(kclOpts *opt.KclOptions) *Compiler {
 	return &Compiler{

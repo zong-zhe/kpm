@@ -134,7 +134,7 @@ func TestUpdateKclModAndLock(t *testing.T) {
 		t.Errorf("failed to find kcl.mod.")
 	} else {
 		assert.Equal(t, len(kclPkg.Dependencies.Deps), 2)
-		assert.Equal(t, len(kclPkg.modFile.Deps), 2)
+		assert.Equal(t, len(kclPkg.modFile.Dependencies.Deps), 2)
 		expectKclMod, _ := os.ReadFile(filepath.Join(expectDir, "kcl.mod"))
 		assert.Equal(t, string(gotKclMod), string(expectKclMod))
 	}
@@ -143,7 +143,7 @@ func TestUpdateKclModAndLock(t *testing.T) {
 		t.Errorf("failed to find kcl.mod.lock.")
 	} else {
 		assert.Equal(t, len(kclPkg.Dependencies.Deps), 2)
-		assert.Equal(t, len(kclPkg.modFile.Deps), 2)
+		assert.Equal(t, len(kclPkg.modFile.Dependencies.Deps), 2)
 		expectKclModLock, _ := os.ReadFile(filepath.Join(expectDir, "kcl.mod.lock"))
 		assert.Equal(t, string(gotKclModLock), string(expectKclModLock))
 	}
@@ -412,15 +412,15 @@ func TestLoadKclPkgFromTar(t *testing.T) {
 	assert.Equal(t, kclPkg.modFile.Pkg.Edition, "0.0.1")
 	assert.Equal(t, kclPkg.modFile.Pkg.Version, "0.0.3")
 
-	assert.Equal(t, len(kclPkg.modFile.Deps), 2)
-	assert.Equal(t, kclPkg.modFile.Deps["konfig"].Name, "konfig")
-	assert.Equal(t, kclPkg.modFile.Deps["konfig"].FullName, "konfig_v0.0.1")
-	assert.Equal(t, kclPkg.modFile.Deps["konfig"].Git.Url, "https://github.com/awesome-kusion/konfig.git")
-	assert.Equal(t, kclPkg.modFile.Deps["konfig"].Git.Tag, "v0.0.1")
+	assert.Equal(t, len(kclPkg.modFile.Dependencies.Deps), 2)
+	assert.Equal(t, kclPkg.modFile.Dependencies.Deps["konfig"].Name, "konfig")
+	assert.Equal(t, kclPkg.modFile.Dependencies.Deps["konfig"].FullName, "konfig_v0.0.1")
+	assert.Equal(t, kclPkg.modFile.Dependencies.Deps["konfig"].Git.Url, "https://github.com/awesome-kusion/konfig.git")
+	assert.Equal(t, kclPkg.modFile.Dependencies.Deps["konfig"].Git.Tag, "v0.0.1")
 
-	assert.Equal(t, kclPkg.modFile.Deps["oci_konfig"].Name, "oci_konfig")
-	assert.Equal(t, kclPkg.modFile.Deps["oci_konfig"].FullName, "oci_konfig_0.0.1")
-	assert.Equal(t, kclPkg.modFile.Deps["oci_konfig"].Oci.Tag, "0.0.1")
+	assert.Equal(t, kclPkg.modFile.Dependencies.Deps["oci_konfig"].Name, "oci_konfig")
+	assert.Equal(t, kclPkg.modFile.Dependencies.Deps["oci_konfig"].FullName, "oci_konfig_0.0.1")
+	assert.Equal(t, kclPkg.modFile.Dependencies.Deps["oci_konfig"].Oci.Tag, "0.0.1")
 
 	assert.Equal(t, len(kclPkg.Deps), 2)
 	assert.Equal(t, kclPkg.Deps["konfig"].Name, "konfig")

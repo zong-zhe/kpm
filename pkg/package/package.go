@@ -91,7 +91,33 @@ func (kclPkg *KclPkg) CompileWithEntryFile(kpmHome string, kclvmCompiler *runner
 		kclvmCompiler.AddDepPath(dName, dPath)
 	}
 
+	kclPkg.FillCompileOptions(kclvmCompiler)
+
 	return kclvmCompiler.Run()
+}
+
+// FillCompileOptions will fill the compile options with the current kcl package information.
+func (kclPkg *KclPkg) FillCompileOptions(compiler *runner.Compiler) {
+	compiler.AddKclArg(kclPkg.GetSettingsStr())
+	compiler.AddKclArg(kclPkg.GetOptionsStr())
+}
+
+// GetSettingsStr will return the settings string of the profile.
+func (kclPkg *KclPkg) GetSettingsStr() string {
+	var result string
+	for _, v := range kclPkg.modFile.Profiles.Settings {
+		result += "-Y " + filepath.Join(kclPkg.HomePath, v)
+	}
+	return result
+}
+
+// GetOptionsStr will return the options string of the profile.
+func (kclPkg *KclPkg) GetOptionsStr() string {
+	var result string
+	for _, v := range kclPkg.modFile.Profiles.Options {
+		result += "-D " + v
+	}
+	return result
 }
 
 // ResolveDeps will return a map between dependency name and its local path,

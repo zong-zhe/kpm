@@ -36,7 +36,7 @@ type ModFile struct {
 	// In the vendor mode, kpm will look for the package in the vendor subdirectory
 	// in the current package directory.
 	VendorMode   bool         `toml:"-"`
-	Profiles     Profile      `toml:"profiles"`
+	Profiles     Profile      `toml:"profile"`
 	Dependencies Dependencies `toml:"dependencies"`
 }
 
