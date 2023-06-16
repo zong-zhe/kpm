@@ -1,7 +1,0 @@
-kcl_cli_configs:
-  file:
-    - ./appops/wordpress/dev/main.k
-    - ./appops/wordpress/dev/platform.k
-    - ./appops/wordpress/base/base.k
-    - ./base/pkg/kusion_models/kube/metadata/metadata.k
-    - ./base/pkg/kusion_models/kube/render/render.k
