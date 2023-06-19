@@ -192,13 +192,11 @@ func runPkgInPath(pkgPath, entryFilePath string, vendorMode bool, kclArgs string
 		return "", err
 	}
 
-	// Set the entry file into compile options.
-	compileOpts := opt.NewKclOpts()
-	compileOpts.EntryFile = entryFilePath
-	compileOpts.KclCliArgs = kclArgs
-
 	// Call the kcl compiler.
-	compileResult, err := kclPkg.CompileWithEntryFile(globalPkgPath, runner.NewCompiler(compileOpts))
+	compileResult, err := kclPkg.CompileWithEntryFile(
+		globalPkgPath,
+		runner.DefaultCompiler().AddKFile(entryFilePath).AddWorkDir(kclPkg.HomePath),
+	)
 
 	if err != nil {
 		return "", err

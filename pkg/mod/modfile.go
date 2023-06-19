@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
+	"kusionstack.io/kclvm-go/pkg/kcl"
 	"kusionstack.io/kpm/pkg/errors"
 	"kusionstack.io/kpm/pkg/git"
 	"kusionstack.io/kpm/pkg/oci"
@@ -61,6 +62,24 @@ func NewProfile() Profile {
 		SortKey:     false,
 		Settings:    []string{},
 	}
+}
+
+// IntoKclOptions will transform the profile into kcl options.
+func (profile *Profile) IntoKclOptions() *kcl.Option {
+
+	opts := kcl.NewOption()
+
+	opts.Merge(kcl.WithOptions(profile.Options...))
+	opts.Merge(kcl.WithOverrides(profile.Overrides...))
+	opts.Merge(kcl.WithDisableNone(profile.DisableNone))
+	opts.Merge(kcl.WithSortKeys(profile.SortKey))
+
+	// iterate over settings and add them to the options
+	for _, setting := range profile.Settings {
+		opts.Merge(kcl.WithSettings(setting))
+	}
+
+	return opts
 }
 
 // FillDependenciesInfo will fill registry information for all dependencies in a kcl.mod.

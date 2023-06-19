@@ -87,10 +87,12 @@ func (kclPkg *KclPkg) CompileWithEntryFile(kpmHome string, kclvmCompiler *runner
 		return nil, err
 	}
 
+	// Fill the dependency path.
 	for dName, dPath := range pkgMap {
 		kclvmCompiler.AddDepPath(dName, dPath)
 	}
 
+	// Fill the kcl compiltion options from kcl.mod.
 	kclPkg.FillCompileOptions(kclvmCompiler)
 
 	return kclvmCompiler.Run()
@@ -98,8 +100,18 @@ func (kclPkg *KclPkg) CompileWithEntryFile(kpmHome string, kclvmCompiler *runner
 
 // FillCompileOptions will fill the compile options with the current kcl package information.
 func (kclPkg *KclPkg) FillCompileOptions(compiler *runner.Compiler) {
-	compiler.AddKclArg(kclPkg.GetSettingsStr())
-	compiler.AddKclArg(kclPkg.GetOptionsStr())
+	for _, v := range kclPkg.modFile.Profiles.Options {
+		compiler.AddOptions(v)
+	}
+	for _, v := range kclPkg.modFile.Profiles.Overrides {
+		compiler.AddOverrides(v)
+	}
+	for _, v := range kclPkg.modFile.Profiles.Settings {
+		compiler.AddSettings(v)
+	}
+
+	compiler.SetDisableNone(kclPkg.modFile.Profiles.DisableNone).
+		SetSortKeys(kclPkg.modFile.Profiles.SortKey)
 }
 
 // GetSettingsStr will return the settings string of the profile.

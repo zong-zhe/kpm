@@ -160,7 +160,7 @@ func TestUnmarshalLockToml(t *testing.T) {
 }
 
 func TestUnMarshalTOMLWithProfile(t *testing.T) {
-	modfile, err := LoadModFile("/Users/zongz/Workspace/kusionstack/kpm/pkg/mod/test_data/test_profile/")
+	modfile, err := LoadModFile(getTestDir("test_profile"))
 	assert.Equal(t, err, nil)
 	assert.Equal(t, modfile.Pkg.Name, "kpm")
 	assert.Equal(t, modfile.Pkg.Version, "0.0.1")

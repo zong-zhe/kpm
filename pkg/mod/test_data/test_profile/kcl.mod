@@ -7,7 +7,7 @@ version = "0.0.1"
 sub = "0.0.1"
 
 [profile]
-entries = ["main.k", "dir"]
+kfiles = ["main.k"]
 options = ["a=b", "b=c"]
 overrides = ["a=b", "b=c"]
 disable_none = true
