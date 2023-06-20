@@ -199,7 +199,7 @@ func runPkgInPath(pkgPath string, entryFilePaths []string, vendorMode bool, kclA
 	// Call the kcl compiler.
 	compileResult, err := kclPkg.CompileWithEntryFile(
 		globalPkgPath,
-		compiler.AddWorkDir(kclPkg.HomePath),
+		compiler.AddKFile(kclPkg.HomePath),
 	)
 
 	if err != nil {

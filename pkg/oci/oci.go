@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
+	"github.com/sirupsen/logrus"
 	"kusionstack.io/kpm/pkg/errors"
 	"kusionstack.io/kpm/pkg/reporter"
 	"kusionstack.io/kpm/pkg/semver"
@@ -23,6 +24,7 @@ const DEFAULT_OCI_ARTIFACT_TYPE = "application/vnd.oci.image.layer.v1.tar"
 
 // Login will login 'hostname' by 'username' and 'password'.
 func Login(hostname, username, password string, setting *settings.Settings) error {
+	logrus.SetLevel(logrus.FatalLevel)
 
 	authClient, err := dockerauth.NewClientWithDockerFallback(setting.CredentialsFile)
 
@@ -35,7 +37,6 @@ func Login(hostname, username, password string, setting *settings.Settings) erro
 			auth.WithLoginHostname(hostname),
 			auth.WithLoginUsername(username),
 			auth.WithLoginSecret(password),
-			auth.WithLoginInsecure(),
 		}...,
 	)
 
