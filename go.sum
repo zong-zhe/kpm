@@ -746,6 +746,8 @@ kusionstack.io/kclvm-artifact-go v0.5.0-alpha.3 h1:sirVOSHHmkgWdBY74luH9jNucL6eb
 kusionstack.io/kclvm-artifact-go v0.5.0-alpha.3/go.mod h1:WI+NvDeMqu1AduJT119X7q8KQdYmKfv4Nq4OvZ1tAsI=
 kusionstack.io/kclvm-go v0.5.0-alpha.3.0.20230614101429-ed21a32545bd h1:qYvIzswMqHL+ebnXJl2id9dFoJHFc2gzMcu4GGko+jg=
 kusionstack.io/kclvm-go v0.5.0-alpha.3.0.20230614101429-ed21a32545bd/go.mod h1:bnY9JNrCG2Cdc/CYLxxDSfB9dYmVcpXZ9SfyQxSf8/w=
+kusionstack.io/kclvm-go v0.5.0-alpha.3.0.20230619120855-0a3ba2479909 h1:eAhW2uPhfvBaYu29MsxZhl60iyL+VwuXui9fWq4ZJNM=
+kusionstack.io/kclvm-go v0.5.0-alpha.3.0.20230619120855-0a3ba2479909/go.mod h1:bnY9JNrCG2Cdc/CYLxxDSfB9dYmVcpXZ9SfyQxSf8/w=
 oras.land/oras-go v1.2.3 h1:v8PJl+gEAntI1pJ/LCrDgsuk+1PKVavVEPsYIHFE5uY=
 oras.land/oras-go v1.2.3/go.mod h1:M/uaPdYklze0Vf3AakfarnpoEckvw0ESbRdN8Z1vdJg=
 oras.land/oras-go/v2 v2.0.2 h1:3aSQdJ7EUC0ft2e9PjJB9Jzastz5ojPA4LzZ3Q4YbUc=

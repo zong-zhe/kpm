@@ -7,9 +7,9 @@ version = "0.0.1"
 sub = "0.0.1"
 
 [profile]
-kfiles = ["main.k"]
+entries = ["main.k", "xxx/xxx/dir"]
 options = ["a=b", "b=c"]
 overrides = ["a=b", "b=c"]
 disable_none = true
 sort_key = true
-settings = ["kcl.yaml"]
+settings = ["xxx/xxx/kcl.yaml"]

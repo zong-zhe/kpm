@@ -35,6 +35,7 @@ func Login(hostname, username, password string, setting *settings.Settings) erro
 			auth.WithLoginHostname(hostname),
 			auth.WithLoginUsername(username),
 			auth.WithLoginSecret(password),
+			auth.WithLoginInsecure(),
 		}...,
 	)
 
@@ -76,6 +77,7 @@ type OciClient struct {
 // repoName is the repo name on registry.
 func NewOciClient(regName, repoName string) (*OciClient, error) {
 	repo, err := remote.NewRepository(filepath.Join(regName, repoName))
+	repo.PlainHTTP = true
 	if err != nil {
 		return nil, errors.FailedPullFromOci
 	}

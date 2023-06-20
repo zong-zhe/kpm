@@ -88,5 +88,5 @@ func (compiler *Compiler) Run() (*kcl.KCLResultList, error) {
 	// Merge the kcl options from kcl.mod and kpm cli.
 	compiler.kclOpts.Merge(kclFlags.IntoKclOptions())
 
-	return kcl.RunWithOpts("", *compiler.kclOpts)
+	return kcl.RunWithOpts(*compiler.kclOpts)
 }
