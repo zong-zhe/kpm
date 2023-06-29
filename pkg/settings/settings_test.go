@@ -146,6 +146,9 @@ func TestPackageCacheLock(t *testing.T) {
 	wg.Wait()
 
 	// Compare the gotlist and expectedlist.
+	fmt.Printf("gotlist: %v\n", gotlist)
+	fmt.Printf("goroutine_1_first_list: %v\n", goroutine_1_first_list)
+	fmt.Printf("goroutine_2_first_list: %v\n", goroutine_2_first_list)
 	assert.Equal(t,
 		(reflect.DeepEqual(gotlist, goroutine_1_first_list) || reflect.DeepEqual(gotlist, goroutine_2_first_list)),
 		true)
