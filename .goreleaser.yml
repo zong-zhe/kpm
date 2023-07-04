@@ -4,8 +4,17 @@ before:
   hooks:
     # You may remove this if you don't use go modules.
     - go mod tidy
+    
+# .goreleaser.yml
 builds:
-  - id: kpm
+  - id: "mybinary-windows-amd64"
     main: ./kpm.go
+    goos:
+      - windows
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=0
     ldflags:
       - "-X kcl-lang.io/kpm/pkg/version.version={{.Version}}"
+
