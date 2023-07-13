@@ -251,13 +251,13 @@ func (kclPkg *KclPkg) CreateDefaultKclProgram() error {
 // AddDeps will add the dependencies to current kcl package and update kcl.mod and kcl.mod.lock.
 func (kclPkg *KclPkg) AddDeps(opt *opt.AddOptions) error {
 	// 1. get settings from the global config file.
-	settings, err := settings.GetSettings()
-	if err != nil {
-		return err
+	settings := settings.GetSettings()
+	if settings.Event != nil {
+		return settings.Event
 	}
 
 	// 2. acquire the lock of the package cache.
-	err = settings.AcquirePackageCacheLock()
+	err := settings.AcquirePackageCacheLock()
 	if err != nil {
 		return err
 	}

@@ -166,9 +166,9 @@ func parseOciRegistryOptions(c *cli.Context) (*opt.RegistryOptions, error) {
 		return nil, err
 	}
 
-	settings, err := settings.GetSettings()
-	if err != nil {
-		return nil, err
+	settings := settings.GetSettings()
+	if settings.Event != nil {
+		return nil, settings.Event
 	}
 
 	return &opt.RegistryOptions{
