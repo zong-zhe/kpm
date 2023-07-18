@@ -2,6 +2,7 @@ package settings
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -75,6 +76,8 @@ func (settings *Settings) AcquirePackageCacheLock() error {
 			if err != nil && firstTry {
 				reporter.Report("kpm: waiting for package-cache lock...")
 				firstTry = false
+				fmt.Printf("err: %v\n", err)
+				return err
 			}
 			// if locked, break the loop.
 			if locked {
