@@ -260,7 +260,7 @@ func (ociClient *OciClient) FetchConfigDesc(localPath, reference, tag string) (*
 	defer fs.Close()
 
 	fetchOpts := oras.DefaultFetchBytesOptions
-	_, manifestContent, err := oras.FetchBytes(*ociClient.ctx, fs, reference, fetchOpts)
+	_, manifestContent, err := oras.FetchBytes(*ociClient.ctx, fs, fmt.Sprintf("%s:%s", reference, tag), fetchOpts)
 	if err != nil {
 		return &ocispec.Descriptor{}, err
 	}
