@@ -85,7 +85,7 @@ func (ociClient *OciClient) SetLogWriter(writer io.Writer) {
 }
 
 func (ociClient *OciClient) GetReference() string {
-	return ociClient.repo.Reference.String()
+	return utils.JoinPath(ociClient.repo.Reference.Registry, ociClient.repo.Reference.Repository)
 }
 
 // NewOciClient will new an OciClient.
@@ -260,7 +260,7 @@ func (ociClient *OciClient) FetchConfigDesc(localPath, reference, tag string) (*
 	defer fs.Close()
 
 	fetchOpts := oras.DefaultFetchBytesOptions
-	_, manifestContent, err := oras.FetchBytes(*ociClient.ctx, fs, ociClient.repo.Reference.Reference, fetchOpts)
+	_, manifestContent, err := oras.FetchBytes(*ociClient.ctx, fs, reference, fetchOpts)
 	if err != nil {
 		return &ocispec.Descriptor{}, err
 	}
