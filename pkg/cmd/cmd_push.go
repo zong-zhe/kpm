@@ -130,23 +130,8 @@ func pushTarPackage(ociUrl, localTarPath string, vendorMode bool, kpmcli *client
 // 3. Generate the OCI options from oci url and the version of current kcl package.
 // 4. Push the package to the oci registry.
 func pushPackage(ociUrl string, kclPkg *pkg.KclPkg, vendorMode bool, kpmcli *client.KpmClient) error {
-
-	tarPath, err := kpmcli.PackagePkg(kclPkg, vendorMode)
-	if err != nil {
-		return err
-	}
-
-	// clean the tar path.
-	defer func() {
-		if kclPkg != nil && utils.DirExists(tarPath) {
-			err = os.RemoveAll(tarPath)
-			if err != nil {
-				err = errors.InternalBug
-			}
-		}
-	}()
-
 	// 2. If the oci url is not specified, generate the default oci url from the current package.
+	var err error
 	if len(ociUrl) == 0 {
 		ociUrl, err = genDefaultOciUrlForKclPkg(kclPkg, kpmcli)
 		if err != nil || len(ociUrl) == 0 {
@@ -157,7 +142,6 @@ func pushPackage(ociUrl string, kclPkg *pkg.KclPkg, vendorMode bool, kpmcli *cli
 			)
 		}
 	}
-
 	// 3. Generate the OCI options from oci url and the version of current kcl package.
 	ociOpts, err := opt.ParseOciOptionFromOciUrl(ociUrl, kclPkg.GetPkgTag())
 	if err != (*reporter.KpmEvent)(nil) {
@@ -170,8 +154,8 @@ func pushPackage(ociUrl string, kclPkg *pkg.KclPkg, vendorMode bool, kpmcli *cli
 
 	reporter.ReportMsgTo(fmt.Sprintf("kpm: package '%s' will be pushed", kclPkg.GetPkgName()), kpmcli.GetLogWriter())
 	// 4. Push it.
-	err = kpmcli.PushToOci(tarPath, ociOpts)
-	if err != (*reporter.KpmEvent)(nil) {
+	pusherr := kpmcli.PushPkgToOci(kclPkg, ociOpts, vendorMode)
+	if pusherr != nil {
 		return err
 	}
 

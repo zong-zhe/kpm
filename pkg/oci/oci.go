@@ -2,13 +2,17 @@ package oci
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"path/filepath"
 
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/thoas/go-funk"
+	"kcl-lang.io/kpm/pkg/constants"
 	"kcl-lang.io/kpm/pkg/errors"
+	pkg "kcl-lang.io/kpm/pkg/package"
 	"kcl-lang.io/kpm/pkg/reporter"
 	"kcl-lang.io/kpm/pkg/semver"
 	"kcl-lang.io/kpm/pkg/settings"
@@ -133,6 +137,7 @@ func (ociClient *OciClient) Pull(localPath, tag string) error {
 
 	// Copy from the remote repository to the file store
 	_, err = oras.Copy(*ociClient.ctx, ociClient.repo, tag, fs, tag, oras.DefaultCopyOptions)
+
 	if err != nil {
 		return reporter.NewErrorEvent(
 			reporter.FailedGetPkg,
@@ -246,6 +251,28 @@ func (ociClient *OciClient) Push(localPath, tag string) *reporter.KpmEvent {
 	return nil
 }
 
+func (ociClient *OciClient) FetchConfigDesc(localPath, reference, tag string) (*ocispec.Descriptor, error) {
+	// Create a file store
+	fs, err := file.New(localPath)
+	if err != nil {
+		return nil, nil
+	}
+	defer fs.Close()
+
+	fetchOpts := oras.DefaultFetchBytesOptions
+	_, manifestContent, err := oras.FetchBytes(*ociClient.ctx, fs, ociClient.repo.Reference.Reference, fetchOpts)
+	if err != nil {
+		return &ocispec.Descriptor{}, err
+	}
+
+	// unmarshal manifest content to extract config descriptor
+	var manifest ocispec.Manifest
+	if err := json.Unmarshal(manifestContent, &manifest); err != nil {
+		return &ocispec.Descriptor{}, err
+	}
+	return &manifest.Config, nil
+}
+
 func loadCredential(hostName string, settings *settings.Settings) (*remoteauth.Credential, error) {
 	authClient, err := dockerauth.NewClientWithDockerFallback(settings.CredentialsFile)
 	if err != nil {
@@ -314,4 +341,78 @@ func Push(localPath, hostName, repoName, tag string, settings *settings.Settings
 
 	// Push the oci package by the oci client.
 	return ociClient.Push(localPath, tag)
+}
+
+func FetchConfigDesc(ctx context.Context, src oras.ReadOnlyTarget, reference string) (ocispec.Descriptor, error) {
+	// fetch manifest descriptor and content
+	fetchOpts := oras.DefaultFetchBytesOptions
+	_, manifestContent, err := oras.FetchBytes(ctx, src, reference, fetchOpts)
+	if err != nil {
+		return ocispec.Descriptor{}, err
+	}
+
+	// unmarshal manifest content to extract config descriptor
+	var manifest ocispec.Manifest
+	if err := json.Unmarshal(manifestContent, &manifest); err != nil {
+		return ocispec.Descriptor{}, err
+	}
+	return manifest.Config, nil
+}
+
+func GetOciManifestFromPkg(kclPkg *pkg.KclPkg) map[string]string {
+	res := make(map[string]string)
+	res[constants.DEFAULT_KCL_OCI_MANIFEST_NAME] = kclPkg.GetPkgName()
+	res[constants.DEFAULT_KCL_OCI_MANIFEST_VERSION] = kclPkg.GetPkgVersion()
+	return res
+}
+
+func (ociClient *OciClient) PushWithManifestAnnotations(localPath, tag string, manifestAnnotations map[string]string) error {
+	// 0. Create a file store
+	fs, err := file.New(filepath.Dir(localPath))
+	if err != nil {
+		return reporter.NewErrorEvent(reporter.FailedPush, err, "Failed to load store path ", localPath)
+	}
+	defer fs.Close()
+
+	// 1. Add files to a file store
+
+	fileNames := []string{localPath}
+	fileDescriptors := make([]v1.Descriptor, 0, len(fileNames))
+	for _, name := range fileNames {
+		// The file name of the pushed file cannot be a file path,
+		// If the file name is a path, the path will be created during pulling.
+		// During pulling, a file should be downloaded separately,
+		// and a file path is created for each download, which is not good.
+		fileDescriptor, err := fs.Add(*ociClient.ctx, filepath.Base(name), DEFAULT_OCI_ARTIFACT_TYPE, "")
+		if err != nil {
+			return reporter.NewErrorEvent(reporter.FailedPush, err, fmt.Sprintf("Failed to add file '%s'", name))
+		}
+		fileDescriptors = append(fileDescriptors, fileDescriptor)
+	}
+
+	// 2. Pack the files and tag the packed manifest
+	packOpts := oras.PackManifestOptions{
+		ManifestAnnotations: manifestAnnotations,
+		Layers:              fileDescriptors,
+	}
+	manifestDescriptor, err := oras.PackManifest(*ociClient.ctx, fs, oras.PackManifestVersion1_1_RC4, DEFAULT_OCI_ARTIFACT_TYPE, packOpts)
+
+	if err != nil {
+		return reporter.NewErrorEvent(reporter.FailedPush, err, fmt.Sprintf("failed to pack package in '%s'", localPath))
+	}
+
+	if err = fs.Tag(*ociClient.ctx, manifestDescriptor, tag); err != nil {
+		return reporter.NewErrorEvent(reporter.FailedPush, err, fmt.Sprintf("failed to tag package with tag '%s'", tag))
+	}
+
+	// 3. Copy from the file store to the remote repository
+	desc, err := oras.Copy(*ociClient.ctx, fs, tag, ociClient.repo, tag, oras.DefaultCopyOptions)
+
+	if err != nil {
+		return reporter.NewErrorEvent(reporter.FailedPush, err, fmt.Sprintf("failed to push '%s'", ociClient.repo.Reference))
+	}
+
+	reporter.ReportMsgTo(fmt.Sprintf("kpm: pushed [registry] %s", ociClient.repo.Reference), ociClient.logWriter)
+	reporter.ReportMsgTo(fmt.Sprintf("kpm: digest: %s", desc.Digest), ociClient.logWriter)
+	return nil
 }

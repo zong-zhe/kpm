@@ -58,6 +58,10 @@ func LoadKclPkgFromTar(pkgTarPath string) (*KclPkg, error) {
 	return LoadKclPkg(destDir)
 }
 
+func (KclPkg *KclPkg) GetPkgVersion() string {
+	return KclPkg.ModFile.Pkg.Version
+}
+
 // GetKclOpts will return the kcl options from kcl.mod.
 func (kclPkg *KclPkg) GetKclOpts() *kcl.Option {
 	return kclPkg.ModFile.Profiles.IntoKclOptions()

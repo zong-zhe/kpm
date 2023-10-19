@@ -716,6 +716,24 @@ func (c *KpmClient) DownloadFromOci(dep *pkg.Oci, localPath string) (string, err
 	return localPath, nil
 }
 
+func (c *KpmClient) FetchManifestConfByPkgName(name, tag string) (string, error) {
+	ociCli, err := oci.NewOciClient(c.settings.Conf.DefaultOciRegistry, filepath.Join(c.settings.Conf.DefaultOciRepo, name), &c.settings)
+	if err != nil {
+		return "", err
+	}
+
+	ociCli.SetLogWriter(c.logWriter)
+	conf, err := ociCli.FetchConfigDesc("", ociCli.GetReference(), tag)
+	if err != nil {
+		return "", err
+	}
+	descBytes, err := json.Marshal(conf)
+	if err != nil {
+		return "", err
+	}
+	return string(descBytes), nil
+}
+
 // PullFromOci will pull a kcl package from oci registry and unpack it.
 func (c *KpmClient) PullFromOci(localPath, source, tag string) error {
 	localPath, err := filepath.Abs(localPath)
@@ -821,6 +839,45 @@ func (c *KpmClient) PushToOci(localPath string, ociOpts *opt.OciOptions) error {
 	}
 
 	return ociCli.Push(localPath, ociOpts.Tag)
+}
+
+// PushPkgToOci will push a kcl package to oci registry.
+func (c *KpmClient) PushPkgToOci(kclPkg *pkg.KclPkg, ociOpts *opt.OciOptions, vendorMode bool) error {
+	ociCli, err := oci.NewOciClient(ociOpts.Reg, ociOpts.Repo, &c.settings)
+	if err != nil {
+		return err
+	}
+
+	ociCli.SetLogWriter(c.logWriter)
+
+	exist, err := ociCli.ContainsTag(ociOpts.Tag)
+	if err != (*reporter.KpmEvent)(nil) {
+		return err
+	}
+
+	if exist {
+		return reporter.NewErrorEvent(
+			reporter.PkgTagExists,
+			fmt.Errorf("package version '%s' already exists", ociOpts.Tag),
+		)
+	}
+
+	tarPath, err := c.PackagePkg(kclPkg, vendorMode)
+	if err != nil {
+		return err
+	}
+
+	// clean the tar path.
+	defer func() {
+		if kclPkg != nil && utils.DirExists(tarPath) {
+			err = os.RemoveAll(tarPath)
+			if err != nil {
+				err = errors.InternalBug
+			}
+		}
+	}()
+
+	return ociCli.PushWithManifestAnnotations(tarPath, ociOpts.Tag, oci.GetOciManifestFromPkg(kclPkg))
 }
 
 // LoginOci will login to the oci registry.
