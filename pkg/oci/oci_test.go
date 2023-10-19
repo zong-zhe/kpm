@@ -1,6 +1,7 @@
 package oci
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -40,4 +41,13 @@ func TestLogin(t *testing.T) {
 
 	err := Login(hostName, userName, userPwd, &settings)
 	assert.Equal(t, err, errors.FailedLogin)
+}
+
+func TestFetch(t *testing.T) {
+	ociCli, err := NewOciClient("localhost:5001", "test/kpm", settings.GetSettings())
+	assert.Equal(t, err, nil)
+
+	conf, err := ociCli.FetchManifestByRef("0.0.3")
+	assert.Equal(t, err, nil)
+	fmt.Printf("conf: %v\n", conf)
 }

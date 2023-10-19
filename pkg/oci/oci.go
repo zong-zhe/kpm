@@ -251,26 +251,19 @@ func (ociClient *OciClient) Push(localPath, tag string) *reporter.KpmEvent {
 	return nil
 }
 
-func (ociClient *OciClient) FetchConfigDesc(localPath, reference, tag string) (*ocispec.Descriptor, error) {
-	// Create a file store
-	fs, err := file.New(localPath)
-	if err != nil {
-		return nil, nil
-	}
-	defer fs.Close()
-
+func (ociClient *OciClient) FetchManifestByRef(tag string) (*ocispec.Manifest, error) {
 	fetchOpts := oras.DefaultFetchBytesOptions
-	_, manifestContent, err := oras.FetchBytes(*ociClient.ctx, fs, fmt.Sprintf("%s:%s", reference, tag), fetchOpts)
+	_, manifestContent, err := oras.FetchBytes(*ociClient.ctx, ociClient.repo, tag, fetchOpts)
 	if err != nil {
-		return &ocispec.Descriptor{}, err
+		return nil, err
 	}
 
 	// unmarshal manifest content to extract config descriptor
 	var manifest ocispec.Manifest
 	if err := json.Unmarshal(manifestContent, &manifest); err != nil {
-		return &ocispec.Descriptor{}, err
+		return nil, err
 	}
-	return &manifest.Config, nil
+	return &manifest, nil
 }
 
 func loadCredential(hostName string, settings *settings.Settings) (*remoteauth.Credential, error) {

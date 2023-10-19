@@ -723,7 +723,7 @@ func (c *KpmClient) FetchManifestConfByPkgName(name, tag string) (string, error)
 	}
 
 	ociCli.SetLogWriter(c.logWriter)
-	conf, err := ociCli.FetchConfigDesc("", ociCli.GetReference(), tag)
+	conf, err := ociCli.FetchManifestByRef(tag)
 	if err != nil {
 		return "", err
 	}
