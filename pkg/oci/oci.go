@@ -356,6 +356,7 @@ func GetOciManifestFromPkg(kclPkg *pkg.KclPkg) map[string]string {
 	res := make(map[string]string)
 	res[constants.DEFAULT_KCL_OCI_MANIFEST_NAME] = kclPkg.GetPkgName()
 	res[constants.DEFAULT_KCL_OCI_MANIFEST_VERSION] = kclPkg.GetPkgVersion()
+	res[constants.DEFAULT_METADATA_SOURCE] = constants.DEFAULT_METADATA_GIT_REPO
 	return res
 }
 

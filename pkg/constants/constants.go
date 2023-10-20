@@ -16,4 +16,6 @@ const (
 	DEFAULT_KCL_FILE_CONTENT         = "The_first_kcl_program = 'Hello World!'"
 	DEFAULT_KCL_OCI_MANIFEST_NAME    = "org.kcllang.package.name"
 	DEFAULT_KCL_OCI_MANIFEST_VERSION = "org.kcllang.package.version"
+	DEFAULT_METADATA_SOURCE          = "org.opencontainers.image.source"
+	DEFAULT_METADATA_GIT_REPO        = "https://github.com/zong-zhe/artifacthub"
 )
