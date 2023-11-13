@@ -99,6 +99,7 @@ func (c *KpmClient) ResolveDepsIntoMap(kclPkg *pkg.KclPkg) (map[string]string, e
 	return pkgMap, nil
 }
 
+// / fillPkgInfoFromOciMenifast will fill the package information from the oci manifest.
 func (c *KpmClient) fillPkgInfoFromOciMenifast(name, tag string, dep pkg.Dependency) (pkg.Dependency, error) {
 	manifest := ocispec.Manifest{}
 	jsonDesc, err := c.FetchOciManifestIntoJsonStr(opt.OciFetchOptions{
@@ -223,6 +224,20 @@ func (c *KpmClient) ResolvePkgDepsMetadata(kclPkg *pkg.KclPkg, update bool) erro
 
 	// update the kcl.mod and kcl.mod.lock.
 	err := kclPkg.UpdateModAndLockFile()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// / UpdateDeps will update the dependencies.
+func (c *KpmClient) UpdateDeps(kclPkg *pkg.KclPkg) error {
+	_, err := c.ResolveDepsMetadataInJsonStr(kclPkg, true)
+	if err != nil {
+		return err
+	}
+
+	err = kclPkg.UpdateModAndLockFile()
 	if err != nil {
 		return err
 	}
