@@ -1,2 +1,2 @@
-failed to logout 'invalid_registry'
-not logged in
+error: failed to logout 'invalid_registry'
+error: not logged in

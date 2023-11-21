@@ -1,2 +1,2 @@
-failed to login 'ghcr.io', please check registry, username and password is valid
-Get "https://ghcr.io/v2/": unsupported
+error: failed to login 'ghcr.io', please check registry, username and password is valid
+error: Get "https://ghcr.io/v2/": unsupported

@@ -164,7 +164,7 @@ func pushPackage(ociUrl string, kclPkg *pkg.KclPkg, vendorMode bool, kpmcli *cli
 		return reporter.NewErrorEvent(
 			reporter.UnsupportOciUrlScheme,
 			errors.InvalidOciUrl,
-			"only support url scheme 'oci://'.",
+			"only support url scheme 'oci://'",
 		)
 	}
 

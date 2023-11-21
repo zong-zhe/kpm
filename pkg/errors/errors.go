@@ -17,7 +17,7 @@ var FailedToLoadPackage = errors.New("failed to load package, please check the p
 var InvalidInitOptions = errors.New("invalid 'kpm init' argument, you must provide a name for the package to be initialized.")
 
 // Invalid 'kpm add'
-var InvalidAddOptions = errors.New("invalid 'kpm add' argument, you must provide a package name or url for the package.")
+var InvalidAddOptions = errors.New("invalid 'kpm add' argument, you must provide a package name or url for the package")
 var InvalidAddOptionsInvalidGitUrl = errors.New("invalid 'kpm add' argument, you must provide a Git Url for the package.")
 var InvalidAddOptionsInvalidOciRef = errors.New("invalid 'kpm add' argument, you must provide a valid Oci Ref for the package.")
 
@@ -39,7 +39,7 @@ var InvalidKpmHomeInCurrentPkg = errors.New("environment variable KCL_PKG_PATH c
 // Invalid oci
 var FailedLogin = errors.New("failed to login, please check registry, username and password is valid.")
 var FailedLogout = errors.New("failed to logout, the registry not logged in.")
-var FailedPull = errors.New("failed to pull kcl package.")
+var FailedPull = errors.New("failed to pull kcl package")
 var FailedPushToOci = errors.New("failed to push kcl package tar to oci.")
 var InvalidOciRef = errors.New("invalid oci reference.")
 var NotOciUrl = errors.New("url is not an oci url.")
@@ -50,7 +50,7 @@ var InvalidVersionFormat = errors.New("failed to parse version.")
 var PathNotFound = errors.New("path not found.")
 var PathIsEmpty = errors.New("path is empty.")
 var InvalidPkg = errors.New("invalid kcl package.")
-var InvalidOciUrl = errors.New("invalid oci url.")
+var InvalidOciUrl = errors.New("invalid oci url")
 var UnknownEnv = errors.New("invalid environment variable.")
 
 // No kcl files

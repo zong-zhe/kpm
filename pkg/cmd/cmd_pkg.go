@@ -40,7 +40,6 @@ func NewPkgCmd(kpmcli *client.KpmClient) *cli.Command {
 				return reporter.NewErrorEvent(
 					reporter.InvalidCmd,
 					fmt.Errorf("the directory where the tar is generated is required"),
-					"run 'kpm pkg help' for more information",
 				)
 			}
 

@@ -21,7 +21,6 @@ func NewLogoutCmd(kpmcli *client.KpmClient) *cli.Command {
 				return reporter.NewErrorEvent(
 					reporter.InvalidCmd,
 					fmt.Errorf("registry must be specified"),
-					"run 'kpm logout help' for more information",
 				)
 			}
 			err := kpmcli.LogoutOci(c.Args().First())

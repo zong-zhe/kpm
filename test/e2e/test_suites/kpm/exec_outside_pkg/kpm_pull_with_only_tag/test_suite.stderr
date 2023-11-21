@@ -1,2 +1,2 @@
-oci url or package name must be specified.
-failed to pull kcl package.
+error: oci url or package name must be specified
+error: failed to pull kcl package
