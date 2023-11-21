@@ -51,7 +51,7 @@ var PathNotFound = errors.New("path not found.")
 var PathIsEmpty = errors.New("path is empty.")
 var InvalidPkg = errors.New("invalid kcl package.")
 var InvalidOciUrl = errors.New("invalid oci url")
-var UnknownEnv = errors.New("invalid environment variable.")
+var UnknownEnv = errors.New("invalid environment variable")
 
 // No kcl files
 var NoKclFiles = errors.New("No input KCL files")
