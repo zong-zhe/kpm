@@ -28,7 +28,7 @@ func NewLogoutCmd(kpmcli *client.KpmClient) *cli.Command {
 			if err != nil {
 				return err
 			}
-			reporter.ReportMsgTo("kpm: Logout Succeeded", kpmcli.GetLogWriter())
+			reporter.ReportMsgTo("Logout Succeeded", kpmcli.GetLogWriter())
 			return nil
 		},
 	}

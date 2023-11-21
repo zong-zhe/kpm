@@ -259,8 +259,8 @@ func (ociClient *OciClient) PushWithOciManifest(localPath, tag string, opts *opt
 		return reporter.NewErrorEvent(reporter.FailedPush, err, fmt.Sprintf("failed to push '%s'", ociClient.repo.Reference))
 	}
 
-	reporter.ReportMsgTo(fmt.Sprintf("kpm: pushed [registry] %s", ociClient.repo.Reference), ociClient.logWriter)
-	reporter.ReportMsgTo(fmt.Sprintf("kpm: digest: %s", desc.Digest), ociClient.logWriter)
+	reporter.ReportMsgTo(fmt.Sprintf("pushed [registry] %s", ociClient.repo.Reference), ociClient.logWriter)
+	reporter.ReportMsgTo(fmt.Sprintf("digest: %s", desc.Digest), ociClient.logWriter)
 	return nil
 }
 

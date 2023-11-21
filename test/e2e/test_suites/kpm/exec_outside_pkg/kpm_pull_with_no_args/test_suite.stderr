@@ -1,2 +1,2 @@
-kpm: oci url or package name must be specified.
-kpm: failed to pull kcl package.
+oci url or package name must be specified.
+failed to pull kcl package.

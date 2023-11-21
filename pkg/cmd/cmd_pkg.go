@@ -53,7 +53,7 @@ func NewPkgCmd(kpmcli *client.KpmClient) *cli.Command {
 			kclPkg, err := pkg.LoadKclPkg(pwd)
 
 			if err != nil {
-				reporter.ExitWithReport("kpm: failed to load package in " + pwd + ".")
+				reporter.ExitWithReport("failed to load package in " + pwd + ".")
 				return err
 			}
 

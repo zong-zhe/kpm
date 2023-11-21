@@ -446,7 +446,7 @@ func (c *KpmClient) CompileOciPkg(ociSource, version string, opts *opt.CompileOp
 
 // createIfNotExist will create a file if it does not exist.
 func (c *KpmClient) createIfNotExist(filepath string, storeFunc func() error) error {
-	reporter.ReportMsgTo(fmt.Sprintf("kpm: creating new :%s", filepath), c.GetLogWriter())
+	reporter.ReportMsgTo(fmt.Sprintf("creating new :%s", filepath), c.GetLogWriter())
 	err := utils.CreateFileIfNotExist(
 		filepath,
 		storeFunc,
@@ -456,7 +456,7 @@ func (c *KpmClient) createIfNotExist(filepath string, storeFunc func() error) er
 			if errEvent.Type() != reporter.FileExists {
 				return err
 			} else {
-				reporter.ReportMsgTo(fmt.Sprintf("kpm: '%s' already exists", filepath), c.GetLogWriter())
+				reporter.ReportMsgTo(fmt.Sprintf("'%s' already exists", filepath), c.GetLogWriter())
 			}
 		} else {
 			return err
@@ -564,7 +564,7 @@ func (c *KpmClient) PackagePkg(kclPkg *pkg.KclPkg, vendorMode bool) (string, err
 	err = c.Package(kclPkg, kclPkg.DefaultTarPath(), vendorMode)
 
 	if err != nil {
-		reporter.ExitWithReport("kpm: failed to package pkg " + kclPkg.GetPkgName() + ".")
+		reporter.ExitWithReport("failed to package pkg " + kclPkg.GetPkgName() + ".")
 		return "", err
 	}
 	return kclPkg.DefaultTarPath(), nil
