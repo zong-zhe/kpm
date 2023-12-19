@@ -1,7 +1,6 @@
 [dependencies]
   [dependencies.bbb]
     name = "bbb"
-    full_name = "bbb_0.0.1"
-    version = "0.0.1"
+    full_name = "bbb_"
     sum = "/PGJJE6Rp0lAsq3n9RUZ34jPGfwzYIZESs17L6kSG/Y="
     path = "../bbb"
