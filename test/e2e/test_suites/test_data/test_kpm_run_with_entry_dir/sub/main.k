@@ -1,1 +1,0 @@
-sub = "The main.k in sub dir."
