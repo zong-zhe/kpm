@@ -37,5 +37,6 @@ jobs:
         run: |
           curl -L https://github.com/goharbor/harbor/releases/download/v2.3.3/harbor-online-installer-v2.3.3.tgz | tar xz
           cd harbor
+          cp harbor.yml.tmpl harbor.yml
           sed -i.bak 's/hostname: reg.mydomain.com/hostname: localhost/' harbor.yml
           sudo ./install.sh
