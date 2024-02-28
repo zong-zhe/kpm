@@ -1,0 +1,41 @@
+name: e2e test
+on: [push, pull_request]
+
+jobs:
+  e2e:
+    name: e2e test
+    runs-on: ubuntu-20.04
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
+  
+      - name: run e2e
+        run: |
+          make e2e
+
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+          sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+          sudo apt-get update
+          sudo apt-get install docker-ce
+
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+
+      - name: Setup Harbor
+        run: |
+          curl -L https://github.com/goharbor/harbor/releases/download/v2.3.3/harbor-online-installer-v2.3.3.tgz | tar xz
+          cd harbor
+          sed -i.bak 's/hostname: reg.mydomain.com/hostname: localhost/' harbor.yml
+          sudo ./install.sh
