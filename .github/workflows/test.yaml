@@ -24,7 +24,7 @@ jobs:
         env:
           GO111MODULE: on
         run: |
-          make cover
+          git version
       - name: Send coverage
         uses: shogo82148/actions-goveralls@v1
         with:
