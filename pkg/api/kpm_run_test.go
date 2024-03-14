@@ -39,9 +39,10 @@ func TestFunctions(t *testing.T) {
 	// t.Run("TestRunWithOpts", TestRunWithOpts)
 	// t.Run("TestRunWithSettingsOpts", TestRunWithSettingsOpts)
 	// t.Run("TestRunTarPkg", TestRunTarPkg)
+	t.Run("TestRunWithOptsAndNoSumCheck", TestRunWithOptsAndNoSumCheck)
 	t.Run("TestRunWithNoSumCheck", TestRunWithNoSumCheck)
 	// t.Run("TestRunPkgWithOpts", TestRunPkgWithOpts)
-	t.Run("TestRunWithOptsAndNoSumCheck", TestRunWithOptsAndNoSumCheck)
+
 	// t.Run("TestRunWithOptsWithNoLog", TestRunWithOptsWithNoLog)
 }
 
