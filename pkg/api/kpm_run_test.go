@@ -24,6 +24,27 @@ func getTestDir(subDir string) string {
 	return testDir
 }
 
+func TestMain(m *testing.M) {
+	// call flag.Parse() here if TestMain uses flags
+	os.Exit(m.Run())
+}
+
+func TestFunctions(t *testing.T) {
+	t.Run("TestGetAbsInputPath", TestGetAbsInputPath)
+	t.Run("TestRunPkgInPath", TestRunPkgInPath)
+	t.Run("TestRunPkgInPathInvalidPath", TestRunPkgInPathInvalidPath)
+	t.Run("TestRunPkgInPathInvalidPkg", TestRunPkgInPathInvalidPkg)
+	t.Run("TestRunTar", TestRunTar)
+	t.Run("TestRunWithWorkdir", TestRunWithWorkdir)
+	t.Run("TestRunWithOpts", TestRunWithOpts)
+	t.Run("TestRunWithSettingsOpts", TestRunWithSettingsOpts)
+	t.Run("TestRunTarPkg", TestRunTarPkg)
+	t.Run("TestRunWithNoSumCheck", TestRunWithNoSumCheck)
+	t.Run("TestRunPkgWithOpts", TestRunPkgWithOpts)
+	t.Run("TestRunWithOptsAndNoSumCheck", TestRunWithOptsAndNoSumCheck)
+	t.Run("TestRunWithOptsWithNoLog", TestRunWithOptsWithNoLog)
+}
+
 func TestGetAbsInputPath(t *testing.T) {
 	pkgPath := getTestDir("test_abs_input")
 	path, err := getAbsInputPath(filepath.Join(pkgPath, "test_pkg_path"), "test_input")
