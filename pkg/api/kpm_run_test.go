@@ -30,19 +30,19 @@ func TestMain(m *testing.M) {
 }
 
 func TestFunctions(t *testing.T) {
-	t.Run("TestGetAbsInputPath", TestGetAbsInputPath)
-	t.Run("TestRunPkgInPath", TestRunPkgInPath)
-	t.Run("TestRunPkgInPathInvalidPath", TestRunPkgInPathInvalidPath)
-	t.Run("TestRunPkgInPathInvalidPkg", TestRunPkgInPathInvalidPkg)
-	t.Run("TestRunTar", TestRunTar)
-	t.Run("TestRunWithWorkdir", TestRunWithWorkdir)
-	t.Run("TestRunWithOpts", TestRunWithOpts)
-	t.Run("TestRunWithSettingsOpts", TestRunWithSettingsOpts)
-	t.Run("TestRunTarPkg", TestRunTarPkg)
+	// t.Run("TestGetAbsInputPath", TestGetAbsInputPath)
+	// t.Run("TestRunPkgInPath", TestRunPkgInPath)
+	// t.Run("TestRunPkgInPathInvalidPath", TestRunPkgInPathInvalidPath)
+	// t.Run("TestRunPkgInPathInvalidPkg", TestRunPkgInPathInvalidPkg)
+	// t.Run("TestRunTar", TestRunTar)
+	// t.Run("TestRunWithWorkdir", TestRunWithWorkdir)
+	// t.Run("TestRunWithOpts", TestRunWithOpts)
+	// t.Run("TestRunWithSettingsOpts", TestRunWithSettingsOpts)
+	// t.Run("TestRunTarPkg", TestRunTarPkg)
 	t.Run("TestRunWithNoSumCheck", TestRunWithNoSumCheck)
-	t.Run("TestRunPkgWithOpts", TestRunPkgWithOpts)
+	// t.Run("TestRunPkgWithOpts", TestRunPkgWithOpts)
 	t.Run("TestRunWithOptsAndNoSumCheck", TestRunWithOptsAndNoSumCheck)
-	t.Run("TestRunWithOptsWithNoLog", TestRunWithOptsWithNoLog)
+	// t.Run("TestRunWithOptsWithNoLog", TestRunWithOptsWithNoLog)
 }
 
 func TestGetAbsInputPath(t *testing.T) {
@@ -225,7 +225,7 @@ func TestRunWithOptsAndNoSumCheck(t *testing.T) {
 		modLock := filepath.Join(workDir, "kcl.mod.lock")
 		expected, err := os.ReadFile(filepath.Join(pkgPath, testCase, "expected"))
 		assert.Equal(t, err, nil)
-
+		fmt.Printf("testCase: %v\n", testCase)
 		res, err := RunWithOpts(
 			opt.WithNoSumCheck(true),
 			opt.WithEntries([]string{pathMainK}),
