@@ -39,8 +39,9 @@ func TestFunctions(t *testing.T) {
 	// t.Run("TestRunWithOpts", TestRunWithOpts)
 	// t.Run("TestRunWithSettingsOpts", TestRunWithSettingsOpts)
 	// t.Run("TestRunTarPkg", TestRunTarPkg)
-	t.Run("TestRunWithOptsAndNoSumCheck", TestRunWithOptsAndNoSumCheck)
 	t.Run("TestRunWithNoSumCheck", TestRunWithNoSumCheck)
+
+	t.Run("TestRunWithOptsAndNoSumCheck", TestRunWithOptsAndNoSumCheck)
 	// t.Run("TestRunPkgWithOpts", TestRunPkgWithOpts)
 
 	// t.Run("TestRunWithOptsWithNoLog", TestRunWithOptsWithNoLog)
@@ -232,6 +233,7 @@ func TestRunWithOptsAndNoSumCheck(t *testing.T) {
 			opt.WithEntries([]string{pathMainK}),
 			opt.WithKclOption(kcl.WithWorkDir(workDir)),
 		)
+		fmt.Printf("err: %v\n", err)
 		assert.Equal(t, err, nil)
 		assert.Equal(t, utils.DirExists(modLock), false)
 		assert.Equal(t, utils.RmNewline(res.GetRawYamlResult()), utils.RmNewline(string(expected)))
