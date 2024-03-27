@@ -248,7 +248,10 @@ func (c *KpmClient) ResolvePkgDepsMetadata(kclPkg *pkg.KclPkg, update bool) erro
 					return err
 				}
 				d.FromKclPkg(depPkg)
-				kclPkg.Dependencies.Deps[name] = d
+				err = c.AddDepToPkg(kclPkg, &d)
+				if err != nil {
+					return err
+				}
 			} else {
 				// Otherwise, re-vendor it.
 				if kclPkg.IsVendorMode() {
