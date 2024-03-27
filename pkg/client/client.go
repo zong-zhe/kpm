@@ -815,6 +815,11 @@ func (c *KpmClient) Download(dep *pkg.Dependency, homePath, localPath string) (*
 			return nil, err
 		}
 		dep.FromKclPkg(kpkg)
+		abspath, err := filepath.Abs(dep.GetLocalFullPath(homePath))
+		if err != nil {
+			return nil, err
+		}
+		dep.Source.Local.Path = abspath
 	}
 
 	var err error
