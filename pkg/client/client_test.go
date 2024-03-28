@@ -16,9 +16,13 @@ import (
 	"github.com/dominikbraun/graph"
 	"github.com/otiai10/copy"
 	"github.com/stretchr/testify/assert"
+<<<<<<< HEAD
 	"gopkg.in/yaml.v3"
 	"kcl-lang.io/kcl-go/pkg/kcl"
 	"kcl-lang.io/kpm/pkg/downloader"
+=======
+	"kcl-lang.io/kcl-go/pkg/kcl"
+>>>>>>> 529738b (fix: oci source with settings files)
 	"kcl-lang.io/kpm/pkg/env"
 	"kcl-lang.io/kpm/pkg/git"
 	"kcl-lang.io/kpm/pkg/opt"
