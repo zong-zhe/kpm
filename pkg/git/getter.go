@@ -14,7 +14,7 @@ var goGetterGetters = map[string]getter.Getter{
 
 var goGetterNoDetectors = []getter.Detector{}
 
-const GIT_PROTOCOL = "git::"
+const GIT_PROTOCOL = ""
 
 func ForceProtocol(url, protocol string) string {
 	return protocol + url

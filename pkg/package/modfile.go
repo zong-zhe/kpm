@@ -246,19 +246,77 @@ func (dep *Dependency) GenDepFullName() string {
 
 // Source is the package source from registry.
 type Source struct {
+	defaultSource *PkgSource
 	*Git
 	*Oci
 	*Local `toml:"-"`
+	*Http
 }
 
+type PkgSource interface {
+	GetSource() *Source
+}
+
+func (oci *Oci) GetSource() *Source {
+	return &Source{Oci: oci}
+}
+
+func (git *Git) GetSource() *Source {
+	return &Source{Git: git}
+}
+
+func (source *Source) FromUrl(url url.URL) *Source {
+	if url.Scheme == "http" || url.Scheme == "https" {
+		gitUrl := url
+		gitUrl.Scheme = "git"
+		gitSource := Source{}
+		ociUrl := url
+		ociUrl.Scheme = constants.OciScheme
+		ociSource := Source{}
+
+		source.Http = &Http{
+			Secure: url.Scheme == "https",
+			MaybeProtocols: []Source{
+				*gitSource.FromUrl(gitUrl),
+				*ociSource.FromUrl(ociUrl),
+			},
+		}
+
+	} else if url.Scheme == "git" || url.Scheme == "ssh" {
+		source.Git = &Git{
+			Url:    url.Host + url.Path,
+			Branch: url.Query().Get("branch"),
+			Commit: url.Query().Get("commit"),
+			Tag:    url.Query().Get("tag"),
+		}
+	} else if url.Scheme == "oci" {
+		source.Oci = &Oci{
+			Reg:    url.Host,
+			Repo:   url.Path,
+			Tag:    url.Query().Get("tag"),
+			Digest: url.Query().Get("digest"),
+		}
+	} else {
+		source.Local = &Local{
+			Path: url.Path,
+		}
+	}
+	return source
+}
+
+type Http struct {
+	Secure         bool
+	MaybeProtocols []Source
+}
 type Local struct {
 	Path string `toml:"path,omitempty"`
 }
 
 type Oci struct {
-	Reg  string `toml:"reg,omitempty"`
-	Repo string `toml:"repo,omitempty"`
-	Tag  string `toml:"oci_tag,omitempty"`
+	Reg    string `toml:"reg,omitempty"`
+	Repo   string `toml:"repo,omitempty"`
+	Tag    string `toml:"oci_tag,omitempty"`
+	Digest string `toml:"digest,omitempty"`
 }
 
 func (oci *Oci) IntoOciUrl() string {

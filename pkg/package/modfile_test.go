@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
@@ -234,4 +235,82 @@ func TestGetFilePath(t *testing.T) {
 	}
 	assert.Equal(t, mfile.GetModFilePath(), filepath.Join(testPath, MOD_FILE))
 	assert.Equal(t, mfile.GetModLockFilePath(), filepath.Join(testPath, MOD_LOCK_FILE))
+}
+
+func TestSourceFromUrl(t *testing.T) {
+
+	httpUrlStr := "http://ghcr.io/kcl-lang/k8s?tag=0.0.1"
+	source := Source{}
+	httpUrl, err := url.Parse(httpUrlStr)
+	assert.Equal(t, err, nil)
+	httpSource := source.FromUrl(*httpUrl)
+	assert.Equal(t, httpSource.Http.Secure, false)
+	assert.Equal(t, len(httpSource.Http.MaybeProtocols), 2)
+	assert.Equal(t, httpSource.Http.MaybeProtocols[0].Git.Url, "ghcr.io/kcl-lang/k8s")
+	assert.Equal(t, httpSource.Http.MaybeProtocols[1].Oci.Reg, "ghcr.io")
+	assert.Equal(t, httpSource.Http.MaybeProtocols[1].Oci.Repo, "/kcl-lang/k8s")
+	assert.Equal(t, httpSource.Http.MaybeProtocols[1].Oci.Tag, "0.0.1")
+
+	httpsUrlStr := "https://ghcr.io/kcl-lang/k8s?tag=0.0.1"
+	source = Source{}
+	httpsUrl, err := url.Parse(httpsUrlStr)
+	assert.Equal(t, err, nil)
+	httpsSource := source.FromUrl(*httpsUrl)
+	assert.Equal(t, httpsSource.Http.Secure, true)
+	assert.Equal(t, len(httpsSource.Http.MaybeProtocols), 2)
+	assert.Equal(t, httpsSource.Http.MaybeProtocols[0].Git.Url, "ghcr.io/kcl-lang/k8s")
+	assert.Equal(t, httpsSource.Http.MaybeProtocols[1].Oci.Reg, "ghcr.io")
+	assert.Equal(t, httpsSource.Http.MaybeProtocols[1].Oci.Repo, "/kcl-lang/k8s")
+	assert.Equal(t, httpsSource.Http.MaybeProtocols[1].Oci.Tag, "0.0.1")
+
+	ociTagUrlStr := "oci://ghcr.io/kcl-lang/k8s?tag=0.0.1"
+	source = Source{}
+	ociTagUrl, err := url.Parse(ociTagUrlStr)
+	assert.Equal(t, err, nil)
+	ociTagSource := source.FromUrl(*ociTagUrl)
+	assert.Equal(t, ociTagSource.Oci.Reg, "ghcr.io")
+	assert.Equal(t, ociTagSource.Oci.Repo, "/kcl-lang/k8s")
+	assert.Equal(t, ociTagSource.Oci.Tag, "0.0.1")
+
+	ociDigestUrlStr := "oci://ghcr.io/kcl-lang/k8s?digest=1231e"
+	source = Source{}
+	ociDigestUrl, err := url.Parse(ociDigestUrlStr)
+	assert.Equal(t, err, nil)
+	ociDigestSource := source.FromUrl(*ociDigestUrl)
+	assert.Equal(t, ociDigestSource.Oci.Reg, "ghcr.io")
+	assert.Equal(t, ociDigestSource.Oci.Repo, "/kcl-lang/k8s")
+	assert.Equal(t, ociDigestSource.Oci.Digest, "1231e")
+
+	gitTagUrlStr := "git://github.com/test/aaa?tag=0.0.1"
+	source = Source{}
+	gitTagUrl, err := url.Parse(gitTagUrlStr)
+	assert.Equal(t, err, nil)
+	gitTagSource := source.FromUrl(*gitTagUrl)
+	assert.Equal(t, gitTagSource.Git.Url, "github.com/test/aaa")
+	assert.Equal(t, gitTagSource.Git.Tag, "0.0.1")
+
+	gitCommitUrlStr := "git://github.com/test/aaa?commit=9j8r9j"
+	source = Source{}
+	gitCommitUrl, err := url.Parse(gitCommitUrlStr)
+	assert.Equal(t, err, nil)
+	gitCommitSource := source.FromUrl(*gitCommitUrl)
+	assert.Equal(t, gitCommitSource.Git.Url, "github.com/test/aaa")
+	assert.Equal(t, gitCommitSource.Git.Commit, "9j8r9j")
+
+	gitBranchUrlStr := "git://github.com/test/aaa?branch=main"
+	source = Source{}
+	gitBranchUrl, err := url.Parse(gitBranchUrlStr)
+	assert.Equal(t, err, nil)
+	gitBranchSource := source.FromUrl(*gitBranchUrl)
+	assert.Equal(t, gitBranchSource.Git.Url, "github.com/test/aaa")
+	assert.Equal(t, gitBranchSource.Git.Branch, "main")
+
+	gitSshUrlStr := "ssh://git@github.com/test/aaa?tag=0.0.1"
+	source = Source{}
+	gitSshUrl, err := url.Parse(gitSshUrlStr)
+	assert.Equal(t, err, nil)
+	gitSshSource := source.FromUrl(*gitSshUrl)
+	// TODO: 这里注意一下，看看 账户和用户名称要怎么搞合适一些
+	assert.Equal(t, gitSshSource.Git.Url, "git@github.com/test/aaa")
+	assert.Equal(t, gitSshSource.Git.Tag, "0.0.1")
 }

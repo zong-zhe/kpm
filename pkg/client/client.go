@@ -30,6 +30,17 @@ import (
 	"kcl-lang.io/kpm/pkg/utils"
 )
 
+type PackageManager interface {
+	Add(source string) error
+	Run(source string) error
+	Push(source string) error
+	Pull(source string) error
+}
+
+func (c *KpmClient) Add(source string) error {
+	return nil
+}
+
 // KpmClient is the client of kpm.
 type KpmClient struct {
 	// The writer of the log.
