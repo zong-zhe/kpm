@@ -1,0 +1,11 @@
+[dependencies]
+  [dependencies.ccc]
+    name = "ccc"
+    full_name = "ccc_0.0.1"
+    version = "0.0.1"
+    sum = "jecXKuIlAyZXQfw+4ocZxIJK5DbCGSCgzZGzMzvn8eo="
+  [dependencies.ddd]
+    name = "ddd"
+    full_name = "ddd_0.0.1"
+    version = "0.0.1"
+    sum = "Y0EwUXMhLA8bc4HJvVuxMlh3+UVYA85360GDQ5JYeBs="

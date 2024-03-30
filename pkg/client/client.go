@@ -641,16 +641,10 @@ func (c *KpmClient) AddDepToPkg(kclPkg *pkg.KclPkg, d *pkg.Dependency) error {
 	}
 
 	// download all the dependencies.
-	changedDeps, _, err := c.InitGraphAndDownloadDeps(kclPkg)
+	_, _, err := c.InitGraphAndDownloadDeps(kclPkg)
 
 	if err != nil {
 		return err
-	}
-
-	// Update kcl.mod and kcl.mod.lock
-	for k, v := range changedDeps.Deps {
-		kclPkg.ModFile.Dependencies.Deps[k] = v
-		kclPkg.Dependencies.Deps[k] = v
 	}
 
 	return err
@@ -1245,7 +1239,7 @@ func (c *KpmClient) InitGraphAndDownloadDeps(kclPkg *pkg.KclPkg) (*pkg.Dependenc
 		return nil, nil, err
 	}
 
-	changedDeps, err := c.downloadDeps(kclPkg.ModFile.Dependencies, kclPkg.Dependencies, depGraph, kclPkg.HomePath, root)
+	changedDeps, err := c.downloadDeps(&kclPkg.ModFile.Dependencies, &kclPkg.Dependencies, depGraph, kclPkg.HomePath, root)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1277,7 +1271,7 @@ func (c *KpmClient) dependencyExists(dep *pkg.Dependency, lockDeps *pkg.Dependen
 }
 
 // downloadDeps will download all the dependencies of the current kcl package.
-func (c *KpmClient) downloadDeps(deps pkg.Dependencies, lockDeps pkg.Dependencies, depGraph graph.Graph[string, string], pkghome, parent string) (*pkg.Dependencies, error) {
+func (c *KpmClient) downloadDeps(deps *pkg.Dependencies, lockDeps *pkg.Dependencies, depGraph graph.Graph[string, string], pkghome, parent string) (*pkg.Dependencies, error) {
 
 	newDeps := pkg.Dependencies{
 		Deps: make(map[string]pkg.Dependency),
@@ -1289,7 +1283,7 @@ func (c *KpmClient) downloadDeps(deps pkg.Dependencies, lockDeps pkg.Dependencie
 			return nil, errors.InvalidDependency
 		}
 
-		existDep := c.dependencyExists(&d, &lockDeps)
+		existDep := c.dependencyExists(&d, lockDeps)
 		if existDep != nil {
 			newDeps.Deps[d.Name] = *existDep
 			continue
@@ -1324,7 +1318,7 @@ func (c *KpmClient) downloadDeps(deps pkg.Dependencies, lockDeps pkg.Dependencie
 
 		// Update kcl.mod and kcl.mod.lock
 		newDeps.Deps[d.Name] = *lockedDep
-		lockDeps.Deps[d.Name] = *lockedDep
+		deps.Deps[d.Name] = *lockedDep
 	}
 
 	// necessary to make a copy as when we are updating kcl.mod in below for loop
@@ -1373,7 +1367,7 @@ func (c *KpmClient) downloadDeps(deps pkg.Dependencies, lockDeps pkg.Dependencie
 		}
 
 		// Download the dependencies.
-		nested, err := c.downloadDeps(deppkg.ModFile.Dependencies, lockDeps, depGraph, deppkg.HomePath, source)
+		nested, err := c.downloadDeps(&deppkg.ModFile.Dependencies, lockDeps, depGraph, deppkg.HomePath, source)
 		if err != nil {
 			return nil, err
 		}
@@ -1384,6 +1378,11 @@ func (c *KpmClient) downloadDeps(deps pkg.Dependencies, lockDeps pkg.Dependencie
 				newDeps.Deps[d.Name] = d
 			}
 		}
+	}
+
+	// Update kcl.mod and kcl.mod.lock
+	for k, v := range newDeps.Deps {
+		lockDeps.Deps[k] = v
 	}
 
 	return &newDeps, nil
