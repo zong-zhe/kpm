@@ -41,6 +41,7 @@ func NewUpdateCmd(kpmcli *client.KpmClient) *cli.Command {
 
 func KpmUpdate(c *cli.Context, kpmcli *client.KpmClient) error {
 	kpmcli.SetNoSumCheck(c.Bool(FLAG_NO_SUM_CHECK))
+<<<<<<< HEAD
 
 	// acquire the lock of the package cache.
 	err := kpmcli.AcquirePackageCacheLock()
@@ -57,6 +58,8 @@ func KpmUpdate(c *cli.Context, kpmcli *client.KpmClient) error {
 	}()
 
 	pkgInfos := c.Args().Slice()
+=======
+	input_paths := c.Args().Slice()
 
 	pwd, err := os.Getwd()
 	if err != nil {
