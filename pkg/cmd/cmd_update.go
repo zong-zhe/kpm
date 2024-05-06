@@ -1,5 +1,5 @@
 // Copyright 2023 The KCL Authors. All rights reserved.
-// Deprecated: The entire contents of this file will be deprecated. 
+// Deprecated: The entire contents of this file will be deprecated.
 // Please use the kcl cli - https://github.com/kcl-lang/cli.
 
 package cmd
@@ -33,21 +33,6 @@ func NewUpdateCmd(kpmcli *client.KpmClient) *cli.Command {
 
 func KpmUpdate(c *cli.Context, kpmcli *client.KpmClient) error {
 	kpmcli.SetNoSumCheck(c.Bool(FLAG_NO_SUM_CHECK))
-
-	// acquire the lock of the package cache.
-	err := kpmcli.AcquirePackageCacheLock()
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		// release the lock of the package cache after the function returns.
-		releaseErr := kpmcli.ReleasePackageCacheLock()
-		if releaseErr != nil && err == nil {
-			err = releaseErr
-		}
-	}()
-
 	input_paths := c.Args().Slice()
 
 	pkg_paths := []string{}

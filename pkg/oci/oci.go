@@ -303,7 +303,7 @@ func (ociClient *OciClient) PushWithOciManifest(localPath, tag string, opts *opt
 	return nil
 }
 
-// FetchManifestByRef will fetch the manifest and return it into json string.
+// FetchManifestIntoJsonStr will fetch the manifest and return it into json string.
 func (ociClient *OciClient) FetchManifestIntoJsonStr(opts opt.OciFetchOptions) (string, error) {
 	fetchOpts := opts.FetchBytesOptions
 	_, manifestContent, err := oras.FetchBytes(*ociClient.ctx, ociClient.repo, opts.Tag, fetchOpts)
