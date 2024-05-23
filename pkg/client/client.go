@@ -184,7 +184,7 @@ func (c *KpmClient) LoadLockDeps(pkgPath string) (*pkg.Dependencies, error) {
 	return deps, nil
 }
 
-// Check whether the dependencies in kcl.mod.lock are the same as the dependencies from the source.
+// AcquireDepSum will acquire the checksum of the dependency from the OCI registry.
 func (c *KpmClient) AcquireDepSum(dep pkg.Dependency) (string, error) {
 	// Only the dependencies from the OCI need can be checked.
 	if dep.Source.Oci != nil {
@@ -246,7 +246,7 @@ func (c *KpmClient) ResolveDepsIntoMap(kclPkg *pkg.KclPkg) (map[string]string, e
 
 const PKG_NAME_PATTERN = "%s_%s"
 
-// Get the search for the dependency.
+// Get the local store path for the dependency.
 // 1. in the KCL_PKG_PATH: default is $HOME/.kcl/kpm
 // 2. in the vendor subdirectory of the current package.
 // 3. the dependency is from the local path.
@@ -380,6 +380,10 @@ func (c *KpmClient) resolvePkgDeps(kclPkg *pkg.KclPkg, lockDeps *pkg.Dependencie
 			)
 		}
 		d.FromKclPkg(depPkg)
+		d.Sum, err = c.AcquireDepSum(d)
+		if err != nil {
+			return err
+		}
 		err = c.resolvePkgDeps(depPkg, lockDeps, update)
 		if err != nil {
 			return err
