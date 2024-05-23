@@ -265,21 +265,6 @@ func (c *KpmClient) getDepStorePath(dep pkg.Dependency, isVendor bool) string {
 // Since redownloads are not triggered if local dependencies exists,
 // indirect dependencies are also synchronized to the lock file by `lockDeps`.
 func (c *KpmClient) ResolvePkgDepsMetadata(kclPkg *pkg.KclPkg, lockDeps *pkg.Dependencies, update bool) error {
-	// In the face of dependencies that do not exist locally, a re-download will be triggered, so a lock is required
-	// acquire the lock of the package cache.
-	err := c.AcquirePackageCacheLock()
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		// release the lock of the package cache after the function returns.
-		releaseErr := c.ReleasePackageCacheLock()
-		if releaseErr != nil && err == nil {
-			err = releaseErr
-		}
-	}()
-
 	var searchPath string
 	kclPkg.NoSumCheck = c.noSumCheck
 
@@ -1463,9 +1448,8 @@ func (c *KpmClient) dependencyExistsLocal(dep *pkg.Dependency) (*pkg.Dependency,
 }
 
 // downloadDeps will download all the dependencies of the current kcl package.
-<<<<<<< HEAD
 func (c *KpmClient) DownloadDeps(deps *pkg.Dependencies, lockDeps *pkg.Dependencies, depGraph graph.Graph[module.Version, module.Version], pkghome string, parent module.Version) (*pkg.Dependencies, error) {
-	
+
 	newDeps := pkg.Dependencies{
 		Deps: make(map[string]pkg.Dependency),
 	}
