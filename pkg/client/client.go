@@ -289,21 +289,6 @@ func (c *KpmClient) ResolvePkgDepsMetadata(kclPkg *pkg.KclPkg, update bool) erro
 }
 
 func (c *KpmClient) resolvePkgDeps(kclPkg *pkg.KclPkg, lockDeps *pkg.Dependencies, update bool) error {
-	// In the face of dependencies that do not exist locally, a re-download will be triggered, so a lock is required
-	// acquire the lock of the package cache.
-	err := c.AcquirePackageCacheLock()
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		// release the lock of the package cache after the function returns.
-		releaseErr := c.ReleasePackageCacheLock()
-		if releaseErr != nil && err == nil {
-			err = releaseErr
-		}
-	}()
-
 	var searchPath string
 	kclPkg.NoSumCheck = c.noSumCheck
 

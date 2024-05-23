@@ -195,23 +195,6 @@ func (d *Dependency) FromKclPkg(pkg *KclPkg) {
 	d.LocalFullPath = pkg.HomePath
 }
 
-// // The name of the local storage path is generated depending on the source of the package
-// func (d *Dependency) GetPkgPathName() string {
-// 	if d.Source.Oci != nil {
-// 		return fmt.Sprintf(PKG_NAME_PATTERN, d.Name, d.Source.Oci.Tag)
-// 	} else if d.Source.Git != nil {
-// 		if len(d.Source.Git.Tag) != 0 {
-// 			return fmt.Sprintf(PKG_NAME_PATTERN, d.Name, d.Source.Git.Tag)
-// 		} else if len(d.Source.Git.Commit) != 0 {
-// 			return fmt.Sprintf(PKG_NAME_PATTERN, d.Name, d.Source.Git.Commit)
-// 		} else {
-// 			return fmt.Sprintf(PKG_NAME_PATTERN, d.Name, d.Source.Git.Branch)
-// 		}
-// 	} else {
-// 		return fmt.Sprintf(PKG_NAME_PATTERN, d.Name, d.Version)
-// 	}
-// }
-
 // SetName will set the name and alias name of a dependency.
 func (d *Dependency) GetAliasName() string {
 	return strings.ReplaceAll(d.Name, "-", "_")
@@ -243,7 +226,6 @@ func (d Dependency) Equals(other Dependency) bool {
 }
 
 // GetLocalFullPath will get the local path of a dependency.
-// GetLocalFullPath will get the local path of a dependency.
 func (dep *Dependency) GetLocalFullPath(rootpath string) string {
 	if !filepath.IsAbs(dep.LocalFullPath) && dep.IsFromLocal() {
 		if filepath.IsAbs(dep.Source.Local.Path) {
@@ -256,10 +238,6 @@ func (dep *Dependency) GetLocalFullPath(rootpath string) string {
 
 func (dep *Dependency) IsFromLocal() bool {
 	return dep.Source.Oci == nil && dep.Source.Git == nil && dep.Source.Local != nil
-}
-
-func (dep *Dependency) IsFromOci() bool {
-	return dep.Source.Oci != nil && dep.Source.Git == nil && dep.Source.Local == nil
 }
 
 // FillDepInfo will fill registry information for a dependency.
