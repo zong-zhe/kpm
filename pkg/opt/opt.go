@@ -271,8 +271,9 @@ func NewGitOptionsFromUrl(parsedUrl *url.URL) *GitOptions {
 	if parsedUrl.Scheme == "" {
 		return nil
 	}
+
 	return &GitOptions{
-		Url:    parsedUrl.Host + parsedUrl.Path,
+		Url:    parsedUrl.String(),
 		Branch: parsedUrl.Query().Get(constants.GitBranch),
 		Tag:    parsedUrl.Query().Get(constants.Tag),
 		Commit: parsedUrl.Query().Get(constants.GitCommit),
