@@ -161,3 +161,5 @@ require (
 	oras.land/oras-go v1.2.5
 	oras.land/oras-go/v2 v2.5.0
 )
+
+replace github.com/distribution/reference => github.com/distribution/reference v0.5.0
