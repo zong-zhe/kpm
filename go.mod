@@ -1,4 +1,4 @@
-module kcl-lang.io/kpm
+module github.com/zong-zhe/kpm
 
 go 1.21
 
@@ -17,6 +17,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	gotest.tools/v3 v3.5.1
 	kcl-lang.io/kcl-go v0.9.0-beta.1
+	kcl-lang.io/kpm v0.8.7
 )
 
 require (
