@@ -200,7 +200,23 @@ type Dependency struct {
 	downloader.Source `json:"-"`
 }
 
+func (d *Dependency) ToString() (string, error) {
+	sourceStr, _ := d.Source.ToString()
+
+	if sourceStr != "" {
+		sourceStr = fmt.Sprintf(" (%s)", sourceStr)
+	}
+
+	versionStr := fmt.Sprintf(" %s", d.Version)
+	if d.Version == "" {
+		versionStr = ""
+	}
+
+	return d.Name + versionStr + sourceStr, nil
+}
+
 func (d *Dependency) FromKclPkg(pkg *KclPkg) {
+	d.Name = pkg.GetPkgName()
 	d.FullName = pkg.GetPkgFullName()
 	d.Version = pkg.GetPkgVersion()
 	d.LocalFullPath = pkg.HomePath

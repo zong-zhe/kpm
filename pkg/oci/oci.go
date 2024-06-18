@@ -170,6 +170,15 @@ func (ociClient *OciClient) Pull(localPath, tag string) error {
 	defer fs.Close()
 	copyOpts := ociClient.PullOciOptions.CopyOpts
 	copyOpts.FindSuccessors = ociClient.PullOciOptions.Successors
+
+	if len(tag) == 0 {
+		tag, err = ociClient.TheLatestTag()
+		if err != nil {
+			return err
+		}
+		reporter.ReportMsgTo(fmt.Sprintf("the lastest version '%s' will be pulled", tag), ociClient.logWriter)
+	}
+
 	_, err = oras.Copy(*ociClient.ctx, ociClient.repo, tag, fs, tag, *copyOpts)
 	if err != nil {
 		return reporter.NewErrorEvent(

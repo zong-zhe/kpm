@@ -9,6 +9,7 @@ import (
 	"github.com/BurntSushi/toml"
 	orderedmap "github.com/elliotchance/orderedmap/v2"
 	"github.com/stretchr/testify/assert"
+
 	"kcl-lang.io/kpm/pkg/downloader"
 	"kcl-lang.io/kpm/pkg/utils"
 )

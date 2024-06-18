@@ -8,9 +8,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"path/filepath"
+
 	"kcl-lang.io/kpm/pkg/constants"
 	"kcl-lang.io/kpm/pkg/opt"
 	"kcl-lang.io/kpm/pkg/settings"
+
+	"kcl-lang.io/kpm/pkg/constants"
 	"kcl-lang.io/kpm/pkg/utils"
 )
 

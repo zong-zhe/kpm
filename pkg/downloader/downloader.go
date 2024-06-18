@@ -27,33 +27,33 @@ type DownloadOptions struct {
 	LogWriter io.Writer
 }
 
-type Option func(*DownloadOptions)
+type DownloadOption func(*DownloadOptions)
 
-func WithLogWriter(logWriter io.Writer) Option {
+func WithLogWriter(logWriter io.Writer) DownloadOption {
 	return func(do *DownloadOptions) {
 		do.LogWriter = logWriter
 	}
 }
 
-func WithSettings(settings settings.Settings) Option {
+func WithSettings(settings settings.Settings) DownloadOption {
 	return func(do *DownloadOptions) {
 		do.Settings = settings
 	}
 }
 
-func WithLocalPath(localPath string) Option {
+func WithLocalPath(localPath string) DownloadOption {
 	return func(do *DownloadOptions) {
 		do.LocalPath = localPath
 	}
 }
 
-func WithSource(source Source) Option {
+func WithSource(source Source) DownloadOption {
 	return func(do *DownloadOptions) {
 		do.Source = source
 	}
 }
 
-func NewDownloadOptions(opts ...Option) *DownloadOptions {
+func NewDownloadOptions(opts ...DownloadOption) *DownloadOptions {
 	do := &DownloadOptions{}
 	for _, opt := range opts {
 		opt(do)
@@ -129,7 +129,7 @@ func (d *OciDownloader) Download(opts DownloadOptions) error {
 	if err != nil {
 		return err
 	}
-
+	ociCli.SetLogWriter(opts.LogWriter)
 	ociCli.PullOciOptions.Platform = d.Platform
 
 	if len(ociSource.Tag) == 0 {
