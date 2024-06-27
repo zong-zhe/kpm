@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"kcl-lang.io/kcl-go/pkg/kcl"
+	"kcl-lang.io/kpm/pkg/downloader"
 	"kcl-lang.io/kpm/pkg/opt"
 	pkg "kcl-lang.io/kpm/pkg/package"
 	"kcl-lang.io/kpm/pkg/utils"
@@ -265,8 +266,8 @@ func TestStoreModAndModLockFile(t *testing.T) {
 		Version:       "0.0.1",
 		Sum:           "sLr3e6W4RPrXYyswdOSiKqkHes1QHX2tk6SwxAPDqqo=",
 		LocalFullPath: filepath.Join(testPath, "dep1_0.0.1"),
-		Source: pkg.Source{
-			Oci: &pkg.Oci{
+		Source: downloader.Source{
+			Oci: &downloader.Oci{
 				Reg:  "ghcr.io",
 				Repo: "kcl-lang/dep1",
 				Tag:  "0.0.1",
