@@ -86,6 +86,11 @@ func (c *KpmClient) Add(options ...AddOption) (*pkg.KclPkg, error) {
 		return nil, err
 	}
 
+	reporter.ReportMsgTo(
+		fmt.Sprintf("adding %s to dependencies", depStr),
+		c.logWriter,
+	)
+
 	// 3. Add it to the dependencies of the kcl package.
 	err = c.AddDepToPkg(opts.KclPkg, &dep)
 	if err != nil {
@@ -116,8 +121,13 @@ func (c *KpmClient) Add(options ...AddOption) (*pkg.KclPkg, error) {
 		return nil, err
 	}
 
+	succeedMsgInfo := dep.Name
+	if len(dep.Version) != 0 {
+		succeedMsgInfo = fmt.Sprintf("%s:%s", dep.Name, dep.Version)
+	}
+
 	reporter.ReportMsgTo(
-		fmt.Sprintf("add %s successfully", depStr),
+		fmt.Sprintf("add dependency '%s' successfully", succeedMsgInfo),
 		c.logWriter,
 	)
 
