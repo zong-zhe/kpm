@@ -6,16 +6,12 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/urfave/cli/v2"
 	"kcl-lang.io/kcl-go/pkg/kcl"
-	"kcl-lang.io/kpm/pkg/api"
 	"kcl-lang.io/kpm/pkg/client"
-	"kcl-lang.io/kpm/pkg/git"
+	"kcl-lang.io/kpm/pkg/downloader"
 	"kcl-lang.io/kpm/pkg/opt"
-	"kcl-lang.io/kpm/pkg/reporter"
-	"kcl-lang.io/kpm/pkg/runner"
 )
 
 // NewRunCmd new a Command for `kpm run`.
@@ -89,82 +85,33 @@ func NewRunCmd(kpmcli *client.KpmClient) *cli.Command {
 }
 
 func KpmRun(c *cli.Context, kpmcli *client.KpmClient) error {
-	// acquire the lock of the package cache.
-	err := kpmcli.AcquirePackageCacheLock()
-	if err != nil {
-		return err
-	}
+	var entries []string
 
-	defer func() {
-		// release the lock of the package cache after the function returns.
-		releaseErr := kpmcli.ReleasePackageCacheLock()
-		if releaseErr != nil && err == nil {
-			err = releaseErr
+	for _, entry := range c.Args().Slice() {
+		sourceUrl, err := downloader.ParseSourceUrlFrom(entry, kpmcli.GetSettings())
+		if err != nil {
+			return err
 		}
-	}()
+		entries = append(entries, sourceUrl.String())
+	}
 
 	kclOpts := CompileOptionFromCli(c)
 	kclOpts.SetNoSumCheck(c.Bool(FLAG_NO_SUM_CHECK))
-	runEntry, errEvent := runner.FindRunEntryFrom(c.Args().Slice())
-	if errEvent != nil {
-		return errEvent
+	kclOpts.SetEntries(entries)
+
+	compileResult, err := kpmcli.CompileWithOpts(kclOpts)
+
+	if err != nil {
+		return err
 	}
+	fmt.Println(compileResult.GetRawYamlResult())
 
-	// 'kpm run' compile the current package under '$pwd'.
-	if runEntry.IsEmpty() {
-		pwd, err := os.Getwd()
-		kclOpts.SetPkgPath(pwd)
-
-		if err != nil {
-			return reporter.NewErrorEvent(
-				reporter.Bug, err, "internal bugs, please contact us to fix it.",
-			)
-		}
-		compileResult, err := kpmcli.CompileWithOpts(kclOpts)
-		if err != nil {
-			return err
-		}
-		fmt.Println(compileResult.GetRawYamlResult())
-	} else {
-		var compileResult *kcl.KCLResultList
-		var err error
-		// 'kpm run' compile the package from the local file system.
-		if runEntry.IsLocalFile() || runEntry.IsLocalFileWithKclMod() {
-			kclOpts.SetPkgPath(runEntry.PackageSource())
-			kclOpts.ExtendEntries(runEntry.EntryFiles())
-			if runEntry.IsLocalFile() {
-				// If there is only kcl file without kcl package,
-				compileResult, err = api.RunWithOpt(kclOpts)
-			} else {
-				// Else compile the kcl pacakge.
-				compileResult, err = kpmcli.CompileWithOpts(kclOpts)
-			}
-		} else if runEntry.IsTar() {
-			// 'kpm run' compile the package from the kcl package tar.
-			compileResult, err = kpmcli.CompileTarPkg(runEntry.PackageSource(), kclOpts)
-		} else if runEntry.IsGit() {
-			gitOpts := git.NewCloneOptions(runEntry.PackageSource(), "", c.String(FLAG_TAG), "", "", nil)
-			// 'kpm run' compile the package from the git url
-			compileResult, err = kpmcli.CompileGitPkg(gitOpts, kclOpts)
-		} else {
-			// 'kpm run' compile the package from the OCI reference or url.
-			compileResult, err = kpmcli.CompileOciPkg(runEntry.PackageSource(), c.String(FLAG_TAG), kclOpts)
-		}
-
-		if err != nil {
-			return err
-		}
-		fmt.Println(compileResult.GetRawYamlResult())
-	}
 	return nil
 }
 
 // CompileOptionFromCli will parse the kcl options from the cli context.
 func CompileOptionFromCli(c *cli.Context) *opt.CompileOptions {
 	opts := opt.DefaultCompileOptions()
-
-	// --input
-	opts.ExtendEntries(c.StringSlice(FLAG_INPUT))
 
 	// --vendor
 	opts.SetVendor(c.Bool(FLAG_VENDOR))

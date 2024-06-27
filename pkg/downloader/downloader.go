@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"kcl-lang.io/kpm/pkg/git"
@@ -131,6 +132,19 @@ func (d *OciDownloader) Download(opts DownloadOptions) error {
 	}
 	ociCli.SetLogWriter(opts.LogWriter)
 	ociCli.PullOciOptions.Platform = d.Platform
+
+	tagMsg := ""
+	if len(ociSource.Tag) != 0 {
+		tagMsg = fmt.Sprintf(":%s", ociSource.Tag)
+	}
+
+	reporter.ReportMsgTo(
+		fmt.Sprintf(
+			"downloading '%s%s' from '%s/%s%s'",
+			ociSource.Repo, tagMsg, ociSource.Reg, strings.TrimPrefix(ociSource.Repo, "/"), tagMsg,
+		),
+		opts.LogWriter,
+	)
 
 	err = ociCli.Pull(localPath, ociSource.Tag)
 	if err != nil {

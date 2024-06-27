@@ -116,7 +116,7 @@ func (ociClient *OciClient) GetReference() string {
 // regName is the registry. e.g. ghcr.io or docker.io.
 // repoName is the repo name on registry.
 func NewOciClient(regName, repoName string, settings *settings.Settings) (*OciClient, error) {
-	repoPath := utils.JoinPath(regName, repoName)
+	repoPath := regName + "/" + strings.TrimPrefix(repoName, "/")
 	repo, err := remote.NewRepository(repoPath)
 
 	if err != nil {

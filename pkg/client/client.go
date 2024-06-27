@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -106,16 +106,9 @@ func (c *KpmClient) downloadPkg(options ...downloader.DownloadOption) (*pkg.KclP
 		}
 	}
 
-	if runtime.GOOS != "windows" {
-		err = os.Rename(tmpDir, localPath)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		err = copy.Copy(tmpDir, localPath)
-		if err != nil {
-			return nil, err
-		}
+	err = utils.MoveFile(tmpDir, localPath)
+	if err != nil {
+		return nil, err
 	}
 
 	localPath, err = filepath.Abs(localPath)
@@ -333,11 +326,7 @@ func (c *KpmClient) getDepStorePath(search_path string, d *pkg.Dependency, isVen
 		if isVendor {
 			return filepath.Join(search_path, "vendor", storePkgName)
 		} else {
-			sourcePath, err := d.Source.ToFilePath()
-			if err != nil {
-				return ""
-			}
-			return filepath.Join(c.homePath, sourcePath)
+			return filepath.Join(c.homePath, storePkgName)
 		}
 	}
 }
@@ -516,6 +505,7 @@ func (c *KpmClient) ResolveDepsMetadataInJsonStr(kclPkg *pkg.KclPkg, update bool
 }
 
 // Compile will call kcl compiler to compile the current kcl package and its dependent packages.
+// Deprecated: Use `func (c *KpmClient) Run(options ...RunOption) (*kcl.KCLResultList, error) ` instead
 func (c *KpmClient) Compile(kclPkg *pkg.KclPkg, kclvmCompiler *runner.Compiler) (*kcl.KCLResultList, error) {
 	pkgMap, err := c.ResolveDepsIntoMap(kclPkg)
 	if err != nil {
@@ -534,68 +524,42 @@ func (c *KpmClient) Compile(kclPkg *pkg.KclPkg, kclvmCompiler *runner.Compiler) 
 }
 
 // CompileWithOpts will compile the kcl program with the compile options.
+// Deprecated: Use `func (c *KpmClient) Run(options ...RunOption) (*kcl.KCLResultList, error)` instead
 func (c *KpmClient) CompileWithOpts(opts *opt.CompileOptions) (*kcl.KCLResultList, error) {
-	pkgPath, err := filepath.Abs(opts.PkgPath())
-	if err != nil {
-		return nil, reporter.NewErrorEvent(reporter.Bug, err, "internal bugs, please contact us to fix it.")
-	}
-
 	c.noSumCheck = opts.NoSumCheck()
 	c.logWriter = opts.LogWriter()
 
-	kclPkg, err := c.LoadPkgFromPath(pkgPath)
-	if err != nil {
-		return nil, err
-	}
-
-	kclPkg.SetVendorMode(opts.IsVendor())
-
-	globalPkgPath, err := env.GetAbsPkgPath()
-	if err != nil {
-		return nil, err
-	}
-
-	err = kclPkg.ValidateKpmHome(globalPkgPath)
-	if err != (*reporter.KpmEvent)(nil) {
-		return nil, err
-	}
-	// add all the options from 'kcl.mod'
-	opts.Merge(*kclPkg.GetKclOpts())
-	if len(opts.Entries()) > 0 {
-		// add entry from '--input'
-		for _, entry := range opts.Entries() {
-			if filepath.IsAbs(entry) {
-				opts.Merge(kcl.WithKFilenames(entry))
-			} else {
-				opts.Merge(kcl.WithKFilenames(filepath.Join(opts.PkgPath(), entry)))
-			}
+	var workDir string
+	if len(opts.GetWorkDir()) == 0 {
+		pwd, err := os.Getwd()
+		if err != nil {
+			return nil, reporter.NewErrorEvent(reporter.Bug, err, "internal bugs, please contact us to fix it.")
 		}
-	} else if len(kclPkg.GetEntryKclFilesFromModFile()) == 0 {
-		// No entries profile in kcl.mod and no file settings in the settings file
-		if !opts.HasSettingsYaml() {
-			// No settings file.
-			opts.Merge(kcl.WithKFilenames(opts.PkgPath()))
-		} else if opts.HasSettingsYaml() && len(opts.KFilenameList) == 0 {
-			// Has settings file but no file config in the settings files.
-			opts.Merge(kcl.WithKFilenames(opts.PkgPath()))
+		workDir = pwd
+	} else {
+		workDir = opts.GetWorkDir()
+	}
+
+	var sources []*downloader.Source
+
+	for _, entry := range opts.Entries() {
+		s, err := downloader.NewSourceFromStr(entry)
+		if err != nil {
+			return nil, err
 		}
-	}
-	opts.Merge(kcl.WithWorkDir(opts.PkgPath()))
-
-	// Calculate the absolute path of entry file described by '--input'.
-	compiler := runner.NewCompilerWithOpts(opts)
-
-	// Call the kcl compiler.
-	compileResult, err := c.Compile(kclPkg, compiler)
-
-	if err != nil {
-		return nil, reporter.NewErrorEvent(reporter.CompileFailed, err, "failed to compile the kcl package")
+		sources = append(sources, s)
 	}
 
-	return compileResult, nil
+	return c.Run(
+		WithRunSources(sources),
+		WithWorkDir(workDir),
+		WithVendor(opts.IsVendor()),
+		WithKclOptions(*opts.Option),
+	)
 }
 
 // RunWithOpts will compile the kcl package with the compile options.
+// Deprecated: Use `func (c *KpmClient) Run(options ...RunOption) (*kcl.KCLResultList, error) ` instead
 func (c *KpmClient) RunWithOpts(opts ...opt.Option) (*kcl.KCLResultList, error) {
 	mergedOpts := opt.DefaultCompileOptions()
 	for _, opt := range opts {
@@ -605,6 +569,7 @@ func (c *KpmClient) RunWithOpts(opts ...opt.Option) (*kcl.KCLResultList, error) 
 }
 
 // CompilePkgWithOpts will compile the kcl package with the compile options.
+// Deprecated: Use `func (c *KpmClient) Run(options ...RunOption) (*kcl.KCLResultList, error) ` instead
 func (c *KpmClient) CompilePkgWithOpts(kclPkg *pkg.KclPkg, opts *opt.CompileOptions) (*kcl.KCLResultList, error) {
 	opts.SetPkgPath(kclPkg.HomePath)
 	if len(opts.Entries()) > 0 {
@@ -637,6 +602,7 @@ func (c *KpmClient) CompilePkgWithOpts(kclPkg *pkg.KclPkg, opts *opt.CompileOpti
 }
 
 // CompileTarPkg will compile the kcl package from the tar package.
+// Deprecated: Use `func (c *KpmClient) Run(options ...RunOption) (*kcl.KCLResultList, error) ` instead
 func (c *KpmClient) CompileTarPkg(tarPath string, opts *opt.CompileOptions) (*kcl.KCLResultList, error) {
 	absTarPath, err := utils.AbsTarPath(tarPath)
 	if err != nil {
@@ -661,70 +627,55 @@ func (c *KpmClient) CompileTarPkg(tarPath string, opts *opt.CompileOptions) (*kc
 }
 
 // CompileGitPkg will compile the kcl package from the git url.
+// Deprecated: Use `func (c *KpmClient) Run(options ...RunOption) (*kcl.KCLResultList, error) ` instead
 func (c *KpmClient) CompileGitPkg(gitOpts *git.CloneOptions, compileOpts *opt.CompileOptions) (*kcl.KCLResultList, error) {
-	// 1. Create the temporary directory to pull the tar.
-	tmpDir, err := os.MkdirTemp("", "")
-	if err != nil {
-		return nil, reporter.NewErrorEvent(reporter.Bug, err, "internal bugs, please contact us to fix it.")
-	}
-	tmpDir = filepath.Join(tmpDir, constants.GitEntry)
 
-	// clean the temp dir.
-	defer os.RemoveAll(tmpDir)
-
-	// 2. clone the git repo
-	_, err = git.CloneWithOpts(
-		git.WithCommit(gitOpts.Commit),
-		git.WithBranch(gitOpts.Branch),
-		git.WithTag(gitOpts.Tag),
-		git.WithRepoURL(gitOpts.RepoURL),
-		git.WithLocalPath(tmpDir),
-	)
+	gitUrl, err := url.Parse(gitOpts.RepoURL)
 	if err != nil {
-		return nil, reporter.NewErrorEvent(reporter.FailedGetPkg, err, "failed to get the git repository")
+		return nil, err
 	}
 
-	compileOpts.SetPkgPath(tmpDir)
+	if gitUrl.Scheme != constants.GitScheme && gitUrl.Scheme != constants.SshScheme {
+		gitUrl.Scheme = constants.GitScheme
+	}
+
+	query := gitUrl.Query()
+
+	if gitOpts.Commit != "" {
+		query.Add(constants.GitCommit, gitOpts.Commit)
+	}
+
+	if gitOpts.Branch != "" {
+		query.Add(constants.GitBranch, gitOpts.Branch)
+	}
+
+	if gitOpts.Tag != "" {
+		query.Add(constants.Tag, gitOpts.Tag)
+	}
+
+	gitUrl.RawQuery = query.Encode()
+	compileOpts.AddEntryFront(gitUrl.String())
 
 	return c.CompileWithOpts(compileOpts)
 }
 
 // CompileOciPkg will compile the kcl package from the OCI reference or url.
+// Deprecated: Use `func (c *KpmClient) Run(options ...RunOption) (*kcl.KCLResultList, error) ` instead
 func (c *KpmClient) CompileOciPkg(ociSource, version string, opts *opt.CompileOptions) (*kcl.KCLResultList, error) {
-	ociOpts, err := c.ParseOciOptionFromString(ociSource, version)
-
+	source, err := downloader.NewSourceFromStr(ociSource)
 	if err != nil {
 		return nil, err
 	}
 
-	// 1. Create the temporary directory to pull the tar.
-	tmpDir, err := os.MkdirTemp("", "")
-	if err != nil {
-		return nil, reporter.NewErrorEvent(reporter.Bug, err, "internal bugs, please contact us to fix it.")
-	}
-	// clean the temp dir.
-	defer os.RemoveAll(tmpDir)
-
-	localPath := ociOpts.SanitizePathWithSuffix(tmpDir)
-
-	// 2. Pull the tar.
-	err = c.pullTarFromOci(localPath, ociOpts)
-
+	source.Oci.Tag = version
+	sourceStr, err := source.ToString()
 	if err != nil {
 		return nil, err
 	}
 
-	// 3.Get the (*.tar) file path.
-	matches, err := filepath.Glob(filepath.Join(localPath, constants.KCL_PKG_TAR))
-	if err != nil || len(matches) != 1 {
-		if err != nil {
-			return nil, reporter.NewErrorEvent(reporter.FailedGetPkg, err, "failed to pull kcl package")
-		} else {
-			return nil, errors.FailedPull
-		}
-	}
+	opts.AddEntryFront(sourceStr)
 
-	return c.CompileTarPkg(matches[0], opts)
+	return c.CompileWithOpts(opts)
 }
 
 // createIfNotExist will create a file if it does not exist.
@@ -1078,19 +1029,6 @@ func (c *KpmClient) Download(dep *pkg.Dependency, homePath, localPath string) (*
 		// clean the temp dir.
 		defer os.RemoveAll(tmpDir)
 
-		depStr, err := dep.ToString()
-		if err != nil {
-			return nil, err
-		}
-
-		reporter.ReportMsgTo(
-			fmt.Sprintf(
-				"downloading %s",
-				depStr,
-			),
-			c.GetLogWriter(),
-		)
-
 		err = c.DepDownloader.Download(*downloader.NewDownloadOptions(
 			downloader.WithLocalPath(tmpDir),
 			downloader.WithSource(dep.Source),
@@ -1115,24 +1053,17 @@ func (c *KpmClient) Download(dep *pkg.Dependency, homePath, localPath string) (*
 			}
 		}
 
-		if runtime.GOOS != "windows" {
-			err = os.MkdirAll(filepath.Dir(localPath), 0755)
+		localDirPath := filepath.Dir(localPath)
+		if !utils.DirExists(localDirPath) {
+			err = os.MkdirAll(localDirPath, os.ModePerm)
 			if err != nil {
 				return nil, err
 			}
-			err = os.Rename(tmpDir, localPath)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			err = os.MkdirAll(filepath.Dir(localPath), 0755)
-			if err != nil {
-				return nil, err
-			}
-			err = copy.Copy(tmpDir, localPath)
-			if err != nil {
-				return nil, err
-			}
+		}
+
+		err = utils.MoveFile(tmpDir, localPath)
+		if err != nil {
+			return nil, err
 		}
 
 		// load the package from the local path.

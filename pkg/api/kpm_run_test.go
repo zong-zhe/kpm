@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"kcl-lang.io/kcl-go/pkg/kcl"
+	"kcl-lang.io/kpm/pkg/downloader"
 	"kcl-lang.io/kpm/pkg/opt"
 	pkg "kcl-lang.io/kpm/pkg/package"
 	"kcl-lang.io/kpm/pkg/utils"
@@ -62,7 +63,7 @@ func TestRunPkgInPathInvalidPath(t *testing.T) {
 	opts.SetPkgPath(filepath.Join(pkgPath, "test_kcl"))
 	result, err := RunPkgInPath(opts)
 	assert.NotEqual(t, err, nil)
-	assert.Equal(t, err.Error(), fmt.Sprintf("failed to compile the kcl package\nCannot find the kcl file, please check the file path %s\n", filepath.Join(pkgPath, "test_kcl", "not_exist.k")))
+	assert.Equal(t, err.Error(), fmt.Sprintf("Cannot find the kcl file, please check the file path %s", filepath.Join(pkgPath, "test_kcl", "not_exist.k")))
 	assert.Equal(t, result, "")
 }
 
@@ -73,7 +74,8 @@ func TestRunPkgInPathInvalidPkg(t *testing.T) {
 	opts.Merge(kcl.WithKFilenames(filepath.Join(pkgPath, "invalid_pkg", "not_exist.k")))
 	result, err := RunPkgInPath(opts)
 	assert.NotEqual(t, err, nil)
-	assert.Equal(t, true, strings.Contains(err.Error(), fmt.Sprintf("could not load 'kcl.mod' in '%s'\n", pkgPath)))
+	fmt.Printf("err: %v\n", err)
+	assert.Equal(t, true, strings.Contains(err.Error(), "Cannot find the kcl file, please check the file path"))
 	assert.Equal(t, result, "")
 }
 
@@ -174,6 +176,7 @@ func TestRunWithNoSumCheck(t *testing.T) {
 	opts.SetPkgPath(pkgPath)
 	opts.SetNoSumCheck(true)
 	_, err := RunPkgInPath(opts)
+	fmt.Printf("err: %v\n", err)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, utils.DirExists(filepath.Join(pkgPath, "kcl.mod.lock")), false)
 
@@ -181,6 +184,7 @@ func TestRunWithNoSumCheck(t *testing.T) {
 	opts.SetPkgPath(pkgPath)
 	opts.SetNoSumCheck(false)
 	_, err = RunPkgInPath(opts)
+	fmt.Printf("err: %v\n", err)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, utils.DirExists(filepath.Join(pkgPath, "kcl.mod.lock")), true)
 	defer func() {
@@ -265,8 +269,8 @@ func TestStoreModAndModLockFile(t *testing.T) {
 		Version:       "0.0.1",
 		Sum:           "sLr3e6W4RPrXYyswdOSiKqkHes1QHX2tk6SwxAPDqqo=",
 		LocalFullPath: filepath.Join(testPath, "dep1_0.0.1"),
-		Source: pkg.Source{
-			Oci: &pkg.Oci{
+		Source: downloader.Source{
+			Oci: &downloader.Oci{
 				Reg:  "ghcr.io",
 				Repo: "kcl-lang/dep1",
 				Tag:  "0.0.1",

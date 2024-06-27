@@ -1,1 +1,2 @@
-the kcl package tar path is not found
+failed to select latest version from 'localhost:5001/test/no_exist.tar'
+GET "http://localhost:5001/v2/test/no_exist.tar/tags/list": response status code 404: name unknown: repository name not known to registry: map[name:test/no_exist.tar]

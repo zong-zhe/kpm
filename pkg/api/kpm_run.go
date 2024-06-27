@@ -119,11 +119,11 @@ func getAbsInputPath(pkgPath string, inputPath string) (string, error) {
 // Deprecated: This method will not be maintained in the future. Use RunWithOpts instead.
 func RunPkgWithOpt(opts *opt.CompileOptions) (*kcl.KCLResultList, error) {
 	kpmcli, err := client.NewKpmClient()
-	kpmcli.SetNoSumCheck(opts.NoSumCheck())
 	if err != nil {
 		return nil, err
 	}
-	return run(kpmcli, opts)
+	kpmcli.SetNoSumCheck(opts.NoSumCheck())
+	return kpmcli.CompileWithOpts(opts)
 }
 
 func runPkgWithOpt(opts *opt.CompileOptions) (*kcl.KCLResultList, error) {

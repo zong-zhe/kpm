@@ -4,9 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"os"
 	"path/filepath"
 
 	"kcl-lang.io/kpm/pkg/constants"
+	"kcl-lang.io/kpm/pkg/opt"
+	"kcl-lang.io/kpm/pkg/settings"
 	"kcl-lang.io/kpm/pkg/utils"
 )
 
@@ -60,6 +63,10 @@ func (source *Source) IsLocalTarPath() bool {
 	return source.Local.IsLocalTarPath()
 }
 
+func (source *Source) IsPackaged() bool {
+	return source.IsLocalTarPath() || source.Git != nil || source.Oci != nil || source.Registry != nil
+}
+
 func (source *Source) FindRootPath() (string, error) {
 	if source == nil {
 		return "", fmt.Errorf("source is nil")
@@ -88,6 +95,15 @@ func (local *Local) IsLocalKPath() bool {
 	return local != nil && filepath.Ext(local.Path) == constants.KFilePathSuffix
 }
 
+func (local *Local) IsDir() bool {
+	fileInfo, err := os.Stat(local.Path)
+	if err != nil {
+		return false
+	}
+
+	return local != nil && utils.DirExists(local.Path) && fileInfo.IsDir()
+}
+
 func (local *Local) FindRootPath() (string, error) {
 	if local == nil {
 		return "", fmt.Errorf("local source is nil")
@@ -103,34 +119,41 @@ func (local *Local) FindRootPath() (string, error) {
 	}
 
 	// if local.Path is a *.k file, find the kcl.mod file in the same directory and in the parent directory
-	if local.IsLocalKPath() {
-		dir := filepath.Dir(local.Path)
-		for {
-			kclModPath := filepath.Join(dir, constants.KCL_MOD)
-			if utils.DirExists(kclModPath) {
-				abspath, err := filepath.Abs(kclModPath)
-				if err != nil {
-					return "", err
-				}
-				return abspath, nil
-			}
 
-			parentDir := filepath.Dir(dir)
-			if parentDir == dir {
-				break
+	dir := filepath.Dir(local.Path)
+	for {
+		kclModPath := filepath.Join(dir, constants.KCL_MOD)
+		if utils.DirExists(kclModPath) {
+			abspath, err := filepath.Abs(kclModPath)
+			if err != nil {
+				return "", err
 			}
-			dir = parentDir
+			return filepath.Dir(abspath), nil
 		}
 
-		// If no kcl.mod file is found, return the directory of the original file
-		abspath, err := filepath.Abs(filepath.Dir(local.Path))
+		parentDir := filepath.Dir(dir)
+		if parentDir == dir {
+			break
+		}
+		dir = parentDir
+	}
+
+	// If no kcl.mod file is found, return the directory of the original file
+	var abspath string
+	var err error
+	if local.IsLocalKPath() {
+		abspath, err = filepath.Abs(filepath.Dir(local.Path))
 		if err != nil {
 			return "", err
 		}
-		return abspath, nil
+	} else {
+		abspath, err = filepath.Abs(local.Path)
+		if err != nil {
+			return "", err
+		}
 	}
 
-	return "", fmt.Errorf("no kcl module root path found")
+	return abspath, nil
 }
 
 func (source *Source) ToFilePath() (string, error) {
@@ -306,21 +329,15 @@ func (source *Source) FromString(sourceStr string) error {
 	if sourceUrl.Scheme == constants.GitScheme || sourceUrl.Scheme == constants.SshScheme {
 		source.Git = &Git{}
 		source.Git.FromString(sourceStr)
-	}
-
-	if sourceUrl.Scheme == constants.OciScheme {
+	} else if sourceUrl.Scheme == constants.OciScheme {
 		source.Oci = &Oci{}
 		source.Oci.FromString(sourceStr)
-	}
-
-	if sourceUrl.Scheme == constants.FileEntry || sourceUrl.Scheme == "" {
-		source.Local = &Local{}
-		source.Local.FromString(sourceStr)
-	}
-
-	if sourceUrl.Scheme == constants.DefaultOciScheme {
+	} else if sourceUrl.Scheme == constants.DefaultOciScheme {
 		source.Registry = &Registry{}
 		source.Registry.FromString(sourceStr)
+	} else {
+		source.Local = &Local{}
+		source.Local.FromString(sourceStr)
 	}
 
 	return nil
@@ -378,12 +395,7 @@ func (local *Local) FromString(localStr string) error {
 		return fmt.Errorf("local source is nil")
 	}
 
-	u, err := url.Parse(localStr)
-	if err != nil {
-		return err
-	}
-
-	local.Path = u.Path
+	local.Path = localStr
 	return nil
 }
 
@@ -454,4 +466,49 @@ func (oci *Oci) IntoOciUrl() string {
 		return u.String()
 	}
 	return ""
+}
+
+func ParseSourceUrlFrom(sourceStr string, settings *settings.Settings) (*url.URL, error) {
+	regOpts, err := opt.NewRegistryOptionsFrom(sourceStr, settings)
+	if err != nil {
+		return nil, err
+	}
+
+	var url url.URL
+	query := url.Query()
+
+	if regOpts.Git != nil {
+		url, err := url.Parse(regOpts.Git.Url)
+		if err != nil {
+			return nil, err
+		}
+
+		if url.Scheme != constants.GitScheme && url.Scheme != constants.SshScheme {
+			url.Scheme = constants.GitScheme
+		}
+		url.RawQuery = query.Encode()
+		return url, nil
+	} else if regOpts.Oci != nil {
+		url.Scheme = constants.OciScheme
+		url.Host = regOpts.Oci.Reg
+		url.Path = regOpts.Oci.Repo
+		if regOpts.Oci.Tag != "" {
+			query.Add(constants.Tag, regOpts.Oci.Tag)
+		}
+		url.RawQuery = query.Encode()
+		return &url, nil
+	} else if regOpts.Registry != nil {
+		url.Scheme = constants.DefaultOciScheme
+		url.Host = regOpts.Registry.Reg
+		url.Path = regOpts.Registry.Repo
+		if regOpts.Registry.Tag != "" {
+			query.Add(constants.Tag, regOpts.Registry.Tag)
+		}
+		url.RawQuery = query.Encode()
+		return &url, nil
+	} else if regOpts.Local != nil {
+		url.Path = regOpts.Local.Path
+		return &url, nil
+	}
+	return nil, fmt.Errorf("invalid source url: %s", sourceStr)
 }

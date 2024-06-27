@@ -1032,6 +1032,7 @@ func TestRunGit(t *testing.T) {
 	for _, tc := range testCases {
 		opts.SetEntries([]string{tc.entryPath})
 		result, err := kpmcli.CompileGitPkg(gitOpts, opts)
+		fmt.Printf("err: %v\n", err)
 		assert.Equal(t, err, nil)
 
 		fileBytes, err := os.ReadFile(filepath.Join(testPath, tc.expectFile))
@@ -1381,6 +1382,7 @@ func TestRunOciWithSettingsFile(t *testing.T) {
 	opts.Merge(kcl.WithSettings(filepath.Join(".", "test_data", "test_run_oci_with_settings", "kcl.yaml")))
 	opts.SetHasSettingsYaml(true)
 	_, err = kpmcli.CompileOciPkg("oci://ghcr.io/kcl-lang/helloworld", "", opts)
+	fmt.Printf("%s", err)
 	assert.Equal(t, err, nil)
 }
 
@@ -1408,6 +1410,7 @@ func TestRunGitWithLocalDep(t *testing.T) {
 		gitOpts := git.NewCloneOptions("https://github.com/kcl-lang/flask-demo-kcl-manifests.git", tc.ref, "", "", "", nil)
 
 		result, err := kpmcli.CompileGitPkg(gitOpts, opts)
+		fmt.Printf("err: %v\n", err)
 		assert.Equal(t, err, nil)
 
 		fileBytes, err := os.ReadFile(expectPath)
@@ -1425,6 +1428,19 @@ func TestRunGitWithLocalDep(t *testing.T) {
 	}
 }
 
+func TestXXX(t *testing.T) {
+	path := "E:\\Users\\zongz\\Workspaces\\kcl\\kpm\\pkg\\client\\main_tes.k"
+
+	opts := kcl.NewOption()
+
+	opts.Merge(kcl.WithWorkDir("E:\\Users\\zongz\\Workspaces\\kcl\\kpm\\pkg\\client"))
+	opts.Merge(kcl.WithKFilenames(path))
+
+	res, err := kcl.RunWithOpts(*opts)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, res.GetRawYamlResult(), "The_first_kcl_program: Hello World!")
+}
+
 func TestLoadOciUrlDiffSetting(t *testing.T) {
 	kpmcli, err := NewKpmClient()
 	assert.Equal(t, err, nil)
@@ -1435,7 +1451,7 @@ func TestLoadOciUrlDiffSetting(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, len(pkg.ModFile.Deps), 1)
 	assert.Equal(t, pkg.ModFile.Deps["oci_pkg"].Oci.Reg, "docker.io")
-	assert.Equal(t, pkg.ModFile.Deps["oci_pkg"].Oci.Repo, "test/oci_pkg")
+	assert.Equal(t, pkg.ModFile.Deps["oci_pkg"].Oci.Repo, "/test/oci_pkg")
 	assert.Equal(t, pkg.ModFile.Deps["oci_pkg"].Oci.Tag, "0.0.1")
 	assert.Equal(t, err, nil)
 }
@@ -1718,4 +1734,166 @@ func testRunDefaultRegistryDep(t *testing.T) {
 		_ = os.Remove(pkgWithSumCheckPathMod)
 		_ = os.Remove(pkgWithSumCheckPathModLock)
 	}()
+}
+
+func TestCompileWithRemotePkg(t *testing.T) {
+	kpmCli, err := NewKpmClient()
+	assert.Equal(t, err, nil)
+
+	tests := []struct {
+		remotePkg      string
+		expectedPath   string
+		downloadingMsg string
+	}{
+		{
+			"oci://ghcr.io/kcl-lang/helloworld?tag=0.1.1",
+			"run_0",
+			"downloading '/kcl-lang/helloworld:0.1.1' from 'ghcr.io/kcl-lang/helloworld:0.1.1'\n",
+		},
+		{
+			"oci://ghcr.io/kcl-lang/helloworld",
+			"run_1",
+			"downloading '/kcl-lang/helloworld' from 'ghcr.io/kcl-lang/helloworld'\nthe lastest version '0.1.2' will be pulled\n",
+		},
+		{
+			"git://github.com/kcl-lang/flask-demo-kcl-manifests?commit=ade147b",
+			"run_2",
+			"cloning 'https://github.com/kcl-lang/flask-demo-kcl-manifests' with commit 'ade147b'\n",
+		},
+		{
+			filepath.Join(getTestDir("test_run"), "run_remote", "run_3", "helloworld_0.0.1.tar"),
+			"run_3",
+			"",
+		},
+	}
+
+	for _, tt := range tests {
+		var buf bytes.Buffer
+		res, err := kpmCli.CompileWithOpts(
+			opt.NewCompileOptions(
+				opt.WithEntries([]string{tt.remotePkg}),
+				opt.WithLogWriter(&buf),
+			),
+		)
+		assert.Equal(t, err, nil)
+		fmt.Printf("err: %v\n", err)
+
+		exceptPath := filepath.Join(getTestDir("test_run"), "run_remote", tt.expectedPath, "except.yaml")
+		expected, err := os.ReadFile(exceptPath)
+		fmt.Printf("err: %v\n", err)
+		assert.Equal(t, err, nil)
+
+		assert.Equal(t, res.GetRawYamlResult(), string(expected))
+		assert.Equal(t, buf.String(), tt.downloadingMsg)
+		fmt.Printf("tt.testmsg: %v\n", tt.remotePkg)
+	}
+}
+
+func TestCompleWithEntries(t *testing.T) {
+	kpmCli, err := NewKpmClient()
+	assert.Equal(t, err, nil)
+
+	testPath := getTestDir("test_run")
+	testPath = filepath.Join(testPath, "run_entries")
+
+	tests := []struct {
+		entries  []string
+		expected string
+	}{
+		{[]string{filepath.Join(testPath, "run_0")}, "The_first_kcl_program: Hello World!"},
+		{[]string{filepath.Join(testPath, "run_1")}, "The_first_kcl_program: Hello World!"},
+		{[]string{filepath.Join(testPath, "run_2")}, "The_first_kcl_program: Hello World!"},
+		{[]string{filepath.Join(testPath, "run_3")}, "The_first_kcl_program: Hello World!"},
+		{[]string{filepath.Join(testPath, "run_4", "main.k")}, "The_first_kcl_program: Hello World!"},
+		{[]string{filepath.Join(testPath, "run_5", "main.k")}, "The_first_kcl_program: Hello World!"},
+		{[]string{filepath.Join(testPath, "run_5", "sub", "main.k")}, "sub: sub"},
+		{[]string{filepath.Join(testPath, "run_6", "sub", "main.k"),
+			filepath.Join(testPath, "run_6", "sub1", "main.k")}, "sub: sub\nsub1: sub1"},
+		{[]string{filepath.Join(testPath, "run_7", "sub"),
+			filepath.Join(testPath, "run_7", "sub1", "main.k")}, "sub: sub\nsub2: sub2\nsub1: sub1"},
+		{[]string{filepath.Join(testPath, "run_8", "sub1"),
+			filepath.Join(testPath, "run_8", "sub")}, "sub1: sub1\nsub: sub\nsub2: sub2"},
+	}
+
+	for _, tt := range tests {
+		res, err := kpmCli.CompileWithOpts(
+			opt.NewCompileOptions(
+				opt.WithEntries(tt.entries),
+			),
+		)
+		assert.Equal(t, err, nil)
+		fmt.Printf("err: %v\n", err)
+		assert.Equal(t, res.GetRawYamlResult(), tt.expected)
+
+		fmt.Printf("tt.testmsg: %v\n", tt.entries)
+	}
+}
+
+func TestCompileInWorkDir(t *testing.T) {
+	kpmCli, err := NewKpmClient()
+	assert.Equal(t, err, nil)
+
+	testPath := getTestDir("test_run")
+	testPath = filepath.Join(testPath, "run_workdir")
+
+	tests := []struct {
+		workdir  string
+		expected string
+	}{
+		// test run in workdir, no kcl.mod entries and no kcl.yaml
+		{filepath.Join(testPath, "run_0"), "The_first_kcl_program: Hello World!"},
+		// test run in workdir, with kcl.mod entries and no kcl.yaml
+		{filepath.Join(testPath, "run_1"), "sub: sub"},
+		// test run in workdir, with kcl.yaml and no kcl.mod entries
+		{filepath.Join(testPath, "run_2"), "sub1: sub1\nsub: sub"},
+		// test run in workdir, with kcl.yaml and kcl.mod entries
+		{filepath.Join(testPath, "run_3"), "sub1: sub1"},
+	}
+
+	for _, tt := range tests {
+		res, err := kpmCli.CompileWithOpts(
+			opt.NewCompileOptions(
+				opt.WithWorkDir(tt.workdir),
+			),
+		)
+		assert.Equal(t, err, nil)
+		fmt.Printf("err: %v\n", err)
+		assert.Equal(t, res.GetRawYamlResult(), tt.expected)
+
+		fmt.Printf("tt.testmsg: %v PASS\n", tt.workdir)
+	}
+}
+
+func TestCompileInWorkDirWithSettings(t *testing.T) {
+	kpmCli, err := NewKpmClient()
+	assert.Equal(t, err, nil)
+
+	testPath := getTestDir("test_run")
+	testPath = filepath.Join(testPath, "run_workdir_with_kcl_yaml")
+
+	tests := []struct {
+		settingFile string
+		expected    string
+	}{
+		// test run in workdir, no kcl.mod entries and no kcl.yaml
+		{filepath.Join(testPath, "run_0", "kcl.yaml"), "The_first_kcl_program: Hello World!"},
+		// test run in workdir, with kcl.mod entries and no kcl.yaml
+		{filepath.Join(testPath, "run_1", "kcl.yaml"), "sub: sub"},
+		// test run in workdir, with kcl.yaml and no kcl.mod entries
+		{filepath.Join(testPath, "run_2", "kcl.yaml"), "sub1: sub1\nsub: sub"},
+		// test run in workdir, with kcl.yaml and kcl.mod entries
+		{filepath.Join(testPath, "run_3", "kcl.yaml"), "sub1: sub1"},
+	}
+
+	for _, tt := range tests {
+		res, err := kpmCli.Run(
+			WithSettingFiles([]string{tt.settingFile}),
+			WithWorkDir(filepath.Dir(tt.settingFile)),
+		)
+		assert.Equal(t, err, nil)
+		fmt.Printf("err: %v\n", err)
+		assert.Equal(t, res.GetRawYamlResult(), tt.expected)
+
+		fmt.Printf("tt.testmsg: %v PASS\n", tt.settingFile)
+	}
 }

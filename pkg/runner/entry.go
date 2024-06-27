@@ -23,6 +23,11 @@ import (
 type EntryKind string
 
 // Entry is the entry of 'kpm run'.
+// 一个编译入口，主要包括
+// 1. packageSource: 包源，可以是文件路径、tar路径、url或者ref
+// 2. entryFiles: 要编译的全部文件，注意，这个里面只能是文件，或者文件目录，不能再是别的了
+// 3. kind: 入口的类型，可以是文件、tar、url或者ref
+// 4. KclPkg: 如果是 kcl 包，这个包里主要负责承载一些 kcl.mod 中的配置信息
 type Entry struct {
 	// The package source of the entry, filepath, tar path, url or ref.
 	packageSource string

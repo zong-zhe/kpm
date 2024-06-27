@@ -245,6 +245,6 @@ func TestGenSource(t *testing.T) {
 	src, err = GenSource("oci", "oci://ghcr.io/kcl-lang/k8s", "1.24")
 	assert.Equal(t, err, nil)
 	assert.Equal(t, src.Oci.Reg, "ghcr.io")
-	assert.Equal(t, src.Oci.Repo, "kcl-lang/k8s")
+	assert.Equal(t, src.Oci.Repo, "/kcl-lang/k8s")
 	assert.Equal(t, src.Oci.Tag, "1.24")
 }

@@ -1,2 +1,2 @@
 only allows one package to be compiled at a time
-cannot compile multiple packages [<workspace>/test_kpm_run_with_multi_pkg_1/kcl1 <workspace>/test_kpm_run_with_multi_pkg_1/kcl2 oci://kcl-lang/kcl] at the same time
+cannot compile multiple packages [<workspace>/test_kpm_run_with_multi_pkg_1/kcl1 <workspace>/test_kpm_run_with_multi_pkg_1/kcl2] at the same time

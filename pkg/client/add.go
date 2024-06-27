@@ -3,12 +3,10 @@ package client
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
 
 	"kcl-lang.io/kpm/pkg/downloader"
 	pkg "kcl-lang.io/kpm/pkg/package"
 	"kcl-lang.io/kpm/pkg/reporter"
-	"kcl-lang.io/kpm/pkg/utils"
 )
 
 // The AddOptions struct contains the options for adding a package to the dependencies of a kcl package.
@@ -77,42 +75,17 @@ func (c *KpmClient) Add(options ...AddOption) (*pkg.KclPkg, error) {
 	}()
 
 	// 1. Check if the package is already in local cache.
-	searchRoot := c.homePath
-	sourceLocalpath, err := opts.Source.ToFilePath()
+	dep := pkg.Dependency{}
+	err = dep.FromSource(*opts.Source)
 	if err != nil {
 		return nil, err
 	}
 
-	var depSearchPath string
-	if opts.Source.IsLocalPath() {
-		depSearchPath = sourceLocalpath
-	} else {
-		depSearchPath = filepath.Join(searchRoot, sourceLocalpath)
-	}
-
-	var dep pkg.Dependency
-	// 2. If not exist, redownload the package.
-	if !utils.DirExists(depSearchPath) {
-		_, err = c.downloadPkg(
-			downloader.WithLocalPath(depSearchPath),
-			downloader.WithSource(*opts.Source),
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// 3. Load the dependency package from the local path.
-	dpkg, err := c.LoadPkgFromPath(depSearchPath)
-	if err != nil {
-		return nil, err
-	}
-	dep.FromKclPkg(dpkg)
-	dep.Source = *opts.Source
 	depStr, err := dep.ToString()
 	if err != nil {
 		return nil, err
 	}
+
 	reporter.ReportMsgTo(
 		fmt.Sprintf("adding %s to dependencies", depStr),
 		c.logWriter,
@@ -148,8 +121,13 @@ func (c *KpmClient) Add(options ...AddOption) (*pkg.KclPkg, error) {
 		return nil, err
 	}
 
+	succeedMsgInfo := dep.Name
+	if len(dep.Version) != 0 {
+		succeedMsgInfo = fmt.Sprintf("%s:%s", dep.Name, dep.Version)
+	}
+
 	reporter.ReportMsgTo(
-		fmt.Sprintf("add %s successfully", depStr),
+		fmt.Sprintf("add dependency '%s' successfully", succeedMsgInfo),
 		c.logWriter,
 	)
 

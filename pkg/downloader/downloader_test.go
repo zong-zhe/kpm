@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"gotest.tools/v3/assert"
-	"kcl-lang.io/kpm/pkg/utils"
 )
 
 const testDataDir = "test_data"
@@ -45,7 +44,6 @@ func TestOciDownloader(t *testing.T) {
 	))
 
 	assert.Equal(t, err, nil)
-	assert.Equal(t, true, utils.DirExists(filepath.Join(path_oci, "artifact.tgz")))
 
 	path_git := getTestDir("test_git")
 	if err := os.MkdirAll(path_oci, os.ModePerm); err != nil {

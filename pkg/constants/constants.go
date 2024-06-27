@@ -24,6 +24,8 @@ const (
 	Tag = "tag"
 
 	KCL_MOD                              = "kcl.mod"
+	KCL_MOD_LOCK                         = "kcl.mod.lock"
+	KCL_YAML                             = "kcl.yaml"
 	OCI_SEPARATOR                        = ":"
 	KCL_PKG_TAR                          = "*.tar"
 	DEFAULT_KCL_FILE_NAME                = "main.k"

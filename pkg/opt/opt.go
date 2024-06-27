@@ -69,12 +69,27 @@ func WithLogWriter(writer io.Writer) Option {
 	}
 }
 
+func WithWorkDir(workdir string) Option {
+	return func(opts *CompileOptions) {
+		opts.Merge(kcl.WithWorkDir(workdir))
+	}
+}
+
 // DefaultCompileOptions returns a default CompileOptions.
 func DefaultCompileOptions() *CompileOptions {
 	return &CompileOptions{
 		writer: os.Stdout,
 		Option: kcl.NewOption(),
 	}
+}
+
+// NewCompileOptions will create a new CompileOptions with the given options.
+func NewCompileOptions(opts ...Option) *CompileOptions {
+	options := DefaultCompileOptions()
+	for _, opt := range opts {
+		opt(options)
+	}
+	return options
 }
 
 // SetNoSumCheck will set the 'no_sum_check' flag.
@@ -90,6 +105,11 @@ func (opts *CompileOptions) NoSumCheck() bool {
 // AddEntry will add a compile entry file to the compiler.
 func (opts *CompileOptions) AddEntry(entry string) {
 	opts.entries = append(opts.entries, entry)
+}
+
+// AddEntry will add a compile entry file to the compiler.
+func (opts *CompileOptions) AddEntryFront(entry string) {
+	opts.entries = append([]string{entry}, opts.entries...)
 }
 
 // SetLogWriter will set the log writer of the compiler.
@@ -209,7 +229,17 @@ type RegistryOptions struct {
 func NewRegistryOptionsFrom(rawUrlorOciRef string, settings *settings.Settings) (*RegistryOptions, error) {
 	parsedUrl, err := url.Parse(rawUrlorOciRef)
 	if err != nil {
-		return nil, err
+		// If all the url are invalid, try to parse the options from the oci ref.
+		ociOptions, err := NewOciOptionsFromRef(rawUrlorOciRef, settings)
+		if err != nil {
+			return nil, err
+		}
+
+		if ociOptions != nil {
+			return &RegistryOptions{
+				Registry: ociOptions,
+			}, nil
+		}
 	}
 
 	// parse the options from the local file path
