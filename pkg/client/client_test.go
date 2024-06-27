@@ -1719,3 +1719,38 @@ func testRunDefaultRegistryDep(t *testing.T) {
 		_ = os.Remove(pkgWithSumCheckPathModLock)
 	}()
 }
+
+func TestCompile(t *testing.T) {
+	kpmCli, err := NewKpmClient()
+	assert.Equal(t, err, nil)
+
+	testPath := getTestDir("test_run")
+
+	// 定义测试用例
+	tests := []struct {
+		entry    string
+		expected string
+		testmsg  string
+	}{
+		// 当输入是一个目录
+		// 目录下有 .k 有 kcl.mod, 但是 kcl.mod 中没有 entries: 直接编译 .k
+		// {filepath.Join(testPath, "run_0"), "The_first_kcl_program: Hello World!", "kcl run <a dir with kcl.mod, no entries> - pass"},
+		// 目录下有 .k 但是没有 kcl.mod: 直接编译 .k
+		// {filepath.Join(testPath, "run_1"), "The_first_kcl_program: Hello World!", "kcl run <a dir without kcl.mod> - pass"},
+		// 目录下有 .k 有 kcl.mod, 且 kcl.mod 中有 entries: 无视.k，编译 kcl.mod entries 中的内容, 因为我已经制定了y
+		{filepath.Join(testPath, "run_2"), "sub: sub", "kcl run <a dir with kcl.mod and entries> - pass"},
+	}
+
+	// 使用for循环遍历测试用例
+	for _, tt := range tests {
+		res, err := kpmCli.CompileWithOpts(
+			opt.NewCompileOptions(
+				opt.WithEntries([]string{tt.entry}),
+			),
+		)
+		assert.Equal(t, err, nil)
+		assert.Equal(t, res.GetRawYamlResult(), tt.expected)
+
+		fmt.Printf("tt.testmsg: %v\n", tt.testmsg)
+	}
+}

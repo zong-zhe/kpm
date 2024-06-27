@@ -77,6 +77,15 @@ func DefaultCompileOptions() *CompileOptions {
 	}
 }
 
+// NewCompileOptions will create a new CompileOptions with the given options.
+func NewCompileOptions(opts ...Option) *CompileOptions {
+	options := DefaultCompileOptions()
+	for _, opt := range opts {
+		opt(options)
+	}
+	return options
+}
+
 // SetNoSumCheck will set the 'no_sum_check' flag.
 func (opts *CompileOptions) SetNoSumCheck(noSumCheck bool) {
 	opts.noSumCheck = noSumCheck

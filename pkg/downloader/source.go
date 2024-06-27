@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"os"
 	"path/filepath"
 
 	"kcl-lang.io/kpm/pkg/constants"
@@ -88,6 +89,15 @@ func (local *Local) IsLocalKPath() bool {
 	return local != nil && filepath.Ext(local.Path) == constants.KFilePathSuffix
 }
 
+func (local *Local) IsDir() bool {
+	fileInfo, err := os.Stat(local.Path)
+	if err != nil {
+		return false
+	}
+
+	return local != nil && utils.DirExists(local.Path) && fileInfo.IsDir()
+}
+
 func (local *Local) FindRootPath() (string, error) {
 	if local == nil {
 		return "", fmt.Errorf("local source is nil")
@@ -124,6 +134,14 @@ func (local *Local) FindRootPath() (string, error) {
 
 		// If no kcl.mod file is found, return the directory of the original file
 		abspath, err := filepath.Abs(filepath.Dir(local.Path))
+		if err != nil {
+			return "", err
+		}
+		return abspath, nil
+	}
+
+	if local.IsDir() {
+		abspath, err := filepath.Abs(local.Path)
 		if err != nil {
 			return "", err
 		}

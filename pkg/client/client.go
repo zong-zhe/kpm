@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/dominikbraun/graph"
+	"github.com/google/uuid"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/otiai10/copy"
 	"golang.org/x/mod/module"
@@ -523,6 +525,139 @@ func (c *KpmClient) Compile(kclPkg *pkg.KclPkg, kclvmCompiler *runner.Compiler) 
 
 // CompileWithOpts will compile the kcl program with the compile options.
 func (c *KpmClient) CompileWithOpts(opts *opt.CompileOptions) (*kcl.KCLResultList, error) {
+	sources := []downloader.Source{}
+
+	for _, entry := range opts.Entries() {
+		source, err := downloader.NewSourceFromStr(entry)
+		if err != nil {
+			return nil, reporter.NewErrorEvent(reporter.Bug, err, "internal bugs, please contact us to fix it.")
+		}
+		sources = append(sources, *source)
+	}
+
+	var pkgRootPath string
+	var entries []string
+
+	tmpDir, err := os.MkdirTemp("", "")
+	if err != nil {
+		return nil, err
+	}
+	// clean the temp dir.
+	defer os.RemoveAll(tmpDir)
+
+	if len(sources) == 0 {
+		pwd, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+
+		pkgRootPath = pwd
+	} else if len(sources) == 1 { // Only one source
+		// download the package from remote source and get the package root path
+		source := sources[0]
+		if !source.IsLocalPath() {
+			kpkg, err := c.downloadPkg(
+				downloader.WithLocalPath(tmpDir),
+				downloader.WithSource(source),
+			)
+			if err != nil {
+				return nil, err
+			}
+			pkgRootPath = kpkg.HomePath
+		} else if source.IsLocalTarPath() {
+			// Untar the package to the temp dir and get the package root path
+			sourcePath, err := source.ToFilePath()
+			if err != nil {
+				return nil, err
+			}
+			err = utils.UnTarDir(sourcePath, tmpDir)
+			if err != nil {
+				return nil, err
+			}
+			pkgRootPath = tmpDir
+		} else {
+			// get the package root path
+			pkgRootPath, err = source.FindRootPath()
+			if err != nil {
+				return nil, err
+			}
+			sourcePath, err := source.ToFilePath()
+			if err != nil {
+				return nil, err
+			}
+			sourcePath, err = filepath.Abs(sourcePath)
+			if err != nil {
+				return nil, err
+			}
+			entries = append(entries, sourcePath)
+		}
+	} else {
+		// More than one source，all sources must have the same root path.
+		for _, source := range sources {
+			sourceRootPath, err := source.FindRootPath()
+			if err != nil {
+				return nil, err
+			}
+
+			if pkgRootPath == "" {
+				pkgRootPath = sourceRootPath
+			}
+
+			if pkgRootPath != sourceRootPath {
+				return nil, fmt.Errorf("cannot compile multiple packages at the same time")
+			}
+
+			sourcePath, err := source.ToFilePath()
+			if err != nil {
+				return nil, err
+			}
+			entries = append(entries, sourcePath)
+		}
+	}
+
+	if opts.PkgPath() == "" {
+		opts.SetPkgPath(pkgRootPath)
+	}
+
+	// If the kcl package root path does not have a kcl.mod file, create a virtual one.
+	vKclModPath := filepath.Join(pkgRootPath, pkg.MOD_FILE)
+	vKclModLockPath := filepath.Join(pkgRootPath, pkg.MOD_LOCK_FILE)
+
+	// remove the log writer when create the virtual mod file, err is enough.
+	// TODO: debug mode should record this log.
+	logWriter := c.GetLogWriter()
+
+	if !utils.DirExists(vKclModPath) {
+		// clean the virtual mod file and lock file.
+		defer func() {
+			if err := os.Remove(vKclModPath); err != nil {
+				log.Printf("Failed to remove %s: %v", vKclModPath, err)
+			}
+			if err := os.Remove(vKclModLockPath); err != nil {
+				log.Printf("Failed to remove %s: %v", vKclModLockPath, err)
+			}
+		}()
+
+		initOpts := opt.InitOptions{
+			Name:     "vPkg_" + uuid.New().String(),
+			InitPath: pkgRootPath,
+		}
+
+		kclPkg := pkg.NewKclPkg(&initOpts)
+
+		c.logWriter = nil
+		err := c.createIfNotExist(kclPkg.ModFile.GetModFilePath(), kclPkg.ModFile.StoreModFile)
+		if err != nil {
+			return nil, err
+		}
+
+		err = c.createIfNotExist(kclPkg.ModFile.GetModLockFilePath(), kclPkg.LockDepsVersion)
+		if err != nil {
+			return nil, err
+		}
+	}
+	c.logWriter = logWriter
+
 	pkgPath, err := filepath.Abs(opts.PkgPath())
 	if err != nil {
 		return nil, reporter.NewErrorEvent(reporter.Bug, err, "internal bugs, please contact us to fix it.")
@@ -549,9 +684,9 @@ func (c *KpmClient) CompileWithOpts(opts *opt.CompileOptions) (*kcl.KCLResultLis
 	}
 	// add all the options from 'kcl.mod'
 	opts.Merge(*kclPkg.GetKclOpts())
-	if len(opts.Entries()) > 0 {
+	if len(entries) > 0 {
 		// add entry from '--input'
-		for _, entry := range opts.Entries() {
+		for _, entry := range entries {
 			if filepath.IsAbs(entry) {
 				opts.Merge(kcl.WithKFilenames(entry))
 			} else {
