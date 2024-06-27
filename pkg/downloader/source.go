@@ -324,21 +324,15 @@ func (source *Source) FromString(sourceStr string) error {
 	if sourceUrl.Scheme == constants.GitScheme || sourceUrl.Scheme == constants.SshScheme {
 		source.Git = &Git{}
 		source.Git.FromString(sourceStr)
-	}
-
-	if sourceUrl.Scheme == constants.OciScheme {
+	} else if sourceUrl.Scheme == constants.OciScheme {
 		source.Oci = &Oci{}
 		source.Oci.FromString(sourceStr)
-	}
-
-	if sourceUrl.Scheme == constants.FileEntry || sourceUrl.Scheme == "" {
-		source.Local = &Local{}
-		source.Local.FromString(sourceStr)
-	}
-
-	if sourceUrl.Scheme == constants.DefaultOciScheme {
+	} else if sourceUrl.Scheme == constants.DefaultOciScheme {
 		source.Registry = &Registry{}
 		source.Registry.FromString(sourceStr)
+	} else {
+		source.Local = &Local{}
+		source.Local.FromString(sourceStr)
 	}
 
 	return nil
@@ -396,12 +390,7 @@ func (local *Local) FromString(localStr string) error {
 		return fmt.Errorf("local source is nil")
 	}
 
-	u, err := url.Parse(localStr)
-	if err != nil {
-		return err
-	}
-
-	local.Path = u.Path
+	local.Path = localStr
 	return nil
 }
 

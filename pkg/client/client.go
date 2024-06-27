@@ -527,6 +527,18 @@ func (c *KpmClient) Compile(kclPkg *pkg.KclPkg, kclvmCompiler *runner.Compiler) 
 func (c *KpmClient) CompileWithOpts(opts *opt.CompileOptions) (*kcl.KCLResultList, error) {
 	sources := []downloader.Source{}
 
+	// kcl 的编译入口可能有如下几种情况。
+	// 只有一个 entry
+	// kcl run git / oci / dir / file
+	// git, oci, dir : kcl.mod 中的 entry 优先。
+	// file : file 优先
+
+	// 多个 entry
+	// git oci 抛出错误。
+	// dir 和 file，kcl.mod 一定在 dir 和 file 的共同的父目录上
+
+	// kcl.yaml 的优先级最高，一旦有 kcl.yaml 就只看 kcl.yaml 了。
+
 	for _, entry := range opts.Entries() {
 		source, err := downloader.NewSourceFromStr(entry)
 		if err != nil {
@@ -625,9 +637,9 @@ func (c *KpmClient) CompileWithOpts(opts *opt.CompileOptions) (*kcl.KCLResultLis
 
 	// remove the log writer when create the virtual mod file, err is enough.
 	// TODO: debug mode should record this log.
-	logWriter := c.GetLogWriter()
 
 	if !utils.DirExists(vKclModPath) {
+		logWriter := c.GetLogWriter()
 		// clean the virtual mod file and lock file.
 		defer func() {
 			if err := os.Remove(vKclModPath); err != nil {
@@ -655,8 +667,8 @@ func (c *KpmClient) CompileWithOpts(opts *opt.CompileOptions) (*kcl.KCLResultLis
 		if err != nil {
 			return nil, err
 		}
+		c.logWriter = logWriter
 	}
-	c.logWriter = logWriter
 
 	pkgPath, err := filepath.Abs(opts.PkgPath())
 	if err != nil {
@@ -684,6 +696,7 @@ func (c *KpmClient) CompileWithOpts(opts *opt.CompileOptions) (*kcl.KCLResultLis
 	}
 	// add all the options from 'kcl.mod'
 	opts.Merge(*kclPkg.GetKclOpts())
+
 	if len(entries) > 0 {
 		// add entry from '--input'
 		for _, entry := range entries {
