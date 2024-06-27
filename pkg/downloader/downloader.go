@@ -132,6 +132,14 @@ func (d *OciDownloader) Download(opts DownloadOptions) error {
 	ociCli.SetLogWriter(opts.LogWriter)
 	ociCli.PullOciOptions.Platform = d.Platform
 
+	reporter.ReportMsgTo(
+		fmt.Sprintf(
+			"downloading '%s:%s' from '%s/%s:%s'",
+			ociSource.Repo, ociSource.Tag, ociSource.Reg, ociSource.Repo, ociSource.Tag,
+		),
+		opts.LogWriter,
+	)
+
 	err = ociCli.Pull(localPath, ociSource.Tag)
 	if err != nil {
 		return err

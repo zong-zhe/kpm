@@ -14,10 +14,12 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/distribution/reference"
 	"github.com/moby/term"
+	"github.com/otiai10/copy"
 
 	"kcl-lang.io/kpm/pkg/constants"
 	"kcl-lang.io/kpm/pkg/errors"
@@ -301,6 +303,29 @@ func ExtractTarball(tarPath, destDir string) error {
 func DirExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+// MoveFile will move the file from 'src' to 'dest'.
+// On windows, it will copy the file from 'src' to 'dest', and then delete the file under 'src'.
+// On unix-like systems, it will rename the file from 'src' to 'dest'.
+func MoveFile(src, dest string) error {
+	var err error
+	if runtime.GOOS != "windows" {
+		err = os.Rename(src, dest)
+		if err != nil {
+			return err
+		}
+	} else {
+		err = copy.Copy(src, dest)
+		if err != nil {
+			return err
+		}
+		err = os.RemoveAll(src)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // IsSymlinkValidAndExists will check whether the symlink exists and points to a valid target

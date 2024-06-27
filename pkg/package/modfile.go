@@ -202,10 +202,82 @@ func (d *Dependency) ToString() (string, error) {
 }
 
 func (d *Dependency) FromKclPkg(pkg *KclPkg) {
-	d.Name = pkg.GetPkgName()
 	d.FullName = pkg.GetPkgFullName()
 	d.Version = pkg.GetPkgVersion()
 	d.LocalFullPath = pkg.HomePath
+}
+
+func (d *Dependency) FromSource(source downloader.Source) error {
+	d.Source = source
+
+	if source.Git != nil {
+		gitSource := downloader.Git{
+			Url:    source.Git.Url,
+			Branch: source.Git.Branch,
+			Commit: source.Git.Commit,
+			Tag:    source.Git.Tag,
+		}
+
+		gitRef, err := gitSource.GetValidGitReference()
+		if err != nil {
+			return err
+		}
+
+		fullName, err := ParseRepoFullNameFromGitSource(gitSource)
+		if err != nil {
+			return err
+		}
+
+		d.Name = ParseRepoNameFromGitSource(gitSource)
+		d.FullName = fullName
+		d.Source.Git = &gitSource
+		d.Version = gitRef
+		return nil
+	}
+
+	if source.Oci != nil {
+		ociSource := downloader.Oci{
+			Reg:  source.Oci.Reg,
+			Repo: source.Oci.Repo,
+			Tag:  source.Oci.Tag,
+		}
+
+		d.Name = filepath.Base(source.Oci.Repo)
+		d.FullName = d.Name + "_" + source.Oci.Tag
+		d.Source.Oci = &ociSource
+		d.Version = source.Oci.Tag
+		return nil
+	}
+
+	if source.Local != nil {
+		depPkg, err := LoadKclPkg(source.Local.Path)
+		if err != nil {
+			return err
+		}
+
+		d.Name = depPkg.ModFile.Pkg.Name
+		d.FullName = depPkg.ModFile.Pkg.Name + "_" + depPkg.ModFile.Pkg.Version
+		d.LocalFullPath = source.Local.Path
+		d.Source.Local = &downloader.Local{Path: source.Local.Path}
+		d.Version = depPkg.ModFile.Pkg.Version
+		return nil
+	}
+
+	if source.Registry != nil {
+		ociSource := downloader.Oci{
+			Reg:  source.Registry.Reg,
+			Repo: source.Registry.Repo,
+			Tag:  source.Registry.Tag,
+		}
+
+		d.Name = source.Registry.Name
+		d.FullName = source.Registry.Name + "_" + source.Registry.Version
+		d.Source.Registry = &downloader.Registry{Oci: &ociSource, Version: source.Registry.Tag}
+		d.Version = source.Registry.Tag
+		return nil
+	}
+
+	return nil
 }
 
 // SetName will set the name and alias name of a dependency.

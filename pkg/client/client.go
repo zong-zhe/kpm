@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -106,16 +105,9 @@ func (c *KpmClient) downloadPkg(options ...downloader.DownloadOption) (*pkg.KclP
 		}
 	}
 
-	if runtime.GOOS != "windows" {
-		err = os.Rename(tmpDir, localPath)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		err = copy.Copy(tmpDir, localPath)
-		if err != nil {
-			return nil, err
-		}
+	err = utils.MoveFile(tmpDir, localPath)
+	if err != nil {
+		return nil, err
 	}
 
 	localPath, err = filepath.Abs(localPath)
@@ -333,11 +325,7 @@ func (c *KpmClient) getDepStorePath(search_path string, d *pkg.Dependency, isVen
 		if isVendor {
 			return filepath.Join(search_path, "vendor", storePkgName)
 		} else {
-			sourcePath, err := d.Source.ToFilePath()
-			if err != nil {
-				return ""
-			}
-			return filepath.Join(c.homePath, sourcePath)
+			return filepath.Join(c.homePath, storePkgName)
 		}
 	}
 }
@@ -1078,19 +1066,6 @@ func (c *KpmClient) Download(dep *pkg.Dependency, homePath, localPath string) (*
 		// clean the temp dir.
 		defer os.RemoveAll(tmpDir)
 
-		depStr, err := dep.ToString()
-		if err != nil {
-			return nil, err
-		}
-
-		reporter.ReportMsgTo(
-			fmt.Sprintf(
-				"downloading %s",
-				depStr,
-			),
-			c.GetLogWriter(),
-		)
-
 		err = c.DepDownloader.Download(*downloader.NewDownloadOptions(
 			downloader.WithLocalPath(tmpDir),
 			downloader.WithSource(dep.Source),
@@ -1115,24 +1090,17 @@ func (c *KpmClient) Download(dep *pkg.Dependency, homePath, localPath string) (*
 			}
 		}
 
-		if runtime.GOOS != "windows" {
-			err = os.MkdirAll(filepath.Dir(localPath), 0755)
+		localPath := filepath.Dir(localPath)
+		if !utils.DirExists(localPath) {
+			err = os.MkdirAll(localPath, os.ModePerm)
 			if err != nil {
 				return nil, err
 			}
-			err = os.Rename(tmpDir, localPath)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			err = os.MkdirAll(filepath.Dir(localPath), 0755)
-			if err != nil {
-				return nil, err
-			}
-			err = copy.Copy(tmpDir, localPath)
-			if err != nil {
-				return nil, err
-			}
+		}
+
+		err = utils.MoveFile(tmpDir, localPath)
+		if err != nil {
+			return nil, err
 		}
 
 		// load the package from the local path.
