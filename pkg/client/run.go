@@ -30,6 +30,7 @@ type RunOptions struct {
 
 type RunOption func(*RunOptions) error
 
+// WithKclOptions sets the kcl options for the kcl compiler.
 func WithKclOptions(opts kcl.Option) RunOption {
 	return func(ro *RunOptions) error {
 		ro.Option = &opts
@@ -37,6 +38,7 @@ func WithKclOptions(opts kcl.Option) RunOption {
 	}
 }
 
+// WithRunSources sets the sources for the kcl package.
 func WithRunSources(sources []*downloader.Source) RunOption {
 	return func(ro *RunOptions) error {
 		if ro.Option == nil {
@@ -47,6 +49,7 @@ func WithRunSources(sources []*downloader.Source) RunOption {
 	}
 }
 
+// WithSource sets the source for the kcl package.
 func WithSource(source *downloader.Source) RunOption {
 	return func(ro *RunOptions) error {
 		if ro.Option == nil {
@@ -57,6 +60,7 @@ func WithSource(source *downloader.Source) RunOption {
 	}
 }
 
+// WithEntries sets the entries for the kcl package.
 func WithEntries(entries []string) RunOption {
 	return func(ro *RunOptions) error {
 		if ro.Option == nil {
@@ -78,6 +82,7 @@ func WithEntries(entries []string) RunOption {
 	}
 }
 
+// WithSettingsFiles sets the settings files for the kcl package.
 func WithSettingFiles(settingFiles []string) RunOption {
 	return func(ro *RunOptions) error {
 		if ro.Option == nil {
@@ -89,6 +94,7 @@ func WithSettingFiles(settingFiles []string) RunOption {
 	}
 }
 
+// WithArguments sets the arguments for the kcl package.
 func WithArguments(args []string) RunOption {
 	return func(ro *RunOptions) error {
 		if ro.Option == nil {
@@ -99,6 +105,7 @@ func WithArguments(args []string) RunOption {
 	}
 }
 
+// WithOverrides sets the overrides for the kcl package.
 func WithOverrides(overrides []string, debug bool) RunOption {
 	return func(ro *RunOptions) error {
 		if ro.Option == nil {
@@ -111,6 +118,7 @@ func WithOverrides(overrides []string, debug bool) RunOption {
 	}
 }
 
+// WithPathSelectors sets the path selectors for the kcl package.
 func WithPathSelectors(pathSelectors []string) RunOption {
 	return func(ro *RunOptions) error {
 		if ro.Option == nil {
@@ -121,6 +129,7 @@ func WithPathSelectors(pathSelectors []string) RunOption {
 	}
 }
 
+// WithDebug sets the debug flag for the kcl package.
 func WithDebug(debug bool) RunOption {
 	return func(ro *RunOptions) error {
 		if ro.Option == nil {
@@ -134,6 +143,7 @@ func WithDebug(debug bool) RunOption {
 	}
 }
 
+// WithDisableNone sets the disable none flag for the kcl package.
 func WithDisableNone(disableNone bool) RunOption {
 	return func(ro *RunOptions) error {
 		if ro.Option == nil {
@@ -147,6 +157,7 @@ func WithDisableNone(disableNone bool) RunOption {
 	}
 }
 
+// WithExternalPkgs sets the external packages for the kcl package.
 func WithExternalPkgs(externalPkgs []string) RunOption {
 	return func(ro *RunOptions) error {
 		if ro.Option == nil {
@@ -157,6 +168,7 @@ func WithExternalPkgs(externalPkgs []string) RunOption {
 	}
 }
 
+// WithSortKeys sets the sort keys flag for the kcl package.
 func WithSortKeys(sortKeys bool) RunOption {
 	return func(ro *RunOptions) error {
 		if ro.Option == nil {
@@ -170,6 +182,7 @@ func WithSortKeys(sortKeys bool) RunOption {
 	}
 }
 
+// WithShowHidden sets the show hidden flag for the kcl package.
 func WithShowHidden(showHidden bool) RunOption {
 	return func(ro *RunOptions) error {
 		if ro.Option == nil {
@@ -183,6 +196,7 @@ func WithShowHidden(showHidden bool) RunOption {
 	}
 }
 
+// WithStrictRange sets the strict range flag for the kcl package.
 func WithStrictRange(strictRange bool) RunOption {
 	return func(ro *RunOptions) error {
 		if ro.Option == nil {
@@ -196,6 +210,7 @@ func WithStrictRange(strictRange bool) RunOption {
 	}
 }
 
+// WithCompileOnly sets the compile only flag for the kcl package.
 func WithCompileOnly(compileOnly bool) RunOption {
 	return func(ro *RunOptions) error {
 		if ro.Option == nil {
@@ -209,6 +224,7 @@ func WithCompileOnly(compileOnly bool) RunOption {
 	}
 }
 
+// WithVendor sets the vendor flag for the kcl package.
 func WithVendor(vendor bool) RunOption {
 	return func(ro *RunOptions) error {
 		if ro.Option == nil {
@@ -222,6 +238,7 @@ func WithVendor(vendor bool) RunOption {
 	}
 }
 
+// WithWorkDir sets the work directory for the kcl package.
 func WithWorkDir(workDir string) RunOption {
 	return func(ro *RunOptions) error {
 		if ro.Option == nil {
@@ -232,7 +249,8 @@ func WithWorkDir(workDir string) RunOption {
 	}
 }
 
-func (o *RunOptions) BaseEntry() (*downloader.Source, error) {
+// RootPkgSource returns the root package source.
+func (o *RunOptions) RootPkgSource() (*downloader.Source, error) {
 	if o.Sources == nil || len(o.Sources) == 0 {
 		if o.workDir == "" {
 			pwd, err := os.Getwd()
@@ -249,18 +267,22 @@ func (o *RunOptions) BaseEntry() (*downloader.Source, error) {
 	}
 }
 
+// NoCompileEntries returns true if there is no compile entries.
 func (o *RunOptions) NoCompileEntries() bool {
 	return o.Sources == nil || len(o.Sources) == 0
 }
 
+// Merge merges the options from kcl.yaml which is located in the work directory or inputed by the cli.
 func (o *RunOptions) loadYamlSettingsFromLocalAndCli(rootPath string) error {
 	err := ErrNoYamlSettings
+	// If the settings are inputed by the cli
 	if o.hasSettingsYaml {
 		for _, setting := range o.SettingYamls {
 			o.Merge(kcl.WithSettings(setting))
 			err = nil
 		}
 	} else {
+		// if the settings are in the work directory.
 		localSettingsYamlPath := filepath.Join(o.workDir, constants.KCL_YAML)
 		if utils.DirExists(localSettingsYamlPath) {
 			o.Merge(kcl.WithSettings(localSettingsYamlPath))
@@ -269,6 +291,9 @@ func (o *RunOptions) loadYamlSettingsFromLocalAndCli(rootPath string) error {
 		}
 	}
 
+	// Iterate all the *.k files get from kcl.yaml and make them absolute path.
+	// If the compilation entries are all local *.k files or directories, the root path is the work directory.
+	// if the compilation entries are git repo, oci registry or tar files, the root path is the home path of the package.
 	for i, kfile := range o.KFilenameList {
 		if !filepath.IsAbs(kfile) {
 			o.KFilenameList[i] = filepath.Join(rootPath, kfile)
@@ -281,6 +306,7 @@ func (o *RunOptions) loadYamlSettingsFromLocalAndCli(rootPath string) error {
 var ErrNoCliSettings = errors.New("no cli settings")
 var ErrNoYamlSettings = errors.New("no yaml settings")
 
+// loadCliSettings loads the settings from the cli.
 func (o *RunOptions) loadCliSettings(rootPath string, baseEntry *downloader.Source) error {
 	if o.NoCompileEntries() {
 		return ErrNoCliSettings
@@ -329,9 +355,9 @@ func (o *RunOptions) loadCliSettings(rootPath string, baseEntry *downloader.Sour
 		}
 	}
 	return nil
-
 }
 
+// loadCompileSettings loads the compile settings from the kcl.yaml and cli.
 func (o *RunOptions) loadCompileSettings(baseEntry *downloader.Source, basePkg *pkg.KclPkg) error {
 	var rootPath string
 	if !baseEntry.IsPackaged() {
@@ -389,15 +415,15 @@ func (c *KpmClient) Run(options ...RunOption) (*kcl.KCLResultList, error) {
 		}
 	}()
 
-	baseEntry, err := o.BaseEntry()
+	rootPkgSource, err := o.RootPkgSource()
 	if err != nil {
 		return nil, err
 	}
 
 	var pkgMap map[string]string
 	var res *kcl.KCLResultList
-	err = NewVisitor(baseEntry, c).Visit(baseEntry, func(basePkg *pkg.KclPkg) error {
-		err = o.loadCompileSettings(baseEntry, basePkg)
+	err = NewVisitor(rootPkgSource, c).Visit(rootPkgSource, func(basePkg *pkg.KclPkg) error {
+		err = o.loadCompileSettings(rootPkgSource, basePkg)
 		if err != nil {
 			return err
 		}
