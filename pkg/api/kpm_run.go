@@ -116,14 +116,14 @@ func getAbsInputPath(pkgPath string, inputPath string) (string, error) {
 }
 
 // RunPkgWithOpt will compile the kcl package with the compile options.
-// Deprecated: This method will not be maintained in the future. Use RunWithOpts instead.
+// Deprecated: This method will not be maintained in the future. Use `func (c *KpmClient) Run(options ...RunOption) (*kcl.KCLResultList, error)` instead.
 func RunPkgWithOpt(opts *opt.CompileOptions) (*kcl.KCLResultList, error) {
 	kpmcli, err := client.NewKpmClient()
+	kpmcli.SetNoSumCheck(opts.NoSumCheck())
 	if err != nil {
 		return nil, err
 	}
-	kpmcli.SetNoSumCheck(opts.NoSumCheck())
-	return kpmcli.CompileWithOpts(opts)
+	return run(kpmcli, opts)
 }
 
 func runPkgWithOpt(opts *opt.CompileOptions) (*kcl.KCLResultList, error) {
@@ -136,6 +136,7 @@ func runPkgWithOpt(opts *opt.CompileOptions) (*kcl.KCLResultList, error) {
 }
 
 // RunCurrentPkg will compile the current kcl package.
+// Deprecated: This method will not be maintained in the future. Use `func (c *KpmClient) Run(options ...RunOption) (*kcl.KCLResultList, error)` instead.
 func RunCurrentPkg(opts *opt.CompileOptions) (*kcl.KCLResultList, error) {
 	pwd, err := os.Getwd()
 	opts.SetPkgPath(pwd)
@@ -148,6 +149,7 @@ func RunCurrentPkg(opts *opt.CompileOptions) (*kcl.KCLResultList, error) {
 }
 
 // RunTarPkg will compile the kcl package from a kcl package tar.
+// Deprecated: This method will not be maintained in the future. Use `func (c *KpmClient) Run(options ...RunOption) (*kcl.KCLResultList, error)` instead.
 func RunTarPkg(tarPath string, opts *opt.CompileOptions) (*kcl.KCLResultList, error) {
 	absTarPath, err := utils.AbsTarPath(tarPath)
 	if err != nil {
@@ -177,6 +179,7 @@ func RunTarPkg(tarPath string, opts *opt.CompileOptions) (*kcl.KCLResultList, er
 }
 
 // RunOciPkg will compile the kcl package from an OCI reference.
+// Deprecated: This method will not be maintained in the future. Use `func (c *KpmClient) Run(options ...RunOption) (*kcl.KCLResultList, error)` instead.
 func RunOciPkg(ociRef, version string, opts *opt.CompileOptions) (*kcl.KCLResultList, error) {
 	kpmcli, err := client.NewKpmClient()
 	if err != nil {

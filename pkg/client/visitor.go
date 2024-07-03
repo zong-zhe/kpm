@@ -21,7 +21,6 @@ type PkgVisitor struct {
 	kpmcli *KpmClient
 }
 
-// 用来下载远端的包并且加载
 type RemotePkgVisitor struct {
 	*PkgVisitor
 }
@@ -64,7 +63,6 @@ func (v *RemotePkgVisitor) Visit(source *downloader.Source, visit func(*pkg.KclP
 	return visit(pkg)
 }
 
-// 用来寻找根目录，并且加载本地的 KCL 包
 type FileLocalPkgVisitor struct {
 	*PkgVisitor
 }
@@ -163,7 +161,6 @@ func (v *TarLocalPkgVisitor) Visit(source *downloader.Source, visit func(*pkg.Kc
 	return visit(pkg)
 }
 
-// NewVisitor 根据source的类型返回对应的Visitor
 func NewVisitor(source *downloader.Source, kpmcli *KpmClient) Visitor {
 	if source.IsLocalTarPath() {
 		return NewTarLocalPkgVisitor(kpmcli)

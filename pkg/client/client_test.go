@@ -1428,19 +1428,6 @@ func TestRunGitWithLocalDep(t *testing.T) {
 	}
 }
 
-func TestXXX(t *testing.T) {
-	path := "E:\\Users\\zongz\\Workspaces\\kcl\\kpm\\pkg\\client\\main_tes.k"
-
-	opts := kcl.NewOption()
-
-	opts.Merge(kcl.WithWorkDir("E:\\Users\\zongz\\Workspaces\\kcl\\kpm\\pkg\\client"))
-	opts.Merge(kcl.WithKFilenames(path))
-
-	res, err := kcl.RunWithOpts(*opts)
-	assert.Equal(t, err, nil)
-	assert.Equal(t, res.GetRawYamlResult(), "The_first_kcl_program: Hello World!")
-}
-
 func TestLoadOciUrlDiffSetting(t *testing.T) {
 	kpmcli, err := NewKpmClient()
 	assert.Equal(t, err, nil)

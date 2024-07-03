@@ -28,40 +28,6 @@ type RunOptions struct {
 	*kcl.Option
 }
 
-// Only one kcl module can be compiled at a time.
-// So, the sources must have the same root path.
-func (ro *RunOptions) Validate() error {
-	if len(ro.Sources) == 0 {
-		return errors.New("no source provided")
-	}
-
-	// More than one source, all sources must have the same root path.
-	if len(ro.Sources) > 1 {
-		rootPath, err := ro.Sources[0].FindRootPath()
-		if err != nil {
-			return err
-		}
-		for _, source := range ro.Sources {
-			// By now, each remote path is a kcl module.
-			// And, only one remote path is allowed.
-			// So when more than one remote path or local path and remote path are provided, return an error.
-			if (!source.IsLocalPath() || source.IsLocalTarPath()) && len(ro.Sources) > 1 {
-				return errors.New("only one kcl module root path is allowed")
-			}
-
-			tmpRootPath, err := source.FindRootPath()
-			if err != nil {
-				return err
-			}
-			if tmpRootPath != rootPath {
-				return errors.New("only one kcl module root path is allowed: root path conflicts between " + rootPath + " with " + tmpRootPath)
-			}
-		}
-	}
-
-	return nil
-}
-
 type RunOption func(*RunOptions) error
 
 func WithKclOptions(opts kcl.Option) RunOption {
@@ -267,7 +233,6 @@ func WithWorkDir(workDir string) RunOption {
 }
 
 func (o *RunOptions) BaseEntry() (*downloader.Source, error) {
-	// 如果参数中没有任何需要编译的东西，那么，当前目录就是 base entry, 直接应用包内情况
 	if o.Sources == nil || len(o.Sources) == 0 {
 		if o.workDir == "" {
 			pwd, err := os.Getwd()
@@ -288,7 +253,6 @@ func (o *RunOptions) NoCompileEntries() bool {
 	return o.Sources == nil || len(o.Sources) == 0
 }
 
-// yaml 中文件路径需要从相对路径替换为绝对路径
 func (o *RunOptions) loadYamlSettingsFromLocalAndCli(rootPath string) error {
 	err := ErrNoYamlSettings
 	if o.hasSettingsYaml {
@@ -357,8 +321,6 @@ func (o *RunOptions) loadCliSettings(rootPath string, baseEntry *downloader.Sour
 				"only allows one package to be compiled at a time",
 			)
 		} else {
-			// 如果 baseEntry 是非 pwd 的本地路径，相对计算时使用 Workdir 计算的
-			// 如果 baseEntry 是 pwd,git,oci,tag，那么，相对路径就是相对于包的homepath
 			if filepath.IsAbs(source.Local.Path) {
 				o.Merge(kcl.WithKFilenames(source.Local.Path))
 			} else {
@@ -390,7 +352,6 @@ func (o *RunOptions) loadCompileSettings(baseEntry *downloader.Source, basePkg *
 				return err
 			}
 			o.Merge(*basePkg.GetKclOpts())
-			// 如果最后没有任何要被编译的入口
 			if len(o.KFilenameList) == 0 {
 				o.Merge(kcl.WithKFilenames(basePkg.HomePath))
 			} else {
@@ -406,7 +367,6 @@ func (o *RunOptions) loadCompileSettings(baseEntry *downloader.Source, basePkg *
 	return nil
 }
 
-// 需要一个 source accesser 来访问 source
 func (c *KpmClient) Run(options ...RunOption) (*kcl.KCLResultList, error) {
 	o := &RunOptions{}
 	for _, option := range options {
@@ -429,7 +389,6 @@ func (c *KpmClient) Run(options ...RunOption) (*kcl.KCLResultList, error) {
 		}
 	}()
 
-	// 1. 首先，需要一个 base entry 是后续 kcl.yaml 和其他 main.k 生效的地方
 	baseEntry, err := o.BaseEntry()
 	if err != nil {
 		return nil, err
