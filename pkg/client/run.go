@@ -89,6 +89,17 @@ type RunOptions struct {
 
 type RunOption func(*RunOptions) error
 
+// WithExternalPackages sets the external packages for running the kcl package.
+func WithExternalPackages(externalPackages []string) RunOption {
+	return func(ro *RunOptions) error {
+		if ro.Option == nil {
+			ro.Option = kcl.NewOption()
+		}
+		ro.Merge(kcl.WithExternalPkgs(externalPackages...))
+		return nil
+	}
+}
+
 // WithWorkDir sets the work directory for running the kcl package.
 func WithWorkDir(workDir string) RunOption {
 	return func(ro *RunOptions) error {
