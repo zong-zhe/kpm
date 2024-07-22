@@ -164,17 +164,16 @@ func NewOciClientWithOpts(opts ...OciClientOption) (*OciClient, error) {
 		Credential: remoteauth.StaticCredential(client.repo.Reference.Host(), *client.cred),
 	}
 
-	return &OciClient{
-		repo: client.repo,
-		ctx:  &ctx,
-		PullOciOptions: &PullOciOptions{
-			CopyOpts: &oras.CopyOptions{
-				CopyGraphOptions: oras.CopyGraphOptions{
-					MaxMetadataBytes: DEFAULT_LIMIT_STORE_SIZE, // default is 64 MiB
-				},
+	client.ctx = &ctx
+	client.PullOciOptions = &PullOciOptions{
+		CopyOpts: &oras.CopyOptions{
+			CopyGraphOptions: oras.CopyGraphOptions{
+				MaxMetadataBytes: DEFAULT_LIMIT_STORE_SIZE, // default is 64 MiB
 			},
 		},
-	}, nil
+	}
+
+	return client, nil
 }
 
 // NewOciClient will new an OciClient.
