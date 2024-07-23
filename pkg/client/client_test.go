@@ -1896,3 +1896,7 @@ func TestRunRemoteWithArgs(t *testing.T) {
 		logbuf.Reset()
 	}
 }
+
+func TestPushWithPlainHttp(t *testing.T) {
+
+}
