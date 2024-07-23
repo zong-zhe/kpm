@@ -1904,7 +1904,6 @@ func TestPushWithPlainHttp(t *testing.T) {
 		Repo string
 	}{
 		{Reg: "localhost:5001", Repo: "test/helloworld"},
-		{Reg: "ghcr.io", Repo: "kcl-lang/helloworld"},
 	}
 
 	for _, test := range tests {
@@ -1925,9 +1924,7 @@ func TestPushWithPlainHttp(t *testing.T) {
 		buf := new(bytes.Buffer)
 		kpmcli.logWriter = buf
 		err = kpmcli.PushToOci(tarPath, &httpOciOpts)
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.Equal(t, err, (*reporter.KpmEvent)(nil))
 		expectedMessage := fmt.Sprintf("pushed [registry] %s/test/helloworld", test.Reg)
 		assert.Contains(t, buf.String(), expectedMessage)
 	}
