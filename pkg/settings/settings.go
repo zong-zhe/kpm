@@ -141,7 +141,7 @@ func (settings *Settings) DefaultOciPlainHttp() bool {
 
 	// If the force OCI plain http is not set,
 	// return the default OCI plain http.
-	return true
+	return false
 }
 
 // ForceOciPlainHttp return the force OCI plain http.

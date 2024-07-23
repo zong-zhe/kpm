@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -97,11 +98,20 @@ type OciClient struct {
 	ctx            *context.Context
 	logWriter      io.Writer
 	cred           *remoteauth.Credential
+	settings       *settings.Settings
 	PullOciOptions *PullOciOptions
 }
 
 // OciClientOption configures how we set up the OciClient
 type OciClientOption func(*OciClient) error
+
+// WithSettings sets the settings of the OciClient
+func WithSettings(settings *settings.Settings) OciClientOption {
+	return func(c *OciClient) error {
+		c.settings = settings
+		return nil
+	}
+}
 
 // WithRepoPath sets the repo path of the OciClient
 func WithRepoPath(repoPath string) OciClientOption {
@@ -157,6 +167,18 @@ func NewOciClientWithOpts(opts ...OciClientOption) (*OciClient, error) {
 		}
 	}
 
+	isPlainHttp, force := client.settings.ForceOciPlainHttp()
+	if force {
+		client.repo.PlainHTTP = isPlainHttp
+	} else {
+		registry := client.repo.Reference.Host()
+		host, _, _ := net.SplitHostPort(registry)
+		if host == "localhost" || registry == "localhost" {
+			// not specified, defaults to plain http for localhost
+			client.repo.PlainHTTP = true
+		}
+	}
+
 	ctx := context.Background()
 	client.repo.Client = &remoteauth.Client{
 		Client:     retry.DefaultClient,
@@ -194,7 +216,7 @@ func NewOciClient(regName, repoName string, settings *settings.Settings) (*OciCl
 	return NewOciClientWithOpts(
 		WithRepoPath(utils.JoinPath(regName, repoName)),
 		WithCredential(credential),
-		WithPlainHttp(settings.DefaultOciPlainHttp()),
+		WithSettings(settings),
 	)
 }
 

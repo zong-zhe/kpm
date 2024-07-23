@@ -22,14 +22,39 @@ type Source struct {
 	*Local `toml:"-"`
 }
 
+// SourceMeta is the source meta information.
+func (s *Source) SourceMeta() *SourceMeta {
+	if s.Git != nil {
+		return s.Git.SourceMeta
+	}
+	if s.Oci != nil {
+		return s.Oci.SourceMeta
+	}
+	if s.Local != nil {
+		return s.Local.SourceMeta
+	}
+	if s.Registry != nil {
+		return s.Registry.SourceMeta
+	}
+	return nil
+}
+
+// SourceMeta is the source meta information.
+// Note: This structure is unstable and may have new member fields added.
+type SourceMeta struct {
+	source string
+}
+
 type Local struct {
 	Path string `toml:"path,omitempty"`
+	*SourceMeta
 }
 
 type Oci struct {
 	Reg  string `toml:"reg,omitempty"`
 	Repo string `toml:"repo,omitempty"`
 	Tag  string `toml:"oci_tag,omitempty"`
+	*SourceMeta
 }
 
 // Git is the package source from git registry.
@@ -39,12 +64,14 @@ type Git struct {
 	Commit  string `toml:"commit,omitempty"`
 	Tag     string `toml:"git_tag,omitempty"`
 	Version string `toml:"version,omitempty"`
+	*SourceMeta
 }
 
 type Registry struct {
 	*Oci    `toml:"-"`
 	Name    string `toml:"-"`
 	Version string `toml:"-"`
+	*SourceMeta
 }
 
 func NewSourceFromStr(sourceStr string) (*Source, error) {
@@ -93,7 +120,6 @@ func (source *Source) FindRootPath() (string, error) {
 		return source.Registry.ToFilePath()
 	}
 	return "", fmt.Errorf("source is nil")
-
 }
 
 func (local *Local) IsLocalTarPath() bool {
@@ -117,7 +143,7 @@ func (local *Local) IsDir() bool {
 		return false
 	}
 
-	return local != nil && utils.DirExists(local.Path) && fileInfo.IsDir()
+	return utils.DirExists(local.Path) && fileInfo.IsDir()
 }
 
 func (local *Local) FindRootPath() (string, error) {
@@ -363,13 +389,10 @@ func (git *Git) FromString(gitStr string) error {
 	if git == nil {
 		return fmt.Errorf("git source is nil")
 	}
+	git.source = gitStr
 	u, err := url.Parse(gitStr)
 	if err != nil {
 		return err
-	}
-
-	if u.Scheme != constants.GitScheme && u.Scheme != constants.SshScheme {
-		return fmt.Errorf("invalid git url with schema: %s", u.Scheme)
 	}
 
 	if u.Scheme == constants.GitScheme {
@@ -389,14 +412,10 @@ func (oci *Oci) FromString(ociStr string) error {
 	if oci == nil {
 		return fmt.Errorf("oci source is nil")
 	}
-
+	oci.source = ociStr
 	u, err := url.Parse(ociStr)
 	if err != nil {
 		return err
-	}
-
-	if u.Scheme != constants.OciScheme {
-		return fmt.Errorf("invalid oci url with schema: %s", u.Scheme)
 	}
 
 	oci.Reg = u.Host
@@ -410,7 +429,7 @@ func (local *Local) FromString(localStr string) error {
 	if local == nil {
 		return fmt.Errorf("local source is nil")
 	}
-
+	local.source = localStr
 	local.Path = localStr
 	return nil
 }
@@ -421,13 +440,10 @@ func (registry *Registry) FromString(registryStr string) error {
 		return fmt.Errorf("registry is nil")
 	}
 
+	registry.source = registryStr
 	registryUrl, err := url.Parse(registryStr)
 	if err != nil {
 		return err
-	}
-
-	if registryUrl.Scheme != constants.DefaultOciScheme {
-		return fmt.Errorf("invalid registry url with schema: %s", registryUrl.Scheme)
 	}
 
 	oci := &Oci{}
