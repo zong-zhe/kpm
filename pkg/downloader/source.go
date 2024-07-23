@@ -22,39 +22,14 @@ type Source struct {
 	*Local `toml:"-"`
 }
 
-// SourceMeta is the source meta information.
-func (s *Source) SourceMeta() *SourceMeta {
-	if s.Git != nil {
-		return s.Git.SourceMeta
-	}
-	if s.Oci != nil {
-		return s.Oci.SourceMeta
-	}
-	if s.Local != nil {
-		return s.Local.SourceMeta
-	}
-	if s.Registry != nil {
-		return s.Registry.SourceMeta
-	}
-	return nil
-}
-
-// SourceMeta is the source meta information.
-// Note: This structure is unstable and may have new member fields added.
-type SourceMeta struct {
-	source string
-}
-
 type Local struct {
 	Path string `toml:"path,omitempty"`
-	*SourceMeta
 }
 
 type Oci struct {
 	Reg  string `toml:"reg,omitempty"`
 	Repo string `toml:"repo,omitempty"`
 	Tag  string `toml:"oci_tag,omitempty"`
-	*SourceMeta
 }
 
 // Git is the package source from git registry.
@@ -64,14 +39,12 @@ type Git struct {
 	Commit  string `toml:"commit,omitempty"`
 	Tag     string `toml:"git_tag,omitempty"`
 	Version string `toml:"version,omitempty"`
-	*SourceMeta
 }
 
 type Registry struct {
 	*Oci    `toml:"-"`
 	Name    string `toml:"-"`
 	Version string `toml:"-"`
-	*SourceMeta
 }
 
 func NewSourceFromStr(sourceStr string) (*Source, error) {
@@ -389,7 +362,6 @@ func (git *Git) FromString(gitStr string) error {
 	if git == nil {
 		return fmt.Errorf("git source is nil")
 	}
-	git.source = gitStr
 	u, err := url.Parse(gitStr)
 	if err != nil {
 		return err
@@ -412,7 +384,6 @@ func (oci *Oci) FromString(ociStr string) error {
 	if oci == nil {
 		return fmt.Errorf("oci source is nil")
 	}
-	oci.source = ociStr
 	u, err := url.Parse(ociStr)
 	if err != nil {
 		return err
@@ -429,7 +400,6 @@ func (local *Local) FromString(localStr string) error {
 	if local == nil {
 		return fmt.Errorf("local source is nil")
 	}
-	local.source = localStr
 	local.Path = localStr
 	return nil
 }
@@ -440,7 +410,6 @@ func (registry *Registry) FromString(registryStr string) error {
 		return fmt.Errorf("registry is nil")
 	}
 
-	registry.source = registryStr
 	registryUrl, err := url.Parse(registryStr)
 	if err != nil {
 		return err
