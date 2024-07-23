@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/dominikbraun/graph"
 	"github.com/elliotchance/orderedmap/v2"
@@ -1898,5 +1899,36 @@ func TestRunRemoteWithArgs(t *testing.T) {
 }
 
 func TestPushWithPlainHttp(t *testing.T) {
+	tests := []struct {
+		Reg  string
+		Repo string
+	}{
+		{Reg: "localhost:5001", Repo: "test/helloworld"},
+		{Reg: "ghcr.io", Repo: "kcl-lang/helloworld"},
+	}
 
+	for _, test := range tests {
+		tag := fmt.Sprintf("test-%d", time.Now().Unix())
+		httpOciOpts := opt.OciOptions{
+			Reg:     test.Reg,
+			Repo:    test.Repo,
+			PkgName: "helloworld",
+			Tag:     tag,
+		}
+
+		pkgPath := getTestDir("test_push_plain_http")
+		tarPath := filepath.Join(pkgPath, "helloworld_0.0.1.tar")
+
+		kpmcli, err := NewKpmClient()
+		assert.Equal(t, err, nil)
+
+		buf := new(bytes.Buffer)
+		kpmcli.logWriter = buf
+		err = kpmcli.PushToOci(tarPath, &httpOciOpts)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expectedMessage := fmt.Sprintf("pushed [registry] %s/test/helloworld", test.Reg)
+		assert.Contains(t, buf.String(), expectedMessage)
+	}
 }
