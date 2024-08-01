@@ -93,7 +93,6 @@ func (source *Source) FindRootPath() (string, error) {
 		return source.Registry.ToFilePath()
 	}
 	return "", fmt.Errorf("source is nil")
-
 }
 
 func (local *Local) IsLocalTarPath() bool {

@@ -367,8 +367,22 @@ func (o *RunOptions) applyCompileOptionsFromKclMod(kclPkg *pkg.KclPkg) bool {
 func (o *RunOptions) applyCompileOptions(source downloader.Source, kclPkg *pkg.KclPkg, workDir string) error {
 	o.Merge(kcl.WithWorkDir(workDir))
 
+	var inputSourcePath string
+	var err error
+	if len(o.Sources) == 1 {
+		if o.Sources[0].IsLocalPath() {
+			inputSourcePath, err = o.Sources[0].ToFilePath()
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	// If the sources from cli is not empty, use the sources from cli.
-	if len(o.Sources) != 0 {
+	// If the sources from cli is not empty, multiple file path or only one dir with kcl.mod
+	if len(o.Sources) != 0 &&
+		// if the sources from cli is only one dir with kcl.mod, it is a package goto else to get compile options from kcl.mod and kcl.yaml
+		!(len(o.Sources) == 1 && inputSourcePath == kclPkg.HomePath) {
 		var compiledFiles []string
 		// All the cli relative path should be transformed to the absolute path by workdir
 		for _, source := range o.Sources {

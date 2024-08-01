@@ -77,48 +77,26 @@ func (vpv *VirtualPkgVisitor) Visit(s *downloader.Source, v visitFunc) error {
 		return err
 	}
 
-	// If the source path does not contain a kcl.mod file, create a virtual kcl.mod file.
-	vKclModPath := filepath.Join(sourcePath, constants.KCL_MOD)
-	if !utils.DirExists(vKclModPath) {
-		// After the visitFunc is executed, clean the virtual kcl.mod file.
-		defer func() error {
-			vKclModLockPath := filepath.Join(sourcePath, constants.KCL_MOD_LOCK)
-			if utils.DirExists(vKclModPath) {
-				err := os.RemoveAll(vKclModPath)
-				if err != nil {
-					return err
-				}
+	// After the visitFunc is executed, clean the kcl.mod.lock file.
+	defer func() error {
+		vKclModLockPath := filepath.Join(sourcePath, constants.KCL_MOD_LOCK)
+		if utils.DirExists(vKclModLockPath) {
+			err := os.RemoveAll(vKclModLockPath)
+			if err != nil {
+				return err
 			}
-			if utils.DirExists(vKclModLockPath) {
-				err := os.RemoveAll(vKclModLockPath)
-				if err != nil {
-					return err
-				}
-			}
-			return nil
-		}()
-		initOpts := opt.InitOptions{
-			Name:     "vPkg_" + uuid.New().String(),
-			InitPath: sourcePath,
 		}
+		return nil
+	}()
 
-		modfile := pkg.NewModFile(&initOpts)
-		logWriter := vpv.kpmcli.GetLogWriter()
-		vpv.kpmcli.SetLogWriter(nil)
-		err = vpv.kpmcli.createIfNotExist(modfile.GetModFilePath(), modfile.StoreModFile)
-		if err != nil {
-			return err
-		}
-		vpv.kpmcli.SetLogWriter(logWriter)
-	}
-
-	kclPkg, err := vpv.kpmcli.LoadPkgFromPath(sourcePath)
-	if err != nil {
-		return err
-	}
+	// A Virtual Package without a kcl.mod file.
+	kclPkg := pkg.NewKclPkg(&opt.InitOptions{
+		Name:     "vPkg_" + uuid.New().String(),
+		InitPath: sourcePath,
+	})
 
 	// If the required files are present, proceed with the visitFunc
-	return v(kclPkg)
+	return v(&kclPkg)
 }
 
 // RemoteVisitor is the visitor for visiting a remote package.

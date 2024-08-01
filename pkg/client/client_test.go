@@ -1837,10 +1837,10 @@ func TestRunLocalWithArgs(t *testing.T) {
 		}, filepath.Join(pkgPath, "with_args", "run_7"), false, "", "base: Base\nThe_first_kcl_program: Hello World!"},
 		{[]string{
 			filepath.Join(pkgPath, "with_args", "run_8"),
-		}, filepath.Join(pkgPath, "with_args", "run_8"), false, "", "The_first_kcl_program: Hello World!"},
+		}, filepath.Join(pkgPath, "with_args", "run_8"), false, "", "sub: SUB"},
 		{[]string{
 			filepath.Join(pkgPath, "with_args", "run_9"),
-		}, filepath.Join(pkgPath, "with_args", "run_9"), false, "", "The_first_kcl_program: Hello World!"},
+		}, filepath.Join(pkgPath, "with_args", "run_9"), false, "", "The_sub_kcl_program: Hello Sub World!"},
 	}
 
 	for _, test := range tests {
