@@ -367,6 +367,10 @@ func (o *RunOptions) applyCompileOptionsFromKclMod(kclPkg *pkg.KclPkg) bool {
 func (o *RunOptions) applyCompileOptions(source downloader.Source, kclPkg *pkg.KclPkg, workDir string) error {
 	o.Merge(kcl.WithWorkDir(workDir))
 
+	// 正常的顺序是先加载 kcl.mod 的配置，如果有 settings 和 cli 就一直覆盖上来 ？
+	o.applyCompileOptionsFromKclMod(kclPkg)
+	o.applyCompileOptionsFromYaml(workDir)	
+	
 	// If the sources from cli is not empty, use the sources from cli.
 	if len(o.Sources) != 0 {
 		var compiledFiles []string
