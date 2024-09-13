@@ -1,13 +1,13 @@
 # Reference from:
 # https://github.com/c-bata/go-prompt/blob/master/.github/workflows/test.yml
 name: Test
-on:
-  pull_request:
-    branches:
-     - main
-  push:
-    branches:
-     - main
+on: push
+  # pull_request:
+  #   branches:
+  #    - main
+  # push:
+  #   branches:
+  #    - main
 
 jobs:
   Test:
@@ -28,6 +28,16 @@ jobs:
       - name: Running go tests with coverage
         env:
           GO111MODULE: on
+        run: |
+          make cover
+      - name: Send coverage
+        uses: shogo82148/actions-goveralls@v1
+        with:
+          path-to-profile: coverage.out
+      - name: Running go tests with coverage and feature gate
+        env:
+          GO111MODULE: on
+          KPM_FEATURE_GATES: "SupportPackageLoader=true"
         run: |
           make cover
       - name: Send coverage
