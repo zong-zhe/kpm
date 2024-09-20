@@ -36,6 +36,13 @@ import (
 	"kcl-lang.io/kpm/pkg/utils"
 )
 
+var TestPkgDependency = pkg.Dependency{
+	Name:     "kcl",
+	FullName: "kcl",
+	Version:  "0.0.0",
+	Sum:      "Sum",
+}
+
 const testDataDir = "test_data"
 
 func getTestDir(subDir string) string {
@@ -1599,10 +1606,10 @@ func TestAddWithLocalPath(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	assert.Equal(t, gotpkg.Dependencies.Deps.Len(), expectpkg.Dependencies.Deps.Len())
-	assert.Equal(t, gotpkg.Dependencies.Deps.GetOrDefault("dep_pkg", pkg.TestPkgDependency).FullName, expectpkg.Dependencies.Deps.GetOrDefault("dep_pkg", pkg.TestPkgDependency).FullName)
-	assert.Equal(t, gotpkg.Dependencies.Deps.GetOrDefault("dep_pkg", pkg.TestPkgDependency).Version, expectpkg.Dependencies.Deps.GetOrDefault("dep_pkg", pkg.TestPkgDependency).Version)
-	assert.Equal(t, gotpkg.Dependencies.Deps.GetOrDefault("dep_pkg", pkg.TestPkgDependency).LocalFullPath, filepath.Join(tmppath, "dep_pkg"))
-	assert.Equal(t, gotpkg.Dependencies.Deps.GetOrDefault("dep_pkg", pkg.TestPkgDependency).Source.Local.Path, "../dep_pkg")
+	assert.Equal(t, gotpkg.Dependencies.Deps.GetOrDefault("dep_pkg", TestPkgDependency).FullName, expectpkg.Dependencies.Deps.GetOrDefault("dep_pkg", TestPkgDependency).FullName)
+	assert.Equal(t, gotpkg.Dependencies.Deps.GetOrDefault("dep_pkg", TestPkgDependency).Version, expectpkg.Dependencies.Deps.GetOrDefault("dep_pkg", TestPkgDependency).Version)
+	assert.Equal(t, gotpkg.Dependencies.Deps.GetOrDefault("dep_pkg", TestPkgDependency).LocalFullPath, filepath.Join(tmppath, "dep_pkg"))
+	assert.Equal(t, gotpkg.Dependencies.Deps.GetOrDefault("dep_pkg", TestPkgDependency).Source.Local.Path, "../dep_pkg")
 }
 
 func TestRunOciWithSettingsFile(t *testing.T) {
@@ -1667,9 +1674,9 @@ func TestLoadOciUrlDiffSetting(t *testing.T) {
 	pkg_local, err := kpmcli.LoadPkgFromPath(testPath)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, pkg_local.ModFile.Deps.Len(), 1)
-	assert.Equal(t, pkg_local.ModFile.Deps.GetOrDefault("oci_pkg", pkg.TestPkgDependency).Oci.Reg, "docker.io")
-	assert.Equal(t, pkg_local.ModFile.Deps.GetOrDefault("oci_pkg", pkg.TestPkgDependency).Oci.Repo, "test/oci_pkg")
-	assert.Equal(t, pkg_local.ModFile.Deps.GetOrDefault("oci_pkg", pkg.TestPkgDependency).Oci.Tag, "0.0.1")
+	assert.Equal(t, pkg_local.ModFile.Deps.GetOrDefault("oci_pkg", TestPkgDependency).Oci.Reg, "docker.io")
+	assert.Equal(t, pkg_local.ModFile.Deps.GetOrDefault("oci_pkg", TestPkgDependency).Oci.Repo, "test/oci_pkg")
+	assert.Equal(t, pkg_local.ModFile.Deps.GetOrDefault("oci_pkg", TestPkgDependency).Oci.Tag, "0.0.1")
 	assert.Equal(t, err, nil)
 }
 

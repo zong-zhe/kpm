@@ -75,9 +75,9 @@ func LoadKclPkgWithOpts(options ...LoadOption) (*KclPkg, error) {
 		if !ok {
 			return nil, fmt.Errorf("could not load 'kcl.mod' in '%s': %w", pkgPath, err)
 		}
-		if lockDep, ok := deps.Deps.Get(name); !ok {
+		if lockDep, ok := deps.Deps.Get(name); ok {
 			lockDep.Source = modDep.Source
-			lockDep.FullName = modDep.GenDepFullName()
+			lockDep.LocalFullPath = modDep.LocalFullPath
 			deps.Deps.Set(name, lockDep)
 		}
 	}

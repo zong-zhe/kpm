@@ -768,7 +768,7 @@ func (c *KpmClient) AddDepWithOpts(kclPkg *pkg.KclPkg, opt *opt.AddOptions) (*pk
 		kclPkg.Dependencies.Deps.Set(d.Name, tempDeps)
 
 		// update the key of kclPkg.Dependencies.Deps from d.Name to opt.NewPkgName
-		kclPkg.Dependencies.Deps.Set(opt.NewPkgName, kclPkg.Dependencies.Deps.GetOrDefault(d.Name, pkg.TestPkgDependency))
+		kclPkg.Dependencies.Deps.Set(opt.NewPkgName, kclPkg.Dependencies.Deps.GetOrDefault(d.Name, TestPkgDependency))
 		kclPkg.Dependencies.Deps.Delete(d.Name)
 	}
 
@@ -813,7 +813,7 @@ func (c *KpmClient) AddDepToPkg(kclPkg *pkg.KclPkg, d *pkg.Dependency) error {
 
 	// Some field will be empty when the dependency is add from CLI.
 	// For avoiding re-download the dependency, just complete part of the fields not all of them.
-	if !kclPkg.ModFile.Dependencies.Deps.GetOrDefault(d.Name, pkg.TestPkgDependency).Equals(*d) {
+	if !kclPkg.ModFile.Dependencies.Deps.GetOrDefault(d.Name, TestPkgDependency).Equals(*d) {
 		// the dep passed on the cli is different from the kcl.mod.
 		kclPkg.ModFile.Dependencies.Deps.Set(d.Name, *d)
 	}
@@ -1787,7 +1787,7 @@ func (c *KpmClient) DownloadDeps(deps *pkg.Dependencies, lockDeps *pkg.Dependenc
 			continue
 		}
 
-		expectedSum := lockDeps.Deps.GetOrDefault(d.Name, pkg.TestPkgDependency).Sum
+		expectedSum := lockDeps.Deps.GetOrDefault(d.Name, TestPkgDependency).Sum
 		// Clean the cache
 		if len(c.homePath) == 0 || len(d.FullName) == 0 {
 			return nil, errors.InternalBug
@@ -1805,7 +1805,7 @@ func (c *KpmClient) DownloadDeps(deps *pkg.Dependencies, lockDeps *pkg.Dependenc
 			return nil, err
 		}
 
-		if lockedDep.Oci != nil && lockedDep.Equals(lockDeps.Deps.GetOrDefault(d.Name, pkg.TestPkgDependency)) {
+		if lockedDep.Oci != nil && lockedDep.Equals(lockDeps.Deps.GetOrDefault(d.Name, TestPkgDependency)) {
 			if !c.noSumCheck && expectedSum != "" &&
 				lockedDep.Sum != "" &&
 				lockedDep.Sum != expectedSum {
@@ -1909,6 +1909,7 @@ func (c *KpmClient) DownloadDeps(deps *pkg.Dependencies, lockDeps *pkg.Dependenc
 			break
 		}
 		lockDeps.Deps.Set(k, v)
+		deps.Deps.Set(k, v)
 	}
 
 	return &newDeps, nil

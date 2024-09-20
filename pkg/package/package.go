@@ -13,12 +13,7 @@ import (
 	"kcl-lang.io/kpm/pkg/utils"
 )
 
-var TestPkgDependency = Dependency{
-	Name:     "kcl",
-	FullName: "kcl",
-	Version:  "0.0.0",
-	Sum:      "Sum",
-}
+
 
 type KclPkg struct {
 	ModFile  ModFile
