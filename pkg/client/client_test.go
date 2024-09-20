@@ -36,13 +36,6 @@ import (
 	"kcl-lang.io/kpm/pkg/utils"
 )
 
-var TestPkgDependency = pkg.Dependency{
-	Name:     "kcl",
-	FullName: "kcl",
-	Version:  "0.0.0",
-	Sum:      "Sum",
-}
-
 const testDataDir = "test_data"
 
 func getTestDir(subDir string) string {
