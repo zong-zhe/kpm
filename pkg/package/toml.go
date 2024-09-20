@@ -155,7 +155,6 @@ func (mod *ModFile) UnmarshalTOML(data interface{}) error {
 		}
 		mod.Profiles = &p
 	}
-
 	return nil
 }
 
