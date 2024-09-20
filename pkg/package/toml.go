@@ -123,25 +123,25 @@ func (mod *ModFile) UnmarshalTOML(data interface{}) error {
 		return fmt.Errorf("expected map[string]interface{}, got %T", data)
 	}
 
+	pkg := Package{}
 	if v, ok := meta[PACKAGE_FLAG]; ok {
-		pkg := Package{}
 		err := pkg.UnmarshalTOML(v)
 		if err != nil {
 			return err
 		}
-		mod.Pkg = pkg
 	}
+	mod.Pkg = pkg
 
+	deps := Dependencies{
+		Deps: orderedmap.NewOrderedMap[string, Dependency](),
+	}
 	if v, ok := meta[DEPS_FLAG]; ok {
-		deps := Dependencies{
-			Deps: orderedmap.NewOrderedMap[string, Dependency](),
-		}
 		err := deps.UnmarshalModTOML(v)
 		if err != nil {
 			return err
 		}
-		mod.Dependencies = deps
 	}
+	mod.Dependencies = deps
 
 	if v, ok := meta[PROFILES_FLAG]; ok {
 		p := NewProfile()
@@ -155,6 +155,7 @@ func (mod *ModFile) UnmarshalTOML(data interface{}) error {
 		}
 		mod.Profiles = &p
 	}
+
 	return nil
 }
 

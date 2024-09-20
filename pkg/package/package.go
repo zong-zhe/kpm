@@ -2,9 +2,7 @@ package pkg
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
-	"strings"
 
 	orderedmap "github.com/elliotchance/orderedmap/v2"
 	"kcl-lang.io/kcl-go/pkg/kcl"
@@ -56,129 +54,6 @@ func NewKclPkg(opts *opt.InitOptions) KclPkg {
 		HomePath:     opts.InitPath,
 		Dependencies: Dependencies{Deps: orderedmap.NewOrderedMap[string, Dependency]()},
 	}
-}
-
-// Deprecated: Use `KpmClient.LoadPkgFromPath()` instead.
-func LoadKclPkg(pkgPath string) (*KclPkg, error) {
-	modFile, err := LoadModFile(pkgPath)
-	if err != nil {
-		return nil, reporter.NewErrorEvent(reporter.FailedLoadKclMod, err, fmt.Sprintf("could not load 'kcl.mod' in '%s'", pkgPath))
-	}
-
-	// Get dependencies from kcl.mod.lock.
-	deps, err := LoadLockDeps(pkgPath)
-
-	if err != nil {
-		return nil, reporter.NewErrorEvent(reporter.FailedLoadKclMod, err, fmt.Sprintf("could not load 'kcl.mod.lock' in '%s'", pkgPath))
-	}
-
-	// Align the dependencies between kcl.mod and kcl.mod.lock.
-	for _, name := range modFile.Dependencies.Deps.Keys() {
-		dep, ok := modFile.Dependencies.Deps.Get(name)
-		if !ok {
-			break
-		}
-		if dep.Local != nil {
-			if ldep, ok := deps.Deps.Get(name); ok {
-				abs, err := filepath.Abs(filepath.Join(pkgPath, dep.Local.Path))
-				if err != nil {
-					return nil, reporter.NewErrorEvent(reporter.Bug, err, "internal bugs, please contact us to fix it.")
-				}
-				ldep.LocalFullPath = abs
-				dep.LocalFullPath = abs
-				ldep.Source = dep.Source
-				deps.Deps.Set(name, ldep)
-				modFile.Dependencies.Deps.Set(name, dep)
-			}
-		}
-		if dep.Git != nil && dep.Git.GetPackage() != "" {
-			name := utils.ParseRepoNameFromGitUrl(dep.Git.Url)
-			if len(dep.Source.Git.Tag) != 0 {
-				name = fmt.Sprintf(PKG_NAME_PATTERN, name, dep.Source.Git.Tag)
-			} else if len(dep.Source.Git.Commit) != 0 {
-				name = fmt.Sprintf(PKG_NAME_PATTERN, name, dep.Source.Git.Commit)
-			} else {
-				name = fmt.Sprintf(PKG_NAME_PATTERN, name, dep.Source.Git.Branch)
-			}
-			dep.FullName = name
-			modFile.Dependencies.Deps.Set(name, dep)
-		}
-	}
-
-	return &KclPkg{
-		ModFile:      *modFile,
-		HomePath:     pkgPath,
-		Dependencies: *deps,
-	}, nil
-
-}
-
-func FindFirstKclPkgFrom(path string) (*KclPkg, error) {
-	matches, _ := filepath.Glob(filepath.Join(path, "*.tar"))
-	if matches == nil || len(matches) != 1 {
-		// then try to glob tgz file
-		matches, _ = filepath.Glob(filepath.Join(path, "*.tgz"))
-		if matches == nil || len(matches) != 1 {
-			pkg, err := LoadKclPkg(path)
-			if err != nil {
-				return nil, reporter.NewErrorEvent(
-					reporter.InvalidKclPkg,
-					err,
-					fmt.Sprintf("failed to find the kcl package tar from '%s'.", path),
-				)
-			}
-
-			return pkg, nil
-		}
-	}
-
-	tarPath := matches[0]
-	unTarPath := filepath.Dir(tarPath)
-	var err error
-	if utils.IsTar(tarPath) {
-		err = utils.UnTarDir(tarPath, unTarPath)
-	} else {
-		err = utils.ExtractTarball(tarPath, unTarPath)
-	}
-	if err != nil {
-		return nil, reporter.NewErrorEvent(
-			reporter.FailedUntarKclPkg,
-			err,
-			fmt.Sprintf("failed to untar the kcl package tar from '%s' into '%s'.", tarPath, unTarPath),
-		)
-	}
-
-	// After untar the downloaded kcl package tar file, remove the tar file.
-	if utils.DirExists(tarPath) {
-		rmErr := os.Remove(tarPath)
-		if rmErr != nil {
-			return nil, reporter.NewErrorEvent(
-				reporter.FailedUntarKclPkg,
-				err,
-				fmt.Sprintf("failed to untar the kcl package tar from '%s' into '%s'.", tarPath, unTarPath),
-			)
-		}
-	}
-
-	pkg, err := LoadKclPkg(unTarPath)
-	if err != nil {
-		return nil, reporter.NewErrorEvent(
-			reporter.InvalidKclPkg,
-			err,
-			fmt.Sprintf("failed to find the kcl package tar from '%s'.", path),
-		)
-	}
-
-	return pkg, nil
-}
-
-func LoadKclPkgFromTar(pkgTarPath string) (*KclPkg, error) {
-	destDir := strings.TrimSuffix(pkgTarPath, filepath.Ext(pkgTarPath))
-	err := utils.UnTarDir(pkgTarPath, destDir)
-	if err != nil {
-		return nil, err
-	}
-	return LoadKclPkg(destDir)
 }
 
 // GetKclOpts will return the kcl options from kcl.mod.

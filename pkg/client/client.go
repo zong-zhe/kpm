@@ -30,7 +30,6 @@ import (
 	"kcl-lang.io/kpm/pkg/errors"
 	"kcl-lang.io/kpm/pkg/features"
 	"kcl-lang.io/kpm/pkg/git"
-	"kcl-lang.io/kpm/pkg/loader"
 	"kcl-lang.io/kpm/pkg/oci"
 	"kcl-lang.io/kpm/pkg/opt"
 	pkg "kcl-lang.io/kpm/pkg/package"
@@ -152,30 +151,17 @@ func (c *KpmClient) GetSettings() *settings.Settings {
 }
 
 func (c *KpmClient) LoadPkgFromPath(pkgPath string) (*pkg.KclPkg, error) {
-	return loader.Load(
-		loader.WithPkgPath(pkgPath),
-		loader.WithSettings(&c.settings),
+	return pkg.LoadKclPkgWithOpts(
+		pkg.WithPkgPath(pkgPath),
+		pkg.WithSettings(&c.settings),
 	)
 }
 
 func (c *KpmClient) LoadModFile(pkgPath string) (*pkg.ModFile, error) {
-	modFile := new(pkg.ModFile)
-	err := modFile.LoadModFile(filepath.Join(pkgPath, pkg.MOD_FILE))
-	if err != nil {
-		return nil, err
-	}
-
-	modFile.HomePath = pkgPath
-
-	if modFile.Dependencies.Deps == nil {
-		modFile.Dependencies.Deps = orderedmap.NewOrderedMap[string, pkg.Dependency]()
-	}
-	err = c.FillDependenciesInfo(modFile)
-	if err != nil {
-		return nil, err
-	}
-
-	return modFile, nil
+	return pkg.LoadAndFillModFileWithOpts(
+		pkg.WithPkgPath(pkgPath),
+		pkg.WithSettings(&c.settings),
+	)
 }
 
 // Load the kcl.mod.lock and acquire the checksum of the dependencies from OCI registry.
@@ -1139,6 +1125,8 @@ func (c *KpmClient) Download(dep *pkg.Dependency, homePath, localPath string) (*
 			return nil, err
 		}
 
+		dep.FullName = dep.GenDepFullName()
+
 		if dep.GetPackage() != "" {
 			localFullPath, err := utils.FindPackage(localPath, dep.GetPackage())
 			if err != nil {
@@ -1150,12 +1138,11 @@ func (c *KpmClient) Download(dep *pkg.Dependency, homePath, localPath string) (*
 			dep.LocalFullPath = localPath
 		}
 
-		dpkg, err := c.LoadPkgFromPath(dep.LocalFullPath)
+		modFile, err := c.LoadModFile(dep.LocalFullPath)
 		if err != nil {
 			return nil, err
 		}
-
-		dep.FromKclPkg(dpkg)
+		dep.Version = modFile.Pkg.Version
 	}
 
 	if dep.Source.Oci != nil || dep.Source.Registry != nil {
@@ -1796,22 +1783,7 @@ func (c *KpmClient) DownloadDeps(deps *pkg.Dependencies, lockDeps *pkg.Dependenc
 
 		existDep, err := c.dependencyExistsLocal(pkghome, &d)
 		if existDep != nil && err == nil {
-
-			if d.GetPackage() != "" {
-				existDep.LocalFullPath, err = utils.FindPackage(existDep.LocalFullPath, d.GetPackage())
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			dpkg, err := c.LoadPkgFromPath(existDep.LocalFullPath)
-			if err != nil {
-				return nil, err
-			}
-
-			existDep.FromKclPkg(dpkg)
 			newDeps.Deps.Set(d.Name, *existDep)
-			deps.Deps.Set(d.Name, *existDep)
 			continue
 		}
 
