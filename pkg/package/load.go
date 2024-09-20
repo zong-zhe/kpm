@@ -191,6 +191,7 @@ func fillDepsInfoWithSettings(deps *Dependencies, settings *settings.Settings) e
 				},
 			}
 		}
+		dep.FullName = dep.GenDepFullName()
 		deps.Deps.Set(name, dep)
 	}
 
