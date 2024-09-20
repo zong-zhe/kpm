@@ -1909,7 +1909,6 @@ func (c *KpmClient) DownloadDeps(deps *pkg.Dependencies, lockDeps *pkg.Dependenc
 			break
 		}
 		lockDeps.Deps.Set(k, v)
-		deps.Deps.Set(k, v)
 	}
 
 	return &newDeps, nil
