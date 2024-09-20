@@ -75,7 +75,7 @@ func TestRunPkgInPathInvalidPkg(t *testing.T) {
 	opts.Merge(kcl.WithKFilenames(filepath.Join(pkgPath, "invalid_pkg", "not_exist.k")))
 	result, err := RunPkgInPath(opts)
 	assert.NotEqual(t, err, nil)
-	assert.Equal(t, true, strings.Contains(err.Error(), fmt.Sprintf("could not load 'kcl.mod' in '%s'", pkgPath)))
+	assert.Equal(t, true, strings.Contains(err.Error(), fmt.Sprintf("could not load 'kcl.mod' in '%s'\n", pkgPath)))
 	assert.Equal(t, result, "")
 }
 

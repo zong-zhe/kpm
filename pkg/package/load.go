@@ -48,32 +48,32 @@ func LoadKclPkgWithOpts(options ...LoadOption) (*KclPkg, error) {
 	modFile := new(ModFile)
 	err := modFile.LoadModFile(filepath.Join(pkgPath, MOD_FILE))
 	if err != nil {
-		return nil, fmt.Errorf("could not load 'kcl.mod' in '%s': %w", pkgPath, err)
+		return nil, fmt.Errorf("could not load 'kcl.mod' in '%s'\n%w", pkgPath, err)
 	}
 
 	// load the kcl.mod.lock file.
 	// Get dependencies from kcl.mod.lock.
 	deps, err := LoadLockDeps(pkgPath)
 	if err != nil {
-		return nil, fmt.Errorf("could not load 'kcl.mod' in '%s': %w", pkgPath, err)
+		return nil, fmt.Errorf("could not load 'kcl.mod' in '%s'\n%w", pkgPath, err)
 	}
 
 	// pre-process the package.
 	// 1. Transform the local path to the absolute path.
 	err = convertDepsLocalPathToAbsPath(&modFile.Dependencies, pkgPath)
 	if err != nil {
-		return nil, fmt.Errorf("could not load 'kcl.mod' in '%s': %w", pkgPath, err)
+		return nil, fmt.Errorf("could not load 'kcl.mod' in '%s'\n%w", pkgPath, err)
 	}
 	// 2. Fill the default oci registry, the default oci registry is in the settings.
 	err = fillDepsInfoWithSettings(&modFile.Dependencies, opts.Settings)
 	if err != nil {
-		return nil, fmt.Errorf("could not load 'kcl.mod' in '%s': %w", pkgPath, err)
+		return nil, fmt.Errorf("could not load 'kcl.mod' in '%s'\n%w", pkgPath, err)
 	}
 	// 3. Sync the dependencies information in kcl.mod.lock with the dependencies in kcl.mod.
 	for _, name := range modFile.Dependencies.Deps.Keys() {
 		modDep, ok := modFile.Dependencies.Deps.Get(name)
 		if !ok {
-			return nil, fmt.Errorf("could not load 'kcl.mod' in '%s': %w", pkgPath, err)
+			return nil, fmt.Errorf("could not load 'kcl.mod' in '%s'\n%w", pkgPath, err)
 		}
 		if lockDep, ok := deps.Deps.Get(name); ok {
 			lockDep.Source = modDep.Source
@@ -105,19 +105,19 @@ func LoadAndFillModFileWithOpts(options ...LoadOption) (*ModFile, error) {
 	modFile := new(ModFile)
 	err := modFile.LoadModFile(filepath.Join(pkgPath, MOD_FILE))
 	if err != nil {
-		return nil, fmt.Errorf("could not load 'kcl.mod' in '%s': %w", pkgPath, err)
+		return nil, fmt.Errorf("could not load 'kcl.mod' in '%s'\n%w", pkgPath, err)
 	}
 
 	// pre-process the package.
 	// 1. Transform the local path to the absolute path.
 	err = convertDepsLocalPathToAbsPath(&modFile.Dependencies, pkgPath)
 	if err != nil {
-		return nil, fmt.Errorf("could not load 'kcl.mod' in '%s': %w", pkgPath, err)
+		return nil, fmt.Errorf("could not load 'kcl.mod' in '%s'\n%w", pkgPath, err)
 	}
 	// 2. Fill the default oci registry, the default oci registry is in the settings.
 	err = fillDepsInfoWithSettings(&modFile.Dependencies, opts.Settings)
 	if err != nil {
-		return nil, fmt.Errorf("could not load 'kcl.mod' in '%s': %w", pkgPath, err)
+		return nil, fmt.Errorf("could not load 'kcl.mod' in '%s'\n%w", pkgPath, err)
 	}
 
 	return modFile, nil
