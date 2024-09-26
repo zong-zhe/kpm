@@ -508,6 +508,13 @@ func TestVendorDeps(t *testing.T) {
 		FullName: "kcl1",
 		Version:  "0.0.1",
 		Sum:      kcl1Sum,
+		Source: downloader.Source{
+			Oci: &downloader.Oci{
+				Reg:  "ghcr.io",
+				Repo: "kcl-lang/kcl1",
+				Tag:  "0.0.1",
+			},
+		},
 	}
 
 	depKcl2 := pkg.Dependency{
@@ -515,6 +522,13 @@ func TestVendorDeps(t *testing.T) {
 		FullName: "kcl2",
 		Version:  "0.0.1",
 		Sum:      kcl2Sum,
+		Source: downloader.Source{
+			Oci: &downloader.Oci{
+				Reg:  "ghcr.io",
+				Repo: "kcl-lang/kcl2",
+				Tag:  "0.0.1",
+			},
+		},
 	}
 
 	mppTest := orderedmap.NewOrderedMap[string, pkg.Dependency]()
@@ -590,6 +604,13 @@ func TestResolveDepsVendorMode(t *testing.T) {
 		FullName: "kcl1_0.0.1",
 		Version:  "0.0.1",
 		Sum:      kcl1Sum,
+		Source: downloader.Source{
+			Oci: &downloader.Oci{
+				Reg:  "ghcr.io",
+				Repo: "kcl-lang/kcl1",
+				Tag:  "0.0.1",
+			},
+		},
 	}
 
 	depKcl2 := pkg.Dependency{
@@ -597,6 +618,13 @@ func TestResolveDepsVendorMode(t *testing.T) {
 		FullName: "kcl2_0.0.1",
 		Version:  "0.0.1",
 		Sum:      kcl2Sum,
+		Source: downloader.Source{
+			Oci: &downloader.Oci{
+				Reg:  "ghcr.io",
+				Repo: "kcl-lang/kcl2",
+				Tag:  "0.0.1",
+			},
+		},
 	}
 
 	mppTest := orderedmap.NewOrderedMap[string, pkg.Dependency]()
@@ -655,6 +683,13 @@ func TestCompileWithEntryFile(t *testing.T) {
 		FullName: "kcl1_0.0.1",
 		Version:  "0.0.1",
 		Sum:      kcl1Sum,
+		Source: downloader.Source{
+			Oci: &downloader.Oci{
+				Reg:  "ghcr.io",
+				Repo: "kcl-lang/kcl2",
+				Tag:  "0.0.1",
+			},
+		},
 	}
 	kcl2Sum, _ := utils.HashDir(filepath.Join(kpm_home, "kcl2"))
 	depKcl2 := pkg.Dependency{
@@ -662,6 +697,13 @@ func TestCompileWithEntryFile(t *testing.T) {
 		FullName: "kcl2_0.0.1",
 		Version:  "0.0.1",
 		Sum:      kcl2Sum,
+		Source: downloader.Source{
+			Oci: &downloader.Oci{
+				Reg:  "ghcr.io",
+				Repo: "kcl-lang/kcl2",
+				Tag:  "0.0.1",
+			},
+		},
 	}
 
 	mppTest := orderedmap.NewOrderedMap[string, pkg.Dependency]()
@@ -837,13 +879,13 @@ func TestTestResolveMetadataInJsonStrWithPackage(t *testing.T) {
 		Deps: make(map[string]pkg.Dependency),
 	}
 
-	localFullPath, err := utils.FindPackage(filepath.Join(globalPkgPath, "modules_ee03122b5f45b09eb48694422fc99a0772f6bba8"), "helloworld")
+	localFullPath, err := utils.FindPackage(filepath.Join(globalPkgPath, "flask-demo-kcl-manifests_8308200"), "cc")
 	assert.Equal(t, err, nil)
 
-	expectedDep.Deps["helloworld"] = pkg.Dependency{
-		Name:          "helloworld",
-		FullName:      "modules_ee03122b5f45b09eb48694422fc99a0772f6bba8",
-		Version:       "ee03122b5f45b09eb48694422fc99a0772f6bba8",
+	expectedDep.Deps["cc"] = pkg.Dependency{
+		Name:          "cc",
+		FullName:      "flask-demo-kcl-manifests_8308200",
+		Version:       "8308200",
 		LocalFullPath: localFullPath,
 	}
 
@@ -871,19 +913,19 @@ func TestTestResolveMetadataInJsonStrWithPackage(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	assert.Equal(t, utils.DirExists(vendorDir), true)
-	assert.Equal(t, utils.DirExists(filepath.Join(vendorDir, "modules_ee03122b5f45b09eb48694422fc99a0772f6bba8")), true)
+	assert.Equal(t, utils.DirExists(filepath.Join(vendorDir, "flask-demo-kcl-manifests_8308200")), true)
 
-	localFullPath, err = utils.FindPackage(filepath.Join(vendorDir, "modules_ee03122b5f45b09eb48694422fc99a0772f6bba8"), "helloworld")
+	localFullPath, err = utils.FindPackage(filepath.Join(vendorDir, "flask-demo-kcl-manifests_8308200"), "cc")
 	assert.Equal(t, err, nil)
 
 	expectedDep = pkg.DependenciesUI{
 		Deps: make(map[string]pkg.Dependency),
 	}
 
-	expectedDep.Deps["helloworld"] = pkg.Dependency{
-		Name:          "helloworld",
-		FullName:      "modules_ee03122b5f45b09eb48694422fc99a0772f6bba8",
-		Version:       "ee03122b5f45b09eb48694422fc99a0772f6bba8",
+	expectedDep.Deps["cc"] = pkg.Dependency{
+		Name:          "cc",
+		FullName:      "flask-demo-kcl-manifests_8308200",
+		Version:       "8308200",
 		LocalFullPath: localFullPath,
 	}
 
