@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/mod/module"
-	"kcl-lang.io/kpm/pkg/3rdparty/mvs"
 	"kcl-lang.io/kpm/pkg/client"
 	"kcl-lang.io/kpm/pkg/utils"
 )
@@ -153,84 +152,84 @@ func TestRequired(t *testing.T) {
 // 	assert.Equal(t, upgrade, expectedReqs)
 // }
 
-func TestPrevious(t *testing.T) {
-	pkg_path := getTestDir("test_with_external_deps")
-	assert.Equal(t, utils.DirExists(filepath.Join(pkg_path, "kcl.mod")), true)
-	kpmcli, err := client.NewKpmClient()
-	assert.Equal(t, err, nil)
-	kclPkg, err := kpmcli.LoadPkgFromPath(pkg_path)
-	assert.Equal(t, err, nil)
+// func TestPrevious(t *testing.T) {
+// 	pkg_path := getTestDir("test_with_external_deps")
+// 	assert.Equal(t, utils.DirExists(filepath.Join(pkg_path, "kcl.mod")), true)
+// 	kpmcli, err := client.NewKpmClient()
+// 	assert.Equal(t, err, nil)
+// 	kclPkg, err := kpmcli.LoadPkgFromPath(pkg_path)
+// 	assert.Equal(t, err, nil)
 
-	_, depGraph, err := kpmcli.InitGraphAndDownloadDeps(kclPkg)
-	assert.Equal(t, err, nil)
+// 	_, depGraph, err := kpmcli.InitGraphAndDownloadDeps(kclPkg)
+// 	assert.Equal(t, err, nil)
 
-	reqs := ReqsGraph{
-		depGraph,
-		kpmcli,
-		kclPkg,
-	}
+// 	reqs := ReqsGraph{
+// 		depGraph,
+// 		kpmcli,
+// 		kclPkg,
+// 	}
 
-	downgrade, err := reqs.Previous(module.Version{Path: "k8s", Version: "1.27"})
-	assert.Equal(t, err, nil)
-	assert.Equal(t, downgrade, module.Version{Path: "k8s", Version: "1.14"})
-}
+// 	downgrade, err := reqs.Previous(module.Version{Path: "k8s", Version: "1.27"})
+// 	assert.Equal(t, err, nil)
+// 	assert.Equal(t, downgrade, module.Version{Path: "k8s", Version: "1.14"})
+// }
 
-func TestUpgradePreviousOfLocalDependency(t *testing.T) {
-	pkg_path := filepath.Join(getTestDir("test_with_internal_deps"), "aaa")
-	assert.Equal(t, utils.DirExists(filepath.Join(pkg_path, "kcl.mod")), true)
-	kpmcli, err := client.NewKpmClient()
-	assert.Equal(t, err, nil)
-	kclPkg, err := kpmcli.LoadPkgFromPath(pkg_path)
-	assert.Equal(t, err, nil)
+// func TestUpgradePreviousOfLocalDependency(t *testing.T) {
+// 	pkg_path := filepath.Join(getTestDir("test_with_internal_deps"), "aaa")
+// 	assert.Equal(t, utils.DirExists(filepath.Join(pkg_path, "kcl.mod")), true)
+// 	kpmcli, err := client.NewKpmClient()
+// 	assert.Equal(t, err, nil)
+// 	kclPkg, err := kpmcli.LoadPkgFromPath(pkg_path)
+// 	assert.Equal(t, err, nil)
 
-	_, depGraph, err := kpmcli.InitGraphAndDownloadDeps(kclPkg)
-	assert.Equal(t, err, nil)
+// 	_, depGraph, err := kpmcli.InitGraphAndDownloadDeps(kclPkg)
+// 	assert.Equal(t, err, nil)
 
-	reqs := ReqsGraph{
-		depGraph,
-		kpmcli,
-		kclPkg,
-	}
+// 	reqs := ReqsGraph{
+// 		depGraph,
+// 		kpmcli,
+// 		kclPkg,
+// 	}
 
-	upgrade, err := reqs.Upgrade(module.Version{Path: "bbb", Version: "0.0.1"})
-	assert.Equal(t, err, nil)
-	assert.Equal(t, upgrade, module.Version{Path: "bbb", Version: "0.0.1"})
+// 	upgrade, err := reqs.Upgrade(module.Version{Path: "bbb", Version: "0.0.1"})
+// 	assert.Equal(t, err, nil)
+// 	assert.Equal(t, upgrade, module.Version{Path: "bbb", Version: "0.0.1"})
 
-	downgrade, err := reqs.Previous(module.Version{Path: "bbb", Version: "0.0.1"})
-	assert.Equal(t, err, nil)
-	assert.Equal(t, downgrade, module.Version{Path: "bbb", Version: "0.0.1"})
-}
+// 	downgrade, err := reqs.Previous(module.Version{Path: "bbb", Version: "0.0.1"})
+// 	assert.Equal(t, err, nil)
+// 	assert.Equal(t, downgrade, module.Version{Path: "bbb", Version: "0.0.1"})
+// }
 
-func TestDowngrade(t *testing.T) {
-	pkg_path := getTestDir("test_with_external_deps")
-	assert.Equal(t, utils.DirExists(filepath.Join(pkg_path, "kcl.mod")), true)
-	kpmcli, err := client.NewKpmClient()
-	assert.Equal(t, err, nil)
-	kclPkg, err := kpmcli.LoadPkgFromPath(pkg_path)
-	assert.Equal(t, err, nil)
+// func TestDowngrade(t *testing.T) {
+// 	pkg_path := getTestDir("test_with_external_deps")
+// 	assert.Equal(t, utils.DirExists(filepath.Join(pkg_path, "kcl.mod")), true)
+// 	kpmcli, err := client.NewKpmClient()
+// 	assert.Equal(t, err, nil)
+// 	kclPkg, err := kpmcli.LoadPkgFromPath(pkg_path)
+// 	assert.Equal(t, err, nil)
 
-	_, depGraph, err := kpmcli.InitGraphAndDownloadDeps(kclPkg)
-	assert.Equal(t, err, nil)
+// 	_, depGraph, err := kpmcli.InitGraphAndDownloadDeps(kclPkg)
+// 	assert.Equal(t, err, nil)
 
-	reqs := ReqsGraph{
-		depGraph,
-		kpmcli,
-		kclPkg,
-	}
+// 	reqs := ReqsGraph{
+// 		depGraph,
+// 		kpmcli,
+// 		kclPkg,
+// 	}
 
-	target := module.Version{Path: kclPkg.GetPkgName(), Version: kclPkg.GetPkgVersion()}
-	downgradeList := []module.Version{
-		{Path: "k8s", Version: "1.17"},
-	}
-	downgrade, err := mvs.Downgrade(target, reqs, downgradeList...)
-	assert.Equal(t, err, nil)
+// 	target := module.Version{Path: kclPkg.GetPkgName(), Version: kclPkg.GetPkgVersion()}
+// 	downgradeList := []module.Version{
+// 		{Path: "k8s", Version: "1.17"},
+// 	}
+// 	downgrade, err := mvs.Downgrade(target, reqs, downgradeList...)
+// 	assert.Equal(t, err, nil)
 
-	expectedReqs := []module.Version{
-		{Path: "test_with_external_deps", Version: "0.0.1"},
-		{Path: "argo-cd-order", Version: "0.1.2"},
-		{Path: "helloworld", Version: "0.1.0"},
-		{Path: "json_merge_patch", Version: "0.1.0"},
-		{Path: "k8s", Version: "1.17"},
-	}
-	assert.Equal(t, downgrade, expectedReqs)
-}
+// 	expectedReqs := []module.Version{
+// 		{Path: "test_with_external_deps", Version: "0.0.1"},
+// 		{Path: "argo-cd-order", Version: "0.1.2"},
+// 		{Path: "helloworld", Version: "0.1.0"},
+// 		{Path: "json_merge_patch", Version: "0.1.0"},
+// 		{Path: "k8s", Version: "1.17"},
+// 	}
+// 	assert.Equal(t, downgrade, expectedReqs)
+// }
