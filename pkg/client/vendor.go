@@ -35,8 +35,6 @@ func (c *KpmClient) vendorDeps(kclPkg *pkg.KclPkg, vendorPath string) error {
 		return err
 	}
 
-	println("Vendoring dependencies...")
-
 	// Move all the selected vendored dependencies to the vendor directory.
 	for _, depName := range kclPkg.Dependencies.Deps.Keys() {
 		dep, ok := kclPkg.Dependencies.Deps.Get(depName)

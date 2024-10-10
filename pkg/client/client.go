@@ -353,6 +353,7 @@ func (c *KpmClient) resolvePkgDeps(kclPkg *pkg.KclPkg, lockDeps *pkg.Dependencie
 
 		// If the dependency exists locally, load the dependency package.
 		depPkg, err := c.LoadPkgFromPath(depPath)
+		fmt.Printf("err load: %v\n", err)
 		if err != nil {
 			return reporter.NewErrorEvent(
 				reporter.DependencyNotFound,
