@@ -11,6 +11,7 @@ import (
 	"kcl-lang.io/kpm/pkg/constants"
 	"kcl-lang.io/kpm/pkg/downloader"
 	"kcl-lang.io/kpm/pkg/errors"
+	"kcl-lang.io/kpm/pkg/features"
 	pkg "kcl-lang.io/kpm/pkg/package"
 	"kcl-lang.io/kpm/pkg/utils"
 	"kcl-lang.io/kpm/pkg/visitor"
@@ -25,46 +26,51 @@ func (c *KpmClient) VendorDeps(kclPkg *pkg.KclPkg) error {
 		return err
 	}
 
-	// Select all the vendored dependencies
-	// and fill the vendored dependencies into kclPkg.Dependencies.Deps
-	err = c.selectVendoredDeps(kclPkg, vendorPath, kclPkg.Dependencies.Deps)
-	if err != nil {
-		return err
-	}
+	if ok, err := features.Enabled(features.SupportMVS); err != nil && ok {
 
-	// Move all the selected vendored dependencies to the vendor directory.
-	for _, depName := range kclPkg.Dependencies.Deps.Keys() {
-		dep, ok := kclPkg.Dependencies.Deps.Get(depName)
-		if !ok {
-			return fmt.Errorf("failed to get dependency %s", depName)
-		}
-
-		// Check if the dependency is already vendored in the vendor directory.
-		existLocalDep, err := c.dependencyExistsLocal(filepath.Dir(vendorPath), &dep, true)
+		// Select all the vendored dependencies
+		// and fill the vendored dependencies into kclPkg.Dependencies.Deps
+		err = c.selectVendoredDeps(kclPkg, vendorPath, kclPkg.Dependencies.Deps)
 		if err != nil {
 			return err
 		}
 
-		if existLocalDep == nil {
-			vendorFullPath := filepath.Join(vendorPath, dep.GenDepFullName())
-			cacheFullPath := filepath.Join(c.homePath, dep.GenDepFullName())
-			if !utils.DirExists(vendorFullPath) {
-				err := copy.Copy(cacheFullPath, vendorFullPath)
-				if err != nil {
-					return err
-				}
+		// Move all the selected vendored dependencies to the vendor directory.
+		for _, depName := range kclPkg.Dependencies.Deps.Keys() {
+			dep, ok := kclPkg.Dependencies.Deps.Get(depName)
+			if !ok {
+				return fmt.Errorf("failed to get dependency %s", depName)
 			}
-			// Load the vendored dependency
-			existLocalDep, err = c.dependencyExistsLocal(filepath.Dir(vendorPath), &dep, true)
+
+			// Check if the dependency is already vendored in the vendor directory.
+			existLocalDep, err := c.dependencyExistsLocal(filepath.Dir(vendorPath), &dep, true)
 			if err != nil {
 				return err
 			}
 
 			if existLocalDep == nil {
-				return fmt.Errorf("failed to find the vendored dependency %s", depName)
+				vendorFullPath := filepath.Join(vendorPath, dep.GenDepFullName())
+				cacheFullPath := filepath.Join(c.homePath, dep.GenDepFullName())
+				if !utils.DirExists(vendorFullPath) {
+					err := copy.Copy(cacheFullPath, vendorFullPath)
+					if err != nil {
+						return err
+					}
+				}
+				// Load the vendored dependency
+				existLocalDep, err = c.dependencyExistsLocal(filepath.Dir(vendorPath), &dep, true)
+				if err != nil {
+					return err
+				}
+
+				if existLocalDep == nil {
+					return fmt.Errorf("failed to find the vendored dependency %s", depName)
+				}
 			}
+			kclPkg.Dependencies.Deps.Set(depName, *existLocalDep)
 		}
-		kclPkg.Dependencies.Deps.Set(depName, *existLocalDep)
+	} else {
+		return c.vendorDeps(kclPkg, vendorPath)
 	}
 	return nil
 }
