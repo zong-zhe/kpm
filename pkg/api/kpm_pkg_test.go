@@ -18,6 +18,7 @@ func TestPackageApi(t *testing.T) {
 	pkg, err := GetKclPackage(pkg_path)
 	assert.Equal(t, err, nil)
 	err = kpmcli.ResolvePkgDepsMetadata(pkg.pkg, true)
+	fmt.Printf("err: %v\n", err)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, pkg.GetPkgName(), "kcl_pkg")
 	assert.Equal(t, pkg.GetVersion(), "0.0.1")
