@@ -9,7 +9,13 @@ import (
 	"kcl-lang.io/kpm/pkg/client"
 )
 
-func TestPackageApi(t *testing.T) {
+func TestXXX(t *testing.T) {
+	testPackageApi(t)
+	testGetAllSchemaTypesMappingNamed(t)
+	testGetSchemaTypeMappingWithFilters(t)
+}
+
+func testPackageApi(t *testing.T) {
 	pkg_path := filepath.Join(getTestDir("test_kpm_package"), "kcl_pkg")
 	kcl_pkg_path, err := GetKclPkgPath()
 	assert.Equal(t, err, nil)
@@ -72,7 +78,7 @@ func TestApiGetDependenciesInModFile(t *testing.T) {
 	assert.Equal(t, dep.Source.Registry.Oci.Tag, "1.27")
 }
 
-func TestGetAllSchemaTypesMappingNamed(t *testing.T) {
+func testGetAllSchemaTypesMappingNamed(t *testing.T) {
 	pkg_path := filepath.Join(getTestDir("test_kpm_package"), "kcl_pkg")
 	pkg, err := GetKclPackage(pkg_path)
 	assert.Equal(t, err, nil)
@@ -97,7 +103,7 @@ func TestGetAllSchemaTypesMappingNamed(t *testing.T) {
 	assert.Equal(t, schemas[filepath.Join("sub", "sub1")]["SchemaWithSameName"].SchemaName, "SchemaWithSameName")
 }
 
-func TestGetSchemaTypeMappingWithFilters(t *testing.T) {
+func testGetSchemaTypeMappingWithFilters(t *testing.T) {
 	pkg_path := filepath.Join(getTestDir("test_kpm_package"), "kcl_pkg")
 	pkg, err := GetKclPackage(pkg_path)
 	assert.Equal(t, err, nil)
