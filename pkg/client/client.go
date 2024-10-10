@@ -411,11 +411,6 @@ func GetReleasesFromSource(sourceType, uri string) ([]string, error) {
 
 // UpdateDeps will update the dependencies.
 func (c *KpmClient) UpdateDeps(kclPkg *pkg.KclPkg) error {
-	_, err := c.ResolveDepsMetadataInJsonStr(kclPkg, true)
-	if err != nil {
-		return err
-	}
-
 	if ok, err := features.Enabled(features.SupportMVS); err != nil && ok {
 		_, err = c.Update(
 			WithUpdatedKclPkg(kclPkg),
@@ -424,6 +419,10 @@ func (c *KpmClient) UpdateDeps(kclPkg *pkg.KclPkg) error {
 			return err
 		}
 	} else {
+		_, err := c.ResolveDepsMetadataInJsonStr(kclPkg, true)
+		if err != nil {
+			return err
+		}
 		// update kcl.mod
 		err = kclPkg.ModFile.StoreModFile()
 		if err != nil {
