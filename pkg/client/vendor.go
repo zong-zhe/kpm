@@ -48,6 +48,8 @@ func (c *KpmClient) vendorDeps(kclPkg *pkg.KclPkg, vendorPath string) error {
 			return err
 		}
 
+		fmt.Printf("existLocalDep: %v\n", existLocalDep)
+
 		if existLocalDep == nil {
 			vendorFullPath := filepath.Join(vendorPath, dep.GenDepFullName())
 			cacheFullPath := filepath.Join(c.homePath, dep.GenDepFullName())
