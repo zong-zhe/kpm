@@ -26,8 +26,7 @@ func (c *KpmClient) VendorDeps(kclPkg *pkg.KclPkg) error {
 		return err
 	}
 
-	if ok, err := features.Enabled(features.SupportMVS); err != nil && ok {
-
+	if ok, err := features.Enabled(features.SupportMVS); err == nil && ok {
 		// Select all the vendored dependencies
 		// and fill the vendored dependencies into kclPkg.Dependencies.Deps
 		err = c.selectVendoredDeps(kclPkg, vendorPath, kclPkg.Dependencies.Deps)
