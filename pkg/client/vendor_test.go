@@ -90,7 +90,7 @@ func TestVendorDeps(t *testing.T) {
 }
 
 func TestVendorWithMVS(t *testing.T) {
-	testDir := getTestDir("test_vendor")
+	testDir := getTestDir("test_vendor_mvs")
 	pkgPath := filepath.Join(testDir, "pkg")
 	kPkg, err := pkg.LoadKclPkgWithOpts(
 		pkg.WithPath(pkgPath),

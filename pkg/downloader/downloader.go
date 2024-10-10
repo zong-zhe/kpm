@@ -166,7 +166,7 @@ func (d *DepDownloader) Download(opts DownloadOptions) error {
 			pkgFullName = fmt.Sprintf("%s_%s", filepath.Base(gitUrl), opts.Source.Git.Commit)
 		}
 
-		cacheFullPath := filepath.Join(opts.CachePath, pkgFullName)
+		cacheFullPath = filepath.Join(opts.CachePath, pkgFullName)
 
 		if utils.DirExists(cacheFullPath) && utils.DirExists(filepath.Join(cacheFullPath, constants.KCL_MOD)) {
 			// copy the cache to the local path
@@ -225,7 +225,7 @@ func (d *DepDownloader) Download(opts DownloadOptions) error {
 
 	if opts.EnableCache {
 		// Enable the cache, update the dependency package to the cache path.
-		err := copy.Copy(tmpDir, cacheFullPath)
+		err := copy.Copy(localPath, cacheFullPath)
 		if err != nil {
 			return err
 		}
