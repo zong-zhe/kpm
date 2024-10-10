@@ -1035,6 +1035,7 @@ func TestUpdateWithKclMod(t *testing.T) {
 	kclPkg, err := kpmcli.LoadPkgFromPath(dest_testDir)
 	assert.Equal(t, err, nil)
 	err = kpmcli.UpdateDeps(kclPkg)
+	fmt.Printf("err: %v\n", err)
 	assert.Equal(t, err, nil)
 	got_lock_file := filepath.Join(dest_testDir, "kcl.mod.lock")
 	got_content, err := os.ReadFile(got_lock_file)
