@@ -8,6 +8,7 @@ import (
 	"github.com/elliotchance/orderedmap/v2"
 	"github.com/stretchr/testify/assert"
 	"kcl-lang.io/kpm/pkg/downloader"
+	"kcl-lang.io/kpm/pkg/features"
 	pkg "kcl-lang.io/kpm/pkg/package"
 	"kcl-lang.io/kpm/pkg/settings"
 	"kcl-lang.io/kpm/pkg/utils"
@@ -90,6 +91,7 @@ func TestVendorDeps(t *testing.T) {
 }
 
 func TestVendorWithMVS(t *testing.T) {
+	features.Enable(features.SupportMVS)
 	testDir := getTestDir("test_vendor")
 	pkgPath := filepath.Join(testDir, "pkg")
 	kPkg, err := pkg.LoadKclPkgWithOpts(
