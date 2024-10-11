@@ -13,7 +13,7 @@ import (
 	"kcl-lang.io/kpm/pkg/utils"
 )
 
-func testWithMVS(t *testing.T) {
+func TestWithMVS(t *testing.T) {
 	features.Enable(features.SupportMVS)
 	defer features.Disable(features.SupportMVS)
 
