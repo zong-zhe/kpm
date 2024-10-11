@@ -57,6 +57,7 @@ func (c *KpmClient) vendorDeps(kclPkg *pkg.KclPkg, vendorPath string) error {
 				if !utils.DirExists(vendorFullPath) {
 					err := copy.Copy(cacheFullPath, vendorFullPath)
 					if err != nil {
+						fmt.Printf("失败了 %v\n", err)
 						return err
 					}
 				}
