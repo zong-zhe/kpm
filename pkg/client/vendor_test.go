@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"kcl-lang.io/kpm/pkg/downloader"
 	pkg "kcl-lang.io/kpm/pkg/package"
-	"kcl-lang.io/kpm/pkg/settings"
 	"kcl-lang.io/kpm/pkg/utils"
 )
 
@@ -87,23 +86,4 @@ func TestVendorDeps(t *testing.T) {
 	assert.Equal(t, len(maps), 2)
 
 	os.RemoveAll(filepath.Join(testDir, "my_kcl"))
-}
-
-func TestVendorWithMVS(t *testing.T) {
-	testDir := getTestDir("test_vendor")
-	pkgPath := filepath.Join(testDir, "pkg")
-	kPkg, err := pkg.LoadKclPkgWithOpts(
-		pkg.WithPath(pkgPath),
-		pkg.WithSettings(settings.GetSettings()),
-	)
-	assert.Equal(t, err, nil)
-
-	kpmcli, err := NewKpmClient()
-	assert.Equal(t, err, nil)
-	err = kpmcli.VendorDeps(kPkg)
-	assert.Equal(t, err, nil)
-
-	assert.Equal(t, utils.DirExists(filepath.Join(pkgPath, "vendor")), true)
-	assert.Equal(t, utils.DirExists(filepath.Join(pkgPath, "vendor", "helloworld_0.1.2")), true)
-	assert.Equal(t, utils.DirExists(filepath.Join(pkgPath, "vendor", "helloworld_0.1.1")), false)
 }

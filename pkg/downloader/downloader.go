@@ -225,7 +225,7 @@ func (d *DepDownloader) Download(opts DownloadOptions) error {
 
 	if opts.EnableCache {
 		// Enable the cache, update the dependency package to the cache path.
-		err := copy.Copy(tmpDir, cacheFullPath)
+		err := copy.Copy(localPath, cacheFullPath)
 		if err != nil {
 			return err
 		}

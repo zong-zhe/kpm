@@ -6,13 +6,22 @@ import (
 	"testing"
 
 	"github.com/otiai10/copy"
-	"gotest.tools/v3/assert"
+	"github.com/stretchr/testify/assert"
 	"kcl-lang.io/kpm/pkg/features"
+	pkg "kcl-lang.io/kpm/pkg/package"
+	"kcl-lang.io/kpm/pkg/settings"
 	"kcl-lang.io/kpm/pkg/utils"
 )
 
-func TestUpdate(t *testing.T) {
+func testWithMVS(t *testing.T) {
 	features.Enable(features.SupportMVS)
+	defer features.Disable(features.SupportMVS)
+
+	testUpdate(t)
+	testVendorWithMVS(t)
+}
+
+func testUpdate(t *testing.T) {
 	testDir := getTestDir("test_update_with_mvs")
 	kpmcli, err := NewKpmClient()
 	if err != nil {
@@ -79,4 +88,23 @@ func TestUpdate(t *testing.T) {
 		assert.Equal(t, utils.RmNewline(string(expectedMod)), utils.RmNewline(string(gotMod)))
 		assert.Equal(t, utils.RmNewline(string(expectedModLock)), utils.RmNewline(string(gotModLock)))
 	}
+}
+
+func testVendorWithMVS(t *testing.T) {
+	testDir := getTestDir("test_vendor_mvs")
+	pkgPath := filepath.Join(testDir, "pkg")
+	kPkg, err := pkg.LoadKclPkgWithOpts(
+		pkg.WithPath(pkgPath),
+		pkg.WithSettings(settings.GetSettings()),
+	)
+	assert.Equal(t, err, nil)
+
+	kpmcli, err := NewKpmClient()
+	assert.Equal(t, err, nil)
+	err = kpmcli.VendorDeps(kPkg)
+	assert.Equal(t, err, nil)
+
+	assert.Equal(t, utils.DirExists(filepath.Join(pkgPath, "vendor")), true)
+	assert.Equal(t, utils.DirExists(filepath.Join(pkgPath, "vendor", "helloworld_0.1.2")), true)
+	assert.Equal(t, utils.DirExists(filepath.Join(pkgPath, "vendor", "helloworld_0.1.1")), false)
 }
