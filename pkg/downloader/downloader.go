@@ -128,19 +128,7 @@ func NewOciDownloader(platform string) *DepDownloader {
 
 func (d *DepDownloader) Download(opts DownloadOptions) error {
 
-	// create a tmp dir to download the oci package.
-	tmpDir, err := os.MkdirTemp("", "")
-	if err != nil {
-		return fmt.Errorf("failed to create a temp dir: %w", err)
-	}
-	if opts.Source.Git != nil {
-		tmpDir = filepath.Join(tmpDir, constants.GitScheme)
-	}
-	// clean the temp dir.
-	defer os.RemoveAll(tmpDir)
-
-	localPath := opts.LocalPath
-	cacheFullPath := opts.CachePath
+	var localPath string
 	if opts.EnableCache {
 		// TODO: After the new local storage structure is complete,
 		// this section should be replaced with the new storage structure instead of the cache path according to the <Cache Path>/<Package Name>.
@@ -182,10 +170,13 @@ func (d *DepDownloader) Download(opts DownloadOptions) error {
 			if err != nil {
 				return err
 			}
+			localPath = cacheFullPath
 		}
+	} else {
+		localPath = opts.LocalPath
 	}
 
-	opts.LocalPath = tmpDir
+	opts.LocalPath = localPath
 	// Dispatch the download to the specific downloader by package source.
 	if opts.Source.Oci != nil || opts.Source.Registry != nil {
 		if opts.Source.Registry != nil {
@@ -194,45 +185,15 @@ func (d *DepDownloader) Download(opts DownloadOptions) error {
 		if d.OciDownloader == nil {
 			d.OciDownloader = &OciDownloader{}
 		}
-		err := d.OciDownloader.Download(opts)
-		if err != nil {
-			return err
-		}
+		return d.OciDownloader.Download(opts)
 	}
 
 	if opts.Source.Git != nil {
 		if d.GitDownloader == nil {
 			d.GitDownloader = &GitDownloader{}
 		}
-		err := d.GitDownloader.Download(opts)
-		if err != nil {
-			return err
-		}
+		return d.GitDownloader.Download(opts)
 	}
-
-	// rename the tmp dir to the local path.
-	if utils.DirExists(localPath) {
-		err := os.RemoveAll(localPath)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Move the downloaded package to the local path.
-	// On unix, after the move, the tmp dir will be removed.
-	err = utils.MoveOrCopy(tmpDir, localPath)
-	if err != nil {
-		return err
-	}
-
-	if opts.EnableCache {
-		// Enable the cache, update the dependency package to the cache path.
-		err := copy.Copy(localPath, cacheFullPath)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 

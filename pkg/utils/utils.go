@@ -6,6 +6,7 @@ import (
 	"compress/gzip"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	goerrors "errors"
 	"fmt"
 	"io"
@@ -17,6 +18,8 @@ import (
 	"runtime"
 	"strings"
 	"syscall"
+
+	"github.com/dchest/siphash"
 
 	"github.com/BurntSushi/toml"
 	"github.com/distribution/reference"
@@ -662,4 +665,15 @@ func MoveOrCopy(src, dest string) error {
 		}
 	}
 	return nil
+}
+
+// generateHash takes a string (in this case, the Git URL) and returns a SHA-1 hash.
+// 注意：这里的 hash 是单向的，不能还原。
+func GenerateHash(input string) (string, error) {
+	hasher := siphash.New(make([]byte, 16))
+	_, err := hasher.Write([]byte(input))
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
