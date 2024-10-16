@@ -250,9 +250,8 @@ func (d *OciDownloader) Download(opts DownloadOptions) error {
 	}
 
 	localPath := opts.LocalPath
-
+	// 如果没有找到，触发重新下载
 	repoPath := utils.JoinPath(ociSource.Reg, ociSource.Repo)
-
 	var cred *remoteauth.Credential
 	var err error
 	if opts.credsClient != nil {
@@ -263,20 +262,16 @@ func (d *OciDownloader) Download(opts DownloadOptions) error {
 	} else {
 		cred = &remoteauth.Credential{}
 	}
-
 	ociCli, err := oci.NewOciClientWithOpts(
 		oci.WithCredential(cred),
 		oci.WithRepoPath(repoPath),
 		oci.WithSettings(&opts.Settings),
 		oci.WithInsecureSkipTLSverify(opts.InsecureSkipTLSverify),
 	)
-
 	if err != nil {
 		return err
 	}
-
 	ociCli.PullOciOptions.Platform = d.Platform
-
 	if len(ociSource.Tag) == 0 {
 		tagSelected, err := ociCli.TheLatestTag()
 		if err != nil {
@@ -291,43 +286,78 @@ func (d *OciDownloader) Download(opts DownloadOptions) error {
 		ociSource.Tag = tagSelected
 	}
 
-	reporter.ReportMsgTo(
-		fmt.Sprintf(
-			"downloading '%s:%s' from '%s/%s:%s'",
-			ociSource.Repo, ociSource.Tag, ociSource.Reg, ociSource.Repo, ociSource.Tag,
-		),
-		opts.LogWriter,
-	)
-
-	err = ociCli.Pull(localPath, ociSource.Tag)
-	if err != nil {
-		return err
-	}
-
-	matches, _ := filepath.Glob(filepath.Join(localPath, "*.tar"))
-	if matches == nil || len(matches) != 1 {
-		// then try to glob tgz file
-		matches, _ = filepath.Glob(filepath.Join(localPath, "*.tgz"))
-		if matches == nil || len(matches) != 1 {
-			return fmt.Errorf("failed to find the downloaded kcl package tar file in '%s'", localPath)
+	cache := NewOciCacheWithCachePath(opts.CachePath)
+	cachePath, err := cache.Find(Source{Oci: ociSource})
+	// 在缓存中找到了，直接 copy 到 localPath
+	if err == nil {
+		err = copy.Copy(cachePath, opts.LocalPath)
+		if err != nil {
+			return err
 		}
-	}
-
-	tarPath := matches[0]
-	if utils.IsTar(tarPath) {
-		err = utils.UnTarDir(tarPath, localPath)
 	} else {
-		err = utils.ExtractTarball(tarPath, localPath)
-	}
-	if err != nil {
-		return fmt.Errorf("failed to untar the kcl package tar from '%s' into '%s'", tarPath, localPath)
-	}
+		// 如果在缓存中没有找到
+		if !errors.Is(err, PkgCacheNotFound) {
+			// 如果是预料之外的错误，直接返回
+			return err
+		} else {
+			reporter.ReportMsgTo(
+				fmt.Sprintf(
+					"downloading '%s:%s' from '%s/%s:%s'",
+					ociSource.Repo, ociSource.Tag, ociSource.Reg, ociSource.Repo, ociSource.Tag,
+				),
+				opts.LogWriter,
+			)
+			err = ociCli.Pull(localPath, ociSource.Tag)
+			if err != nil {
+				return err
+			}
 
-	// After untar the downloaded kcl package tar file, remove the tar file.
-	if utils.DirExists(tarPath) {
-		rmErr := os.Remove(tarPath)
-		if rmErr != nil {
-			return fmt.Errorf("failed to remove the downloaded kcl package tar file '%s'", tarPath)
+			matches, _ := filepath.Glob(filepath.Join(localPath, "*.tar"))
+			if matches == nil || len(matches) != 1 {
+				// then try to glob tgz file
+				matches, _ = filepath.Glob(filepath.Join(localPath, "*.tgz"))
+				if matches == nil || len(matches) != 1 {
+					return fmt.Errorf("failed to find the downloaded kcl package tar file in '%s'", localPath)
+				}
+			}
+
+			tarPath := matches[0]
+			if utils.IsTar(tarPath) {
+				err = utils.UnTarDir(tarPath, localPath)
+			} else {
+				err = utils.ExtractTarball(tarPath, localPath)
+			}
+			if err != nil {
+				return fmt.Errorf("failed to untar the kcl package tar from '%s' into '%s'", tarPath, localPath)
+			}
+
+			// 记得 tar 完成解压后更新缓存
+			err = cache.Update(Source{Oci: ociSource}, func(cachePath string) error {
+				tarFileName := filepath.Base(tarPath)
+				destPath := filepath.Join(cachePath, tarFileName)
+				if !utils.DirExists(filepath.Dir(destPath)) {
+					if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+						return fmt.Errorf("failed to create directory: %w", err)
+					}
+				}
+				if err := copy.Copy(tarPath, destPath); err != nil {
+					return fmt.Errorf("failed to copy tar file to directory: %w", err)
+				}
+				return nil
+			})
+
+			if err != nil {
+				return err
+			}
+
+			defer func() {
+				if utils.DirExists(tarPath) {
+					rmErr := os.Remove(tarPath)
+					if rmErr != nil {
+						err = fmt.Errorf("failed to remove the downloaded kcl package tar file '%s'", tarPath)
+					}
+				}
+			}()
 		}
 	}
 
