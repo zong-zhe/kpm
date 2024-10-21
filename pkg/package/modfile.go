@@ -201,6 +201,12 @@ type Dependency struct {
 	downloader.Source `json:"-"`
 }
 
+type DependencyOp struct {
+	CrateSpec *string
+	Rename    *string
+	Source    *downloader.Source
+}
+
 // VersionGreaterThan will compare the version of a dependency with another dependency.
 func (d *Dependency) VersionLessThan(other *Dependency) (bool, error) {
 

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"kcl-lang.io/kpm/pkg/constants"
+	"kcl-lang.io/kpm/pkg/oci"
 	"kcl-lang.io/kpm/pkg/opt"
 	"kcl-lang.io/kpm/pkg/settings"
 	"kcl-lang.io/kpm/pkg/utils"
@@ -30,6 +31,13 @@ type Oci struct {
 	Reg  string `toml:"reg,omitempty"`
 	Repo string `toml:"repo,omitempty"`
 	Tag  string `toml:"oci_tag,omitempty"`
+	// An internal field to store the local path of the oci package.
+	pathSource string
+	ociClient  *oci.OciClient
+}
+
+func (oci *Oci) block_until_ready() error {
+	return nil
 }
 
 // Git is the package source from git registry.
