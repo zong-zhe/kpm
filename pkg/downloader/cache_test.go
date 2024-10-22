@@ -38,7 +38,7 @@ func TestCache(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, cachePath, filepath.Join(testDir, "oci", "cache", hash, "helloworld_0.1.3"))
+	assert.Equal(t, cachePath, filepath.Join(testDir, "oci", "src", hash, "helloworld_0.1.3"))
 
 	cachepath, err := ociCache.Find(Source{Oci: oci})
 	assert.Equal(t, cachepath, "")
@@ -56,7 +56,7 @@ func TestCache(t *testing.T) {
 			return fmt.Errorf("failed to copy tar file to directory: %w", err)
 		}
 
-		srcPath, err := oci.GenSrcCachePath()
+		srcPath, err := oci.GenCachePath()
 		if err != nil {
 			return err
 		}

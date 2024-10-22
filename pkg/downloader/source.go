@@ -27,9 +27,10 @@ type Local struct {
 }
 
 type Oci struct {
-	Reg  string `toml:"reg,omitempty"`
-	Repo string `toml:"repo,omitempty"`
-	Tag  string `toml:"oci_tag,omitempty"`
+	Reg           string `toml:"reg,omitempty"`
+	Repo          string `toml:"repo,omitempty"`
+	Tag           string `toml:"oci_tag,omitempty"`
+	ociDownloader *OciDownloader
 }
 
 // Git is the package source from git registry.
@@ -600,54 +601,6 @@ func (s *Source) GenCachePath() (string, error) {
 func (g *Git) GenCachePath() (string, error) {
 	lastElement := filepath.Base(strings.TrimSuffix(g.Url, filepath.Ext(g.Url)))
 
-	hash, err := g.Hash()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join("git", "db", lastElement+"_"+hash), nil
-}
-
-func (o *Oci) GenCachePath() (string, error) {
-	var packageFilename string
-	if o.Tag == "" {
-		packageFilename = filepath.Base(o.Repo)
-	} else {
-		packageFilename = fmt.Sprintf("%s_%s", filepath.Base(o.Repo), o.Tag)
-	}
-	hash, err := o.Hash()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join("oci", "cache", hash, packageFilename), nil
-}
-
-func (l *Local) GenCachePath() (string, error) {
-	return l.Path, nil
-}
-
-func (r *Registry) GenCachePath() (string, error) {
-	return r.Oci.GenCachePath()
-}
-
-func (s *Source) GenSrcCachePath() (string, error) {
-	if s.Git != nil {
-		return s.Git.GenSrcCachePath()
-	}
-	if s.Oci != nil {
-		return s.Oci.GenSrcCachePath()
-	}
-	if s.Local != nil {
-		return s.Local.GenSrcCachePath()
-	}
-	if s.Registry != nil {
-		return s.Registry.GenSrcCachePath()
-	}
-	return "", nil
-}
-
-func (g *Git) GenSrcCachePath() (string, error) {
-	lastElement := filepath.Base(strings.TrimSuffix(g.Url, filepath.Ext(g.Url)))
-
 	var flag string
 	if g.Tag != "" {
 		flag = g.Tag
@@ -664,7 +617,7 @@ func (g *Git) GenSrcCachePath() (string, error) {
 	return filepath.Join("git", "checkout", lastElement+"_"+hash, flag), nil
 }
 
-func (o *Oci) GenSrcCachePath() (string, error) {
+func (o *Oci) GenCachePath() (string, error) {
 	var packageFilename string
 	if o.Tag == "" {
 		packageFilename = filepath.Base(o.Repo)
@@ -678,10 +631,10 @@ func (o *Oci) GenSrcCachePath() (string, error) {
 	return filepath.Join("oci", "src", hash, packageFilename), nil
 }
 
-func (l *Local) GenSrcCachePath() (string, error) {
+func (l *Local) GenCachePath() (string, error) {
 	return l.Path, nil
 }
 
-func (r *Registry) GenSrcCachePath() (string, error) {
-	return r.Oci.GenSrcCachePath()
+func (r *Registry) GenCachePath() (string, error) {
+	return r.Oci.GenCachePath()
 }

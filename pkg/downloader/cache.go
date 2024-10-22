@@ -45,7 +45,7 @@ var PkgCacheNotFound = fmt.Errorf("package cache not found")
 
 // Find finds the cache path for the source.
 func (p *PkgCache) Find(source Source) (string, error) {
-	srcPath, err := source.GenSrcCachePath()
+	srcPath, err := source.GenCachePath()
 	if err != nil {
 		return "", err
 	}
@@ -69,7 +69,7 @@ func (p *PkgCache) Remove(source Source) error {
 		return err
 	}
 
-	srcCachePath, err := source.GenSrcCachePath()
+	srcCachePath, err := source.GenCachePath()
 	if err != nil {
 		return err
 	}

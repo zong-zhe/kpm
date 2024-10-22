@@ -291,43 +291,79 @@ func (d *OciDownloader) Download(opts DownloadOptions) error {
 		ociSource.Tag = tagSelected
 	}
 
-	reporter.ReportMsgTo(
-		fmt.Sprintf(
-			"downloading '%s:%s' from '%s/%s:%s'",
-			ociSource.Repo, ociSource.Tag, ociSource.Reg, ociSource.Repo, ociSource.Tag,
-		),
-		opts.LogWriter,
-	)
-
-	err = ociCli.Pull(localPath, ociSource.Tag)
-	if err != nil {
-		return err
-	}
-
-	matches, _ := filepath.Glob(filepath.Join(localPath, "*.tar"))
-	if matches == nil || len(matches) != 1 {
-		// then try to glob tgz file
-		matches, _ = filepath.Glob(filepath.Join(localPath, "*.tgz"))
-		if matches == nil || len(matches) != 1 {
-			return fmt.Errorf("failed to find the downloaded kcl package tar file in '%s'", localPath)
+	if opts.EnableCache {
+		cache := PkgCache{
+			cacheDir: opts.CachePath,
 		}
-	}
 
-	tarPath := matches[0]
-	if utils.IsTar(tarPath) {
-		err = utils.UnTarDir(tarPath, localPath)
-	} else {
-		err = utils.ExtractTarball(tarPath, localPath)
-	}
-	if err != nil {
-		return fmt.Errorf("failed to untar the kcl package tar from '%s' into '%s'", tarPath, localPath)
-	}
+		cachePath, err := cache.Find(Source{Oci: ociSource})
+		if err == nil {
+			if localPath != cachePath {
+				err := copy.Copy(cachePath, localPath)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			if errors.Is(err, PkgCacheNotFound) {
+				reporter.ReportMsgTo(
+					fmt.Sprintf(
+						"downloading '%s:%s' from '%s/%s:%s'",
+						ociSource.Repo, ociSource.Tag, ociSource.Reg, ociSource.Repo, ociSource.Tag,
+					),
+					opts.LogWriter,
+				)
 
-	// After untar the downloaded kcl package tar file, remove the tar file.
-	if utils.DirExists(tarPath) {
-		rmErr := os.Remove(tarPath)
-		if rmErr != nil {
-			return fmt.Errorf("failed to remove the downloaded kcl package tar file '%s'", tarPath)
+				err = ociCli.Pull(localPath, ociSource.Tag)
+				if err != nil {
+					return err
+				}
+
+				matches, _ := filepath.Glob(filepath.Join(localPath, "*.tar"))
+				if matches == nil || len(matches) != 1 {
+					// then try to glob tgz file
+					matches, _ = filepath.Glob(filepath.Join(localPath, "*.tgz"))
+					if matches == nil || len(matches) != 1 {
+						return fmt.Errorf("failed to find the downloaded kcl package tar file in '%s'", localPath)
+					}
+				}
+
+				tarPath := matches[0]
+				if utils.IsTar(tarPath) {
+					err = utils.UnTarDir(tarPath, localPath)
+				} else {
+					err = utils.ExtractTarball(tarPath, localPath)
+				}
+				if err != nil {
+					return fmt.Errorf("failed to untar the kcl package tar from '%s' into '%s'", tarPath, localPath)
+				}
+
+				cache.Update(Source{Oci: ociSource}, func(cachePath string) error {
+					hash, err := ociSource.Hash()
+					if err != nil {
+						return err
+					}
+					cacheTarPath := filepath.Join(cache.cacheDir, "oci", "cache", hash, filepath.Base(tarPath))
+					if err := copy.Copy(tarPath, cacheTarPath); err != nil {
+						return err
+					}
+
+					return nil
+				})
+
+				// After untar the downloaded kcl package tar file, remove the tar file.
+				defer func() {
+					if utils.DirExists(tarPath) {
+						rmErr := os.Remove(tarPath)
+						if rmErr != nil {
+							fmt.Printf("failed to remove the downloaded kcl package tar file '%s': %v\n", tarPath, rmErr)
+						}
+					}
+				}()
+
+			} else {
+				return err
+			}
 		}
 	}
 
