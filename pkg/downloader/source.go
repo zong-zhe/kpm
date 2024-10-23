@@ -582,7 +582,7 @@ func (o *Oci) Hash() (string, error) {
 		return "", err
 	}
 
-	return filepath.Join(hash, packageFilename), nil
+	return filepath.Join("oci", hash, packageFilename), nil
 }
 
 func (l *Local) Hash() (string, error) {

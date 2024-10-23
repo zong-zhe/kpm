@@ -91,6 +91,7 @@ type RemoteVisitor struct {
 	*PkgVisitor
 	EnableCache           bool
 	CachePath             string
+	VisitedPath           string
 	Downloader            downloader.Downloader
 	InsecureSkipTLSverify bool
 }
@@ -110,13 +111,32 @@ func (rv *RemoteVisitor) Visit(s *downloader.Source, v visitFunc) error {
 		return fmt.Errorf("source is not remote")
 	}
 
-	tmpDir, err := os.MkdirTemp("", "")
+	var visitedPath string
+	sourceHash, err := s.Hash()
 	if err != nil {
 		return err
 	}
+	if len(rv.VisitedPath) != 0 {
+		visitedPath = filepath.Join(rv.VisitedPath, sourceHash)
+	} else {
+		tmpDir, err := os.MkdirTemp("", "")
+		if err != nil {
+			return err
+		}
+
+		visitedPath = filepath.Join(tmpDir, sourceHash)
+		defer os.RemoveAll(tmpDir)
+	}
+
+	if !utils.DirExists(visitedPath) {
+		err = os.MkdirAll(visitedPath, 0755)
+		if err != nil {
+			return err
+		}
+	}
 
 	if s.Git != nil {
-		tmpDir = filepath.Join(tmpDir, constants.GitScheme)
+		visitedPath = filepath.Join(visitedPath, constants.GitScheme)
 	}
 
 	credCli, err := downloader.LoadCredentialFile(rv.Settings.CredentialsFile)
@@ -124,9 +144,8 @@ func (rv *RemoteVisitor) Visit(s *downloader.Source, v visitFunc) error {
 		return err
 	}
 
-	defer os.RemoveAll(tmpDir)
 	err = rv.Downloader.Download(*downloader.NewDownloadOptions(
-		downloader.WithLocalPath(tmpDir),
+		downloader.WithLocalPath(visitedPath),
 		downloader.WithSource(*s),
 		downloader.WithLogWriter(rv.LogWriter),
 		downloader.WithSettings(*rv.Settings),
@@ -139,9 +158,9 @@ func (rv *RemoteVisitor) Visit(s *downloader.Source, v visitFunc) error {
 	if err != nil {
 		return err
 	}
-	pkgPath := tmpDir
+	pkgPath := visitedPath
 	if s.Git != nil && len(s.Git.Package) > 0 {
-		pkgPath, err = utils.FindPackage(tmpDir, s.Git.Package)
+		pkgPath, err = utils.FindPackage(visitedPath, s.Git.Package)
 		if err != nil {
 			return err
 		}
