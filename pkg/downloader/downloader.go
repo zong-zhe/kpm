@@ -338,16 +338,22 @@ func (d *OciDownloader) Download(opts DownloadOptions) error {
 			}
 		}
 	} else {
-		matches, _ := filepath.Glob(filepath.Join(localPath, "*.tar"))
-		if matches == nil || len(matches) != 1 {
-			// then try to glob tgz file
-			matches, _ = filepath.Glob(filepath.Join(localPath, "*.tgz"))
-			if matches == nil || len(matches) != 1 {
-				return fmt.Errorf("failed to find the downloaded kcl package tar file in '%s'", localPath)
-			}
-		}
+		reporter.ReportMsgTo(
+			fmt.Sprintf(
+				"downloading '%s:%s' from '%s/%s:%s'",
+				ociSource.Repo, ociSource.Tag, ociSource.Reg, ociSource.Repo, ociSource.Tag,
+			),
+			opts.LogWriter,
+		)
 
-		tarPath := matches[0]
+		err = ociCli.Pull(localPath, ociSource.Tag)
+		if err != nil {
+			return err
+		}
+		tarPath, err := utils.FindPkgArchive(localPath)
+		if err != nil {
+			return err
+		}
 		if utils.IsTar(tarPath) {
 			err = utils.UnTarDir(tarPath, localPath)
 		} else {
