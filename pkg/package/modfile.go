@@ -283,8 +283,8 @@ func (d *Dependency) GenPathSuffix() string {
 		} else {
 			storePkgName = fmt.Sprintf(PKG_NAME_PATTERN, name, d.Source.Git.Branch)
 		}
-	} else if d.Source.Registry != nil {
-		storePkgName = fmt.Sprintf(PKG_NAME_PATTERN, name, d.Source.Registry.Version)
+	} else if d.Source.PkgSpec != nil {
+		storePkgName = fmt.Sprintf(PKG_NAME_PATTERN, name, d.Source.PkgSpec.Version)
 	} else {
 		storePkgName = fmt.Sprintf(PKG_NAME_PATTERN, d.Name, d.Version)
 	}
@@ -334,6 +334,8 @@ func (dep *Dependency) GenDepFullName() string {
 		} else {
 			dep.FullName = fmt.Sprintf(PKG_NAME_PATTERN, name, dep.Source.Git.Branch)
 		}
+	} else if dep.Source.Oci != nil {
+		dep.FullName = fmt.Sprintf(PKG_NAME_PATTERN, name, dep.Source.Oci.Tag)
 	} else {
 		dep.FullName = fmt.Sprintf(PKG_NAME_PATTERN, name, dep.Version)
 	}
@@ -347,9 +349,6 @@ func (dep *Dependency) GetDownloadPath() string {
 	}
 	if dep.Source.Oci != nil {
 		return dep.Source.Oci.IntoOciUrl()
-	}
-	if dep.Source.Registry != nil {
-		return dep.Source.Registry.Oci.IntoOciUrl()
 	}
 	return ""
 }
@@ -384,7 +383,7 @@ func (dep *Dependency) GetSourceType() string {
 	if dep.Source.Git != nil {
 		return GIT
 	}
-	if dep.Source.Oci != nil || dep.Source.Registry != nil {
+	if dep.Source.Oci != nil || dep.Source.PkgSpec != nil {
 		return OCI
 	}
 	if dep.Source.Local != nil {
@@ -562,18 +561,11 @@ func ParseOpt(opt *opt.RegistryOptions) (*Dependency, error) {
 		}, nil
 	}
 	if opt.Registry != nil {
-		ociSource := downloader.Oci{
-			Reg:  opt.Registry.Reg,
-			Repo: opt.Registry.Repo,
-			Tag:  opt.Registry.Tag,
-		}
-
 		return &Dependency{
 			Name:     opt.Registry.Ref,
 			FullName: opt.Registry.Ref + "_" + opt.Registry.Tag,
 			Source: downloader.Source{
-				Registry: &downloader.Registry{
-					Oci:     &ociSource,
+				PkgSpec: &downloader.PkgSpec{
 					Version: opt.Registry.Tag,
 					Name:    opt.Registry.Ref,
 				},

@@ -89,8 +89,8 @@ func TestUnMarshalTOML(t *testing.T) {
 	assert.NotEqual(t, modfile.Dependencies.Deps.GetOrDefault("MyOciKcl1", TestPkgDependency), nil)
 	assert.Equal(t, modfile.Dependencies.Deps.GetOrDefault("MyOciKcl1", TestPkgDependency).Name, "MyOciKcl1")
 	assert.Equal(t, modfile.Dependencies.Deps.GetOrDefault("MyOciKcl1", TestPkgDependency).FullName, "MyOciKcl1_0.0.1")
-	assert.NotEqual(t, modfile.Dependencies.Deps.GetOrDefault("MyOciKcl1", TestPkgDependency).Source.Registry, nil)
-	assert.Equal(t, modfile.Dependencies.Deps.GetOrDefault("MyOciKcl1", TestPkgDependency).Source.Registry.Tag, "0.0.1")
+	assert.NotEqual(t, modfile.Dependencies.Deps.GetOrDefault("MyOciKcl1", TestPkgDependency).Source.PkgSpec, nil)
+	assert.Equal(t, modfile.Dependencies.Deps.GetOrDefault("MyOciKcl1", TestPkgDependency).Source.PkgSpec.Version, "0.0.1")
 }
 
 func TestMarshalLockTOML(t *testing.T) {
@@ -184,8 +184,8 @@ func TestUnMarshalOciUrl(t *testing.T) {
 		DepSourceRepo string
 		DepSourceTag  string
 	}{
-		{"unmarshal_0", "oci_pkg_name", "oci_pkg_name_0.0.1", "0.0.1", "ghcr.io", "test/helloworld", "0.0.1"},
-		{"unmarshal_1", "oci_pkg_name", "oci_pkg_name_0.0.1", "0.0.1", "localhost:5001", "test/helloworld", "0.0.1"},
+		{"unmarshal_0", "oci_pkg_name", "oci_pkg_name_0.0.1", "", "ghcr.io", "test/helloworld", "0.0.1"},
+		{"unmarshal_1", "oci_pkg_name", "oci_pkg_name_0.0.1", "", "localhost:5001", "test/helloworld", "0.0.1"},
 	}
 
 	for _, tc := range testCases {
@@ -197,7 +197,7 @@ func TestUnMarshalOciUrl(t *testing.T) {
 		assert.Equal(t, modfile.Dependencies.Deps.GetOrDefault("oci_pkg_name", TestPkgDependency).Version, tc.DepVersion)
 		assert.Equal(t, modfile.Dependencies.Deps.GetOrDefault("oci_pkg_name", TestPkgDependency).Source.Oci.Reg, tc.DepSourceReg)
 		assert.Equal(t, modfile.Dependencies.Deps.GetOrDefault("oci_pkg_name", TestPkgDependency).Source.Oci.Repo, tc.DepSourceRepo)
-		assert.Equal(t, modfile.Dependencies.Deps.GetOrDefault("oci_pkg_name", TestPkgDependency).Source.Oci.Tag, tc.DepVersion)
+		assert.Equal(t, modfile.Dependencies.Deps.GetOrDefault("oci_pkg_name", TestPkgDependency).Source.Oci.Tag, tc.DepSourceTag)
 	}
 }
 

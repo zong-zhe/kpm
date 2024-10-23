@@ -14,50 +14,48 @@ const SOURCE_PATTERN = "{ %s }"
 func (source *Source) MarshalTOML() string {
 	var sb strings.Builder
 
-	if source.Registry != nil {
-		registryToml := source.Registry.MarshalTOML()
-		if len(registryToml) != 0 {
-			sb.WriteString(fmt.Sprintf("%q", registryToml))
+	if source.SpecOnly {
+		specToml := source.PkgSpec.MarshalTOML()
+		sb.WriteString(specToml)
+	} else {
+		var pkgVersion string
+		if source.PkgSpec != nil && len(source.PkgSpec.Version) > 0 {
+			pkgVersion = fmt.Sprintf(", version = %q", source.PkgSpec.Version)
 		}
-	}
 
-	if source.Git != nil {
-		gitToml := source.Git.MarshalTOML()
-		if len(gitToml) != 0 {
-			sb.WriteString(fmt.Sprintf(SOURCE_PATTERN, gitToml))
-		}
-	}
-
-	if source.Oci != nil {
-		ociToml := source.Oci.MarshalTOML()
-		if len(ociToml) != 0 {
-			if len(source.Oci.Reg) != 0 && len(source.Oci.Repo) != 0 {
-				sb.WriteString(fmt.Sprintf(SOURCE_PATTERN, ociToml))
-			} else {
-				sb.WriteString(ociToml)
+		if source.Git != nil {
+			gitToml := source.Git.MarshalTOML()
+			if len(gitToml) != 0 {
+				sb.WriteString(fmt.Sprintf(SOURCE_PATTERN, gitToml+pkgVersion))
 			}
 		}
-	}
 
-	if source.Local != nil {
-		localPathToml := source.Local.MarshalTOML()
-		if len(localPathToml) != 0 {
-			sb.WriteString(fmt.Sprintf(SOURCE_PATTERN, localPathToml))
+		if source.Oci != nil {
+			ociToml := source.Oci.MarshalTOML()
+			if len(ociToml) != 0 {
+				if len(source.Oci.Reg) != 0 && len(source.Oci.Repo) != 0 {
+					sb.WriteString(fmt.Sprintf(SOURCE_PATTERN, ociToml+pkgVersion))
+				} else {
+					sb.WriteString(ociToml)
+				}
+			}
+		}
+
+		if source.Local != nil {
+			localPathToml := source.Local.MarshalTOML()
+			if len(localPathToml) != 0 {
+				sb.WriteString(fmt.Sprintf(SOURCE_PATTERN, localPathToml+pkgVersion))
+			}
 		}
 	}
 
 	return sb.String()
 }
 
-func (registry *Registry) MarshalTOML() string {
+func (ps *PkgSpec) MarshalTOML() string {
 	var sb strings.Builder
-	if len(registry.Version) != 0 {
-		sb.WriteString(registry.Version)
-		return sb.String()
-	}
-
-	if len(registry.Oci.Tag) != 0 {
-		sb.WriteString(registry.Oci.Tag)
+	if ps != nil && len(ps.Version) != 0 && len(ps.Name) != 0 {
+		sb.WriteString(fmt.Sprintf("\"%s\" = \"%s\"", ps.Name, ps.Version))
 		return sb.String()
 	}
 
@@ -155,24 +153,21 @@ func (source *Source) UnmarshalModTOML(data interface{}) error {
 				return err
 			}
 			source.Oci = &oci
-		} else {
-			reg := Registry{}
-			err := reg.UnmarshalModTOML(data)
-			if err != nil {
-				return err
-			}
-			source.Registry = &reg
+		}
+
+		if v, ok := meta["version"].(string); ok {
+			source.PkgSpec.Version = v
 		}
 	}
 
 	_, ok = data.(string)
 	if ok {
-		registry := Registry{}
-		err := registry.UnmarshalModTOML(data)
+		pSpec := PkgSpec{}
+		err := pSpec.UnmarshalModTOML(data)
 		if err != nil {
 			return err
 		}
-		source.Registry = &registry
+		source.PkgSpec = &pSpec
 	}
 
 	return nil
@@ -245,12 +240,10 @@ func (local *Local) UnmarshalModTOML(data interface{}) error {
 	return nil
 }
 
-func (reg *Registry) UnmarshalModTOML(data interface{}) error {
+func (ps *PkgSpec) UnmarshalModTOML(data interface{}) error {
 	version, ok := data.(string)
 	if ok {
-		reg.Version = version
-		reg.Oci = &Oci{}
-		reg.Oci.Tag = version
+		ps.Version = version
 	}
 
 	return nil

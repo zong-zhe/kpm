@@ -57,17 +57,17 @@ func initTestDir(subDir string) string {
 func TestWithGlobalLock(t *testing.T) {
 	test.RunTestWithGlobalLock(t, "TestUpdateWithKclMod", testUpdateWithKclMod)
 	test.RunTestWithGlobalLock(t, "TestUpdateWithKclModlock", testUpdateWithKclModlock)
-	test.RunTestWithGlobalLock(t, "TestUpdateWithNoSumCheck", TestUpdateWithNoSumCheck)
+	test.RunTestWithGlobalLock(t, "TestUpdateWithNoSumCheck", testUpdateWithNoSumCheck)
 	test.RunTestWithGlobalLock(t, "TestAddWithDiffVersionNoSumCheck", testAddWithDiffVersionNoSumCheck)
 	test.RunTestWithGlobalLock(t, "TestAddWithDiffVersionWithSumCheck", testAddWithDiffVersionWithSumCheck)
 	test.RunTestWithGlobalLock(t, "TestDownloadOci", testDownloadOci)
 	test.RunTestWithGlobalLock(t, "TestRunWithOciDownloader", testRunWithOciDownloader)
 	test.RunTestWithGlobalLock(t, "TestAddWithOciDownloader", testAddWithOciDownloader)
-	test.RunTestWithGlobalLock(t, "TestAddDefaultRegistryDep", testAddDefaultRegistryDep)
+	test.RunTestWithGlobalLock(t, "TestAddDefaultRegistryDep", TestAddDefaultRegistryDep)
 	test.RunTestWithGlobalLock(t, "TestUpdateDefaultRegistryDep", testUpdateDefaultRegistryDep)
 	test.RunTestWithGlobalLock(t, "TestRunDefaultRegistryDep", testRunDefaultRegistryDep)
 	test.RunTestWithGlobalLock(t, "TestAddWithNoSumCheck", testAddWithNoSumCheck)
-	test.RunTestWithGlobalLock(t, "TestAddWithGitCommit", testAddWithGitCommit)
+	test.RunTestWithGlobalLock(t, "TestAddWithGitCommit", TestAddWithGitCommit)
 	test.RunTestWithGlobalLock(t, "TestDependenciesOrder", testDependenciesOrder)
 	test.RunTestWithGlobalLock(t, "TestRunInVendor", testRunInVendor)
 	test.RunTestWithGlobalLock(t, "TestPkgWithInVendorMode", testPkgWithInVendorMode)
@@ -82,6 +82,9 @@ func TestWithGlobalLock(t *testing.T) {
 	test.RunTestWithGlobalLock(t, "TestDownloadGitWithPackage", testDownloadGitWithPackage)
 	test.RunTestWithGlobalLock(t, "TestModandLockFilesWithGitPackageDownload", testModandLockFilesWithGitPackageDownload)
 	test.RunTestWithGlobalLock(t, "TestDependencyGraph", testDependencyGraph)
+	test.RunTestWithGlobalLock(t, "TestAdd", testAdd)
+	test.RunTestWithGlobalLock(t, "TestVendorDeps", testVendorDeps)
+	test.RunTestWithGlobalLock(t, "TestVendorWithMVS", testVendorWithMVS)
 }
 
 // TestDownloadOci test download from oci registry.
@@ -1190,7 +1193,7 @@ func testAddWithNoSumCheck(t *testing.T) {
 	}()
 }
 
-func TestUpdateWithNoSumCheck(t *testing.T) {
+func testUpdateWithNoSumCheck(t *testing.T) {
 	pkgPath := getTestDir("test_update_no_sum_check")
 	kpmcli, err := NewKpmClient()
 	assert.Equal(t, err, nil)
@@ -1345,7 +1348,7 @@ func testAddWithDiffVersionWithSumCheck(t *testing.T) {
 	}()
 }
 
-func testAddWithGitCommit(t *testing.T) {
+func TestAddWithGitCommit(t *testing.T) {
 	pkgPath := getTestDir("add_with_git_commit")
 
 	testPkgPath := ""
@@ -1602,7 +1605,7 @@ func TestAddLocalPath(t *testing.T) {
 	}()
 }
 
-func testAddDefaultRegistryDep(t *testing.T) {
+func TestAddDefaultRegistryDep(t *testing.T) {
 	type testCase struct {
 		tag           string
 		pkgPath       string

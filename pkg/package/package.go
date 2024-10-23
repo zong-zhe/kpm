@@ -91,6 +91,11 @@ func LoadKclPkgWithOpts(options ...LoadOption) (*KclPkg, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not load 'kcl.mod' in '%s'\n%w", pkgPath, err)
 	}
+
+	err = fillDepsInfoWithSettings(deps, opts.Settings)
+	if err != nil {
+		return nil, fmt.Errorf("could not load 'kcl.mod.lock' in '%s'\n%w", pkgPath, err)
+	}
 	// 3. Sync the dependencies information in kcl.mod.lock with the dependencies in kcl.mod.
 	for _, name := range deps.Deps.Keys() {
 		lockDep, ok := deps.Deps.Get(name)
@@ -103,12 +108,15 @@ func LoadKclPkgWithOpts(options ...LoadOption) (*KclPkg, error) {
 		} else {
 			// If there is no source in the lock file, fill the default oci registry.
 			if lockDep.Source.IsNilSource() {
-				lockDep.Source.Registry = &downloader.Registry{
-					Name: lockDep.Name,
+				lockDep.Source = downloader.Source{
+					PkgSpec: &downloader.PkgSpec{
+						Name:    lockDep.Name,
+						Version: lockDep.Version,
+					},
 					Oci: &downloader.Oci{
 						Reg:  opts.Settings.DefaultOciRegistry(),
 						Repo: utils.JoinPath(opts.Settings.DefaultOciRepo(), lockDep.Name),
-						Tag:  lockDep.Version,
+						Tag:  lockDep.Source.Oci.Tag,
 					},
 				}
 			}
@@ -191,6 +199,8 @@ func fillDepsInfoWithSettings(deps *Dependencies, settings *settings.Settings) e
 		if !ok {
 			break
 		}
+
+		dep.FullName = dep.GenDepFullName()
 		// Fill the default oci registry.
 		if dep.Source.Oci != nil {
 			if len(dep.Source.Oci.Reg) == 0 {
@@ -202,22 +212,13 @@ func fillDepsInfoWithSettings(deps *Dependencies, settings *settings.Settings) e
 				dep.Source.Oci.Repo = urlpath
 			}
 		}
-		if dep.Source.Registry != nil {
-			if len(dep.Source.Registry.Reg) == 0 {
-				dep.Source.Registry.Reg = settings.DefaultOciRegistry()
-			}
 
-			if len(dep.Source.Registry.Repo) == 0 {
-				urlpath := utils.JoinPath(settings.DefaultOciRepo(), dep.Name)
-				dep.Source.Registry.Repo = urlpath
-			}
-
-			dep.Version = dep.Source.Registry.Version
-		}
 		if dep.Source.IsNilSource() {
-			dep.Source.Registry = &downloader.Registry{
-				Name:    dep.Name,
-				Version: dep.Version,
+			dep.Source = downloader.Source{
+				PkgSpec: &downloader.PkgSpec{
+					Name:    dep.Name,
+					Version: dep.Version,
+				},
 				Oci: &downloader.Oci{
 					Reg:  settings.DefaultOciRegistry(),
 					Repo: utils.JoinPath(settings.DefaultOciRepo(), dep.Name),

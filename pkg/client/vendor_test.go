@@ -11,7 +11,6 @@ import (
 	"kcl-lang.io/kpm/pkg/features"
 	pkg "kcl-lang.io/kpm/pkg/package"
 	"kcl-lang.io/kpm/pkg/settings"
-	"kcl-lang.io/kpm/pkg/test"
 	"kcl-lang.io/kpm/pkg/utils"
 )
 
@@ -110,9 +109,4 @@ func testVendorWithMVS(t *testing.T) {
 	assert.Equal(t, utils.DirExists(filepath.Join(pkgPath, "vendor")), true)
 	assert.Equal(t, utils.DirExists(filepath.Join(pkgPath, "vendor", "helloworld_0.1.2")), true)
 	assert.Equal(t, utils.DirExists(filepath.Join(pkgPath, "vendor", "helloworld_0.1.1")), false)
-}
-
-func TestVendorWithGlobalLock(t *testing.T) {
-	test.RunTestWithGlobalLock(t, "TestVendorDeps", testVendorDeps)
-	test.RunTestWithGlobalLock(t, "TestVendorWithMVS", testVendorWithMVS)
 }

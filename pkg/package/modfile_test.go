@@ -192,11 +192,10 @@ func TestLoadModFile(t *testing.T) {
 
 	assert.Equal(t, modFile.Dependencies.Deps.GetOrDefault("oci_name", TestPkgDependency).Name, "oci_name")
 	assert.Equal(t, modFile.Dependencies.Deps.GetOrDefault("oci_name", TestPkgDependency).Version, "oci_tag")
-	assert.Equal(t, modFile.Dependencies.Deps.GetOrDefault("oci_name", TestPkgDependency).Source.Registry.Tag, "oci_tag")
 	assert.Equal(t, err, nil)
 
 	assert.Equal(t, modFile.Dependencies.Deps.GetOrDefault("helloworld", TestPkgDependency).Name, "helloworld")
-	assert.Equal(t, modFile.Dependencies.Deps.GetOrDefault("helloworld", TestPkgDependency).Version, "0.1.2")
+	assert.Equal(t, modFile.Dependencies.Deps.GetOrDefault("helloworld", TestPkgDependency).Version, "")
 	assert.Equal(t, modFile.Dependencies.Deps.GetOrDefault("helloworld", TestPkgDependency).Source.Oci.Tag, "0.1.2")
 	assert.Equal(t, err, nil)
 }

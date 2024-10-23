@@ -228,6 +228,8 @@ func (deps *Dependencies) UnmarshalModTOML(data interface{}) error {
 		if err != nil {
 			return err
 		}
+		dep.Source.PkgSpec.Name = k
+		dep.Version = dep.Source.PkgSpec.Version
 		deps.Deps.Set(k, dep)
 	}
 
@@ -235,7 +237,9 @@ func (deps *Dependencies) UnmarshalModTOML(data interface{}) error {
 }
 
 func (dep *Dependency) UnmarshalModTOML(data interface{}) error {
-	source := downloader.Source{}
+	source := downloader.Source{
+		PkgSpec: &downloader.PkgSpec{},
+	}
 	err := source.UnmarshalModTOML(data)
 	if err != nil {
 		return err
@@ -251,9 +255,6 @@ func (dep *Dependency) UnmarshalModTOML(data interface{}) error {
 	}
 	if source.Oci != nil {
 		version = source.Oci.Tag
-	}
-	if source.Registry != nil {
-		version = source.Registry.Version
 	}
 
 	dep.FullName = fmt.Sprintf(PKG_NAME_PATTERN, dep.Name, version)

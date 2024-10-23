@@ -142,14 +142,11 @@ func (d *DepDownloader) Download(opts DownloadOptions) error {
 
 	localPath := opts.LocalPath
 	cacheFullPath := opts.CachePath
-	if opts.EnableCache {
+	if ok, err := features.Enabled(features.SupportNewStorage); err == nil && !ok && opts.EnableCache {
 		// TODO: After the new local storage structure is complete,
 		// this section should be replaced with the new storage structure instead of the cache path according to the <Cache Path>/<Package Name>.
 		//  https://github.com/kcl-lang/kpm/issues/384
 		var pkgFullName string
-		if opts.Source.Registry != nil && len(opts.Source.Registry.Version) != 0 {
-			pkgFullName = fmt.Sprintf("%s_%s", filepath.Base(opts.Source.Registry.Oci.Repo), opts.Source.Registry.Version)
-		}
 		if opts.Source.Oci != nil && len(opts.Source.Oci.Tag) != 0 {
 			pkgFullName = fmt.Sprintf("%s_%s", filepath.Base(opts.Source.Oci.Repo), opts.Source.Oci.Tag)
 		}
@@ -186,12 +183,13 @@ func (d *DepDownloader) Download(opts DownloadOptions) error {
 		}
 	}
 
+	if utils.DirExists(localPath) && utils.DirExists(filepath.Join(localPath, constants.KCL_MOD)) {
+		return nil
+	}
+
 	opts.LocalPath = tmpDir
 	// Dispatch the download to the specific downloader by package source.
-	if opts.Source.Oci != nil || opts.Source.Registry != nil {
-		if opts.Source.Registry != nil {
-			opts.Source.Oci = opts.Source.Registry.Oci
-		}
+	if opts.Source.Oci != nil {
 		if d.OciDownloader == nil {
 			d.OciDownloader = &OciDownloader{}
 		}
@@ -226,7 +224,7 @@ func (d *DepDownloader) Download(opts DownloadOptions) error {
 		return err
 	}
 
-	if opts.EnableCache {
+	if ok, err := features.Enabled(features.SupportNewStorage); err == nil && !ok && opts.EnableCache {
 		// Enable the cache, update the dependency package to the cache path.
 		err := copy.Copy(localPath, cacheFullPath)
 		if err != nil {
@@ -294,18 +292,12 @@ func (d *OciDownloader) Download(opts DownloadOptions) error {
 
 	if ok, err := features.Enabled(features.SupportNewStorage); err == nil && ok {
 		if opts.EnableCache {
-			hash, err := ociSource.Hash()
-			if err != nil {
-				return err
-			}
-			cacheFullPath := filepath.Join(opts.CachePath, hash)
-			localFullPath := filepath.Join(opts.LocalPath, hash)
 
-			if utils.DirExists(localFullPath) &&
-				utils.DirExists(filepath.Join(localFullPath, constants.KCL_MOD)) {
+			if utils.DirExists(opts.LocalPath) &&
+				utils.DirExists(filepath.Join(opts.LocalPath, constants.KCL_MOD)) {
 				return nil
 			} else {
-				cacheTarPath, err := utils.FindPkgArchive(cacheFullPath)
+				cacheTarPath, err := utils.FindPkgArchive(opts.CachePath)
 				if err != nil && errors.Is(err, utils.PkgArchiveNotFound) {
 					reporter.ReportMsgTo(
 						fmt.Sprintf(
@@ -315,11 +307,11 @@ func (d *OciDownloader) Download(opts DownloadOptions) error {
 						opts.LogWriter,
 					)
 
-					err = ociCli.Pull(cacheFullPath, ociSource.Tag)
+					err = ociCli.Pull(opts.CachePath, ociSource.Tag)
 					if err != nil {
 						return err
 					}
-					cacheTarPath, err = utils.FindPkgArchive(cacheFullPath)
+					cacheTarPath, err = utils.FindPkgArchive(opts.CachePath)
 					if err != nil {
 						return err
 					}
@@ -328,9 +320,9 @@ func (d *OciDownloader) Download(opts DownloadOptions) error {
 				}
 
 				if utils.IsTar(cacheTarPath) {
-					err = utils.UnTarDir(cacheTarPath, localFullPath)
+					err = utils.UnTarDir(cacheTarPath, opts.LocalPath)
 				} else {
-					err = utils.ExtractTarball(cacheTarPath, localFullPath)
+					err = utils.ExtractTarball(cacheTarPath, opts.LocalPath)
 				}
 				if err != nil {
 					return err

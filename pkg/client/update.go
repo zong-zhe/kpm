@@ -48,6 +48,21 @@ func (c *KpmClient) Update(options ...UpdateOption) (*pkg.KclPkg, error) {
 		return nil, fmt.Errorf("kcl.mod.lock dependencies is nil")
 	}
 
+	for _, depName := range modDeps.Keys() {
+		dep, ok := modDeps.Get(depName)
+		if !ok {
+			return nil, fmt.Errorf("failed to get dependency %s", depName)
+		}
+
+		if existDep, exist := lockDeps.Get(dep.Name); exist {
+			if less, err := existDep.VersionLessThan(&dep); less && err == nil {
+				kpkg.Dependencies.Deps.Set(dep.Name, dep)
+			}
+		} else {
+			kpkg.Dependencies.Deps.Set(dep.Name, dep)
+		}
+	}
+
 	// Create a new dependency resolver
 	depResolver := resolver.DepsResolver{
 		DefaultCachePath:      c.homePath,

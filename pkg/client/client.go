@@ -543,7 +543,10 @@ func (c *KpmClient) AddDepWithOpts(kclPkg *pkg.KclPkg, opt *opt.AddOptions) (*pk
 	)
 
 	// 2. download the dependency to the local path.
-	err = c.AddDepToPkg(kclPkg, d)
+	err = c.Add(
+		WithAddKclPkg(*kclPkg),
+		WithAddSource(&d.Source),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -684,17 +687,11 @@ func (c *KpmClient) FillDepInfo(dep *pkg.Dependency, homepath string) error {
 			dep.Source.Oci.Repo = urlpath
 		}
 	}
-	if dep.Source.Registry != nil {
-		if len(dep.Source.Registry.Reg) == 0 {
-			dep.Source.Registry.Reg = c.GetSettings().DefaultOciRegistry()
+	if dep.Source.PkgSpec != nil && dep.Source.Oci == nil {
+		dep.Source.Oci = &downloader.Oci{
+			Reg:  c.GetSettings().DefaultOciRegistry(),
+			Repo: utils.JoinPath(c.GetSettings().DefaultOciRepo(), dep.Name),
 		}
-
-		if len(dep.Source.Registry.Repo) == 0 {
-			urlpath := utils.JoinPath(c.GetSettings().DefaultOciRepo(), dep.Name)
-			dep.Source.Registry.Repo = urlpath
-		}
-
-		dep.Version = dep.Source.Registry.Version
 	}
 	if dep.Source.Git != nil && dep.Source.Git.GetPackage() != "" {
 		name := utils.ParseRepoNameFromGitUrl(dep.Source.Git.Url)
@@ -846,12 +843,10 @@ func (c *KpmClient) Download(dep *pkg.Dependency, homePath, localPath string) (*
 		dep.Version = modFile.Pkg.Version
 	}
 
-	if dep.Source.Oci != nil || dep.Source.Registry != nil {
+	if dep.Source.Oci != nil {
 		var ociSource *downloader.Oci
 		if dep.Source.Oci != nil {
 			ociSource = dep.Source.Oci
-		} else if dep.Source.Registry != nil {
-			ociSource = dep.Source.Registry.Oci
 		}
 		// Select the latest tag, if the tag, the user inputed, is empty.
 		if ociSource.Tag == "" || ociSource.Tag == constants.LATEST {
@@ -860,11 +855,6 @@ func (c *KpmClient) Download(dep *pkg.Dependency, homePath, localPath string) (*
 				return nil, err
 			}
 			ociSource.Tag = latestTag
-
-			if dep.Source.Registry != nil {
-				dep.Source.Registry.Tag = latestTag
-				dep.Source.Registry.Version = latestTag
-			}
 
 			// Complete some information that the local three dependencies depend on.
 			// The invalid path such as '$HOME/.kcl/kpm/k8s_' is placed because the version field is missing.

@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/google/uuid"
-	"kcl-lang.io/kpm/pkg/constants"
 	"kcl-lang.io/kpm/pkg/downloader"
 	"kcl-lang.io/kpm/pkg/opt"
 	pkg "kcl-lang.io/kpm/pkg/package"
@@ -91,6 +89,7 @@ type RemoteVisitor struct {
 	*PkgVisitor
 	EnableCache           bool
 	CachePath             string
+	VisitedPath           string
 	Downloader            downloader.Downloader
 	InsecureSkipTLSverify bool
 }
@@ -110,13 +109,28 @@ func (rv *RemoteVisitor) Visit(s *downloader.Source, v visitFunc) error {
 		return fmt.Errorf("source is not remote")
 	}
 
-	tmpDir, err := os.MkdirTemp("", "")
-	if err != nil {
-		return err
+	var visitedPath string
+	var err error
+	if len(rv.VisitedPath) != 0 {
+		visitedPath, err = s.LocalFullPath(rv.VisitedPath)
+		if err != nil {
+			return err
+		}
+	} else {
+		tmpDir, err := os.MkdirTemp("", "")
+		if err != nil {
+			return err
+		}
+
+		visitedPath = tmpDir
+		defer os.RemoveAll(tmpDir)
 	}
 
-	if s.Git != nil {
-		tmpDir = filepath.Join(tmpDir, constants.GitScheme)
+	if !utils.DirExists(visitedPath) {
+		err := os.MkdirAll(visitedPath, 0755)
+		if err != nil {
+			return err
+		}
 	}
 
 	credCli, err := downloader.LoadCredentialFile(rv.Settings.CredentialsFile)
@@ -124,9 +138,13 @@ func (rv *RemoteVisitor) Visit(s *downloader.Source, v visitFunc) error {
 		return err
 	}
 
-	defer os.RemoveAll(tmpDir)
+	rv.CachePath, err = s.CacheFullPath(rv.CachePath)
+	if err != nil {
+		return err
+	}
+
 	err = rv.Downloader.Download(*downloader.NewDownloadOptions(
-		downloader.WithLocalPath(tmpDir),
+		downloader.WithLocalPath(visitedPath),
 		downloader.WithSource(*s),
 		downloader.WithLogWriter(rv.LogWriter),
 		downloader.WithSettings(*rv.Settings),
@@ -139,9 +157,16 @@ func (rv *RemoteVisitor) Visit(s *downloader.Source, v visitFunc) error {
 	if err != nil {
 		return err
 	}
-	pkgPath := tmpDir
+	pkgPath := visitedPath
 	if s.Git != nil && len(s.Git.Package) > 0 {
-		pkgPath, err = utils.FindPackage(tmpDir, s.Git.Package)
+		pkgPath, err = utils.FindPackage(visitedPath, s.Git.Package)
+		if err != nil {
+			return err
+		}
+	}
+
+	if s.PkgSpec != nil && len(s.PkgSpec.Name) > 0 {
+		pkgPath, err = utils.FindPackage(visitedPath, s.PkgSpec.Name)
 		if err != nil {
 			return err
 		}
