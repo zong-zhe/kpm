@@ -243,17 +243,6 @@ type Platform struct {
 	Platform     *v1.Platform
 }
 
-func (d *OciDownloader) downloadToNewLocalStorage(opts DownloadOptions) error {
-
-	// download the package from the OCI registry
-	ociSource := opts.Source.Oci
-	if ociSource == nil {
-		return errors.New("oci source is nil")
-	}
-
-	return nil
-}
-
 func (d *OciDownloader) Download(opts DownloadOptions) error {
 	// download the package from the OCI registry
 	ociSource := opts.Source.Oci
@@ -305,18 +294,12 @@ func (d *OciDownloader) Download(opts DownloadOptions) error {
 
 	if ok, err := features.Enabled(features.SupportNewStorage); err == nil && ok {
 		if opts.EnableCache {
-			var packageFilename string
-			if ociSource.Tag == "" {
-				packageFilename = filepath.Base(ociSource.Repo)
-			} else {
-				packageFilename = fmt.Sprintf("%s_%s", filepath.Base(ociSource.Repo), ociSource.Tag)
-			}
 			hash, err := ociSource.Hash()
 			if err != nil {
 				return err
 			}
-			cacheFullPath := filepath.Join(opts.CachePath, "oci", "cache", hash, packageFilename)
-			localFullPath := filepath.Join(opts.LocalPath, "oci", "src", hash, packageFilename)
+			cacheFullPath := filepath.Join(opts.CachePath, hash)
+			localFullPath := filepath.Join(opts.LocalPath, hash)
 
 			if utils.DirExists(localFullPath) &&
 				utils.DirExists(filepath.Join(localFullPath, constants.KCL_MOD)) {
