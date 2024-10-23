@@ -14,8 +14,16 @@ import (
 	"kcl-lang.io/kpm/pkg/utils"
 )
 
+// Describes the KCL module.
+// Note: This is a unstable struct and may add more fields.
+type PkgSpec struct {
+	Name    string
+	Version string
+}
+
 // Source is the package source from registry.
 type Source struct {
+	pkgSpec *PkgSpec `toml:"-"`
 	*Registry
 	*Git
 	*Oci
@@ -54,6 +62,17 @@ func NewSourceFromStr(sourceStr string) (*Source, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	url, err := url.Parse(sourceStr)
+	if err != nil {
+		return nil, err
+	}
+
+	source.pkgSpec = &PkgSpec{
+		Name:    url.Query().Get("name"),
+		Version: url.Query().Get("version"),
+	}
+
 	return source, nil
 }
 
