@@ -1,8 +1,9 @@
 [dependencies]
-  [dependencies.helloworld]
-    name = "helloworld"
-    full_name = "helloworld_0.1.2"
-    version = "0.1.2"
+  [dependencies.subhelloworld]
+    name = "subhelloworld"
+    full_name = "subhelloworld_0.0.1"
+    \ = "0.0.1"
+    sum = "9J9HOMhdypaDYf0J7PqtpGTdlkbxkN0HFEYhosHhf4U="
     reg = "ghcr.io"
     repo = "kcl-lang/helloworld"
-    oci_tag = "0.1.2"
+    oci_tag = "0.1.4"

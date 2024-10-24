@@ -9,10 +9,15 @@ import (
 )
 
 const NEWLINE = "\n"
-const SOURCE_PATTERN = "{ %s }"
+const SOURCE_PATTERN = "{ %s, %s }"
 
 func (source *Source) MarshalTOML() string {
 	var sb strings.Builder
+
+	var pkgVersion string
+	if len(source.PkgSpec.Version) > 0 {
+		pkgVersion = fmt.Sprintf("version = %q", source.PkgSpec.Version)
+	}
 
 	if source.Registry != nil {
 		registryToml := source.Registry.MarshalTOML()
@@ -24,7 +29,7 @@ func (source *Source) MarshalTOML() string {
 	if source.Git != nil {
 		gitToml := source.Git.MarshalTOML()
 		if len(gitToml) != 0 {
-			sb.WriteString(fmt.Sprintf(SOURCE_PATTERN, gitToml))
+			sb.WriteString(fmt.Sprintf(SOURCE_PATTERN, gitToml, pkgVersion))
 		}
 	}
 
@@ -32,7 +37,7 @@ func (source *Source) MarshalTOML() string {
 		ociToml := source.Oci.MarshalTOML()
 		if len(ociToml) != 0 {
 			if len(source.Oci.Reg) != 0 && len(source.Oci.Repo) != 0 {
-				sb.WriteString(fmt.Sprintf(SOURCE_PATTERN, ociToml))
+				sb.WriteString(fmt.Sprintf(SOURCE_PATTERN, ociToml, pkgVersion))
 			} else {
 				sb.WriteString(ociToml)
 			}
@@ -42,7 +47,7 @@ func (source *Source) MarshalTOML() string {
 	if source.Local != nil {
 		localPathToml := source.Local.MarshalTOML()
 		if len(localPathToml) != 0 {
-			sb.WriteString(fmt.Sprintf(SOURCE_PATTERN, localPathToml))
+			sb.WriteString(fmt.Sprintf(SOURCE_PATTERN, localPathToml, pkgVersion))
 		}
 	}
 
@@ -162,6 +167,10 @@ func (source *Source) UnmarshalModTOML(data interface{}) error {
 				return err
 			}
 			source.Registry = &reg
+		}
+
+		if v, ok := meta["version"].(string); ok {
+			source.PkgSpec.Version = v
 		}
 	}
 

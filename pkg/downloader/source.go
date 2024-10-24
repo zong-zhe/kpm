@@ -23,7 +23,7 @@ type PkgSpec struct {
 
 // Source is the package source from registry.
 type Source struct {
-	pkgSpec *PkgSpec `toml:"-"`
+	PkgSpec *PkgSpec `toml:"-"`
 	*Registry
 	*Git
 	*Oci
@@ -68,7 +68,7 @@ func NewSourceFromStr(sourceStr string) (*Source, error) {
 		return nil, err
 	}
 
-	source.pkgSpec = &PkgSpec{
+	source.PkgSpec = &PkgSpec{
 		Name:    url.Query().Get("name"),
 		Version: url.Query().Get("version"),
 	}

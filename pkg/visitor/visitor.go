@@ -166,6 +166,13 @@ func (rv *RemoteVisitor) Visit(s *downloader.Source, v visitFunc) error {
 		}
 	}
 
+	if s.PkgSpec != nil && len(s.PkgSpec.Name) > 0 {
+		pkgPath, err = utils.FindPackage(visitedPath, s.PkgSpec.Name)
+		if err != nil {
+			return err
+		}
+	}
+
 	kclPkg, err := pkg.LoadKclPkgWithOpts(
 		pkg.WithPath(pkgPath),
 		pkg.WithSettings(rv.Settings),

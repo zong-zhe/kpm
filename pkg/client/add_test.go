@@ -8,6 +8,7 @@ import (
 )
 
 func TestAdd(t *testing.T) {
+	// features.Enable(features.SupportNewStorage)
 	testDir := getTestDir("add_with_pkg_spec")
 
 	testOciDir := filepath.Join(testDir, "oci")
@@ -28,7 +29,7 @@ func TestAdd(t *testing.T) {
 
 	err = kpmcli.Add(
 		WithAddKclPkg(*kpkg),
-		WithAddSourceUrl("oci://ghcr.io/kcl-lang/helloworld?tag=0.1.2"),
+		WithAddSourceUrl("oci://ghcr.io/kcl-lang/helloworld?tag=0.1.4&name=subhelloworld&version=0.0.1"),
 	)
 
 	if err != nil {
