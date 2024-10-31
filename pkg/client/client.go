@@ -549,7 +549,10 @@ func (c *KpmClient) AddDepWithOpts(kclPkg *pkg.KclPkg, opt *opt.AddOptions) (*pk
 	)
 
 	// 2. download the dependency to the local path.
-	err = c.AddDepToPkg(kclPkg, d)
+	err = c.Add(
+		WithAddKclPkg(kclPkg),
+		WithAddSource(&d.Source),
+	)
 	if err != nil {
 		return nil, err
 	}
