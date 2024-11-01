@@ -666,6 +666,9 @@ func (s *Source) LocalPath() string {
 		gitUrl := strings.TrimSuffix(s.Git.Url, filepath.Ext(s.Git.Url))
 		path = fmt.Sprintf("%s_%s", filepath.Base(gitUrl), s.Git.Commit)
 	}
+	if !s.ModSpec.IsNil() {
+		path = fmt.Sprintf("%s_%s", s.ModSpec.Name, s.ModSpec.Version)
+	}
 
 	return path
 }
