@@ -58,12 +58,12 @@ func TestWithGlobalLock(t *testing.T) {
 	test.RunTestWithGlobalLock(t, "TestUpdateWithKclMod", testUpdateWithKclMod)
 	test.RunTestWithGlobalLock(t, "TestUpdateWithKclModlock", testUpdateWithKclModlock)
 	test.RunTestWithGlobalLock(t, "TestUpdateWithNoSumCheck", testUpdateWithNoSumCheck)
-	test.RunTestWithGlobalLock(t, "TestAddWithDiffVersionNoSumCheck", TestAddWithDiffVersionNoSumCheck)
+	test.RunTestWithGlobalLock(t, "TestAddWithDiffVersionNoSumCheck", testAddWithDiffVersionNoSumCheck)
 	test.RunTestWithGlobalLock(t, "TestAddWithDiffVersionWithSumCheck", testAddWithDiffVersionWithSumCheck)
 	test.RunTestWithGlobalLock(t, "TestDownloadOci", testDownloadOci)
 	test.RunTestWithGlobalLock(t, "TestRunWithOciDownloader", testRunWithOciDownloader)
 	test.RunTestWithGlobalLock(t, "TestAddWithOciDownloader", testAddWithOciDownloader)
-	test.RunTestWithGlobalLock(t, "TestAddDefaultRegistryDep", TestAddDefaultRegistryDep)
+	test.RunTestWithGlobalLock(t, "TestAddDefaultRegistryDep", testAddDefaultRegistryDep)
 	test.RunTestWithGlobalLock(t, "TestUpdateDefaultRegistryDep", testUpdateDefaultRegistryDep)
 	test.RunTestWithGlobalLock(t, "TestRunDefaultRegistryDep", testRunDefaultRegistryDep)
 	test.RunTestWithGlobalLock(t, "TestAddWithNoSumCheck", testAddWithNoSumCheck)
@@ -72,7 +72,7 @@ func TestWithGlobalLock(t *testing.T) {
 	test.RunTestWithGlobalLock(t, "TestRunInVendor", testRunInVendor)
 	test.RunTestWithGlobalLock(t, "TestPkgWithInVendorMode", testPkgWithInVendorMode)
 	test.RunTestWithGlobalLock(t, "TestResolveMetadataInJsonStrWithPackage", testResolveMetadataInJsonStrWithPackage)
-	test.RunTestWithGlobalLock(t, "TestResolveMetadataInJsonStr", TestResolveMetadataInJsonStr)
+	test.RunTestWithGlobalLock(t, "TestResolveMetadataInJsonStr", testResolveMetadataInJsonStr)
 	test.RunTestWithGlobalLock(t, "testPackageCurrentPkgPath", testPackageCurrentPkgPath)
 	test.RunTestWithGlobalLock(t, "TestUpdateKclModAndLock", testUpdateKclModAndLock)
 	test.RunTestWithGlobalLock(t, "TestResolveDepsWithOnlyKclMod", testResolveDepsWithOnlyKclMod)
@@ -82,7 +82,7 @@ func TestWithGlobalLock(t *testing.T) {
 	test.RunTestWithGlobalLock(t, "TestDownloadGitWithPackage", testDownloadGitWithPackage)
 	test.RunTestWithGlobalLock(t, "TestModandLockFilesWithGitPackageDownload", testModandLockFilesWithGitPackageDownload)
 	test.RunTestWithGlobalLock(t, "TestDependencyGraph", testDependencyGraph)
-	test.RunTestWithGlobalLock(t, "testAddWithModSpec", TestAddWithModSpec)
+	test.RunTestWithGlobalLock(t, "testAddWithModSpec", testAddWithModSpec)
 }
 
 // TestDownloadOci test download from oci registry.
@@ -762,7 +762,7 @@ func testPackageCurrentPkgPath(t *testing.T) {
 	}()
 }
 
-func TestResolveMetadataInJsonStr(t *testing.T) {
+func testResolveMetadataInJsonStr(t *testing.T) {
 	originalValue := os.Getenv(env.PKG_PATH)
 	defer os.Setenv(env.PKG_PATH, originalValue)
 
@@ -1245,7 +1245,7 @@ func testUpdateWithNoSumCheck(t *testing.T) {
 	}()
 }
 
-func TestAddWithDiffVersionNoSumCheck(t *testing.T) {
+func testAddWithDiffVersionNoSumCheck(t *testing.T) {
 	pkgPath := getTestDir("test_add_diff_version")
 
 	pkgWithSumCheckPath := filepath.Join(pkgPath, "no_sum_check")
@@ -1626,7 +1626,7 @@ func TestAddLocalPath(t *testing.T) {
 	}()
 }
 
-func TestAddDefaultRegistryDep(t *testing.T) {
+func testAddDefaultRegistryDep(t *testing.T) {
 	type testCase struct {
 		tag           string
 		pkgPath       string
