@@ -130,7 +130,7 @@ func (rv *RemoteVisitor) Visit(s *downloader.Source, v visitFunc) error {
 	// For Git, the main branch
 	if !s.ModSpec.IsNil() && s.ModSpec.Version == "" {
 		latest, err := rv.Downloader.LatestVersion(*downloader.NewDownloadOptions(
-			downloader.WithSource(s),
+			downloader.WithSource(*s),
 			downloader.WithLogWriter(rv.LogWriter),
 			downloader.WithSettings(*rv.Settings),
 			downloader.WithCredsClient(credCli),
@@ -179,7 +179,7 @@ func (rv *RemoteVisitor) Visit(s *downloader.Source, v visitFunc) error {
 
 	err = rv.Downloader.Download(*downloader.NewDownloadOptions(
 		downloader.WithLocalPath(modPath),
-		downloader.WithSource(s),
+		downloader.WithSource(*s),
 		downloader.WithLogWriter(rv.LogWriter),
 		downloader.WithSettings(*rv.Settings),
 		downloader.WithCredsClient(credCli),

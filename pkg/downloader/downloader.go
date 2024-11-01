@@ -29,7 +29,7 @@ type DownloadOptions struct {
 	// If `EnableCache` is false, this will not result in increasing disk usage.
 	EnableCache bool
 	// Source is the source of the package. including git, oci, local.
-	Source *Source
+	Source Source
 	// Settings is the default settings and authrization information.
 	Settings settings.Settings
 	// LogWriter is the writer to write the log.
@@ -84,7 +84,7 @@ func WithLocalPath(localPath string) Option {
 	}
 }
 
-func WithSource(source *Source) Option {
+func WithSource(source Source) Option {
 	return func(do *DownloadOptions) {
 		do.Source = source
 	}

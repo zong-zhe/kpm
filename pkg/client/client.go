@@ -815,7 +815,7 @@ func (c *KpmClient) Download(dep *pkg.Dependency, homePath, localPath string) (*
 	if dep.Source.Git != nil {
 		err := c.DepDownloader.Download(*downloader.NewDownloadOptions(
 			downloader.WithLocalPath(localPath),
-			downloader.WithSource(&dep.Source),
+			downloader.WithSource(dep.Source),
 			downloader.WithLogWriter(c.logWriter),
 			downloader.WithSettings(c.settings),
 		))
@@ -887,7 +887,7 @@ func (c *KpmClient) Download(dep *pkg.Dependency, homePath, localPath string) (*
 		}
 		err = c.DepDownloader.Download(*downloader.NewDownloadOptions(
 			downloader.WithLocalPath(localPath),
-			downloader.WithSource(&dep.Source),
+			downloader.WithSource(dep.Source),
 			downloader.WithLogWriter(c.logWriter),
 			downloader.WithSettings(c.settings),
 			downloader.WithCredsClient(credCli),
