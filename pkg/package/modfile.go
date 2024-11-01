@@ -513,11 +513,18 @@ func ParseOpt(opt *opt.RegistryOptions) (*Dependency, error) {
 			return nil, err
 		}
 
+		var modSpec *downloader.ModSpec
+		if opt.Git.Package != "" {
+			modSpec = &downloader.ModSpec{}
+			modSpec.FromString(opt.Git.Package)
+		}
+
 		return &Dependency{
 			Name:     ParseRepoNameFromGitSource(gitSource),
 			FullName: fullName,
 			Source: downloader.Source{
-				Git: &gitSource,
+				ModSpec: modSpec,
+				Git:     &gitSource,
 			},
 			Version: gitRef,
 		}, nil
@@ -571,7 +578,7 @@ func ParseOpt(opt *opt.RegistryOptions) (*Dependency, error) {
 					Version: opt.Registry.Tag,
 					Name:    opt.Registry.Ref,
 				},
-				Oci:      &ociSource,
+				Oci: &ociSource,
 			},
 			Version: opt.Registry.Tag,
 		}, nil

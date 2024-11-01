@@ -128,7 +128,7 @@ func (rv *RemoteVisitor) Visit(s *downloader.Source, v visitFunc) error {
 	// 2. If the version is not specified, get the latest version.
 	// For Oci, the latest tag
 	// For Git, the main branch
-	if !s.ModSpec.IsNil() && s.ModSpec.Version == "" {
+	if (s.Oci != nil && s.Oci.NoVersion()) || (s.Git != nil && s.Git.NoVersion()) {
 		latest, err := rv.Downloader.LatestVersion(*downloader.NewDownloadOptions(
 			downloader.WithSource(*s),
 			downloader.WithLogWriter(rv.LogWriter),
@@ -207,7 +207,9 @@ func (rv *RemoteVisitor) Visit(s *downloader.Source, v visitFunc) error {
 	}
 
 	if !s.ModSpec.IsNil() {
-		if kclPkg.ModFile.Pkg.Version != s.ModSpec.Version {
+		if s.ModSpec.Version == "" {
+			s.ModSpec.Version = kclPkg.ModFile.Pkg.Version
+		} else if kclPkg.ModFile.Pkg.Version != s.ModSpec.Version {
 			return fmt.Errorf(
 				"version mismatch: %s != %s, version %s not found",
 				kclPkg.ModFile.Pkg.Version, s.ModSpec.Version, s.ModSpec.Version,

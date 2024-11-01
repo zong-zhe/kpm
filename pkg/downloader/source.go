@@ -52,6 +52,10 @@ type Oci struct {
 	Tag  string `toml:"oci_tag,omitempty"`
 }
 
+func (o *Oci) NoVersion() bool {
+	return o.Tag == ""
+}
+
 // Git is the package source from git registry.
 type Git struct {
 	Url     string `toml:"url,omitempty"`
@@ -60,6 +64,10 @@ type Git struct {
 	Tag     string `toml:"git_tag,omitempty"`
 	Version string `toml:"version,omitempty"`
 	Package string `toml:"package,omitempty"`
+}
+
+func (g *Git) NoVersion() bool {
+	return g.Version == "" && g.Tag == "" && g.Branch == "" && g.Commit == ""
 }
 
 func NewSourceFromStr(sourceStr string) (*Source, error) {
@@ -484,6 +492,7 @@ func (ps *ModSpec) FromString(registryStr string) error {
 	}
 	parts := strings.Split(registryStr, ":")
 	if len(parts) == 1 {
+		ps.Name = parts[0]
 		return nil
 	}
 
