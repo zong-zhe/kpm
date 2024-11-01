@@ -1,3 +1,3 @@
-import flask_demo_kcl_manifests as flask
+import flask_manifests as flask
 
 a = flask.config
