@@ -72,7 +72,7 @@ func TestWithGlobalLock(t *testing.T) {
 	test.RunTestWithGlobalLock(t, "TestRunInVendor", testRunInVendor)
 	test.RunTestWithGlobalLock(t, "TestPkgWithInVendorMode", testPkgWithInVendorMode)
 	test.RunTestWithGlobalLock(t, "TestResolveMetadataInJsonStrWithPackage", testResolveMetadataInJsonStrWithPackage)
-	test.RunTestWithGlobalLock(t, "TestResolveMetadataInJsonStr", testResolveMetadataInJsonStr)
+	test.RunTestWithGlobalLock(t, "TestResolveMetadataInJsonStr", TestResolveMetadataInJsonStr)
 	test.RunTestWithGlobalLock(t, "testPackageCurrentPkgPath", testPackageCurrentPkgPath)
 	test.RunTestWithGlobalLock(t, "TestUpdateKclModAndLock", testUpdateKclModAndLock)
 	test.RunTestWithGlobalLock(t, "TestResolveDepsWithOnlyKclMod", testResolveDepsWithOnlyKclMod)
@@ -762,7 +762,7 @@ func testPackageCurrentPkgPath(t *testing.T) {
 	}()
 }
 
-func testResolveMetadataInJsonStr(t *testing.T) {
+func TestResolveMetadataInJsonStr(t *testing.T) {
 	originalValue := os.Getenv(env.PKG_PATH)
 	defer os.Setenv(env.PKG_PATH, originalValue)
 
@@ -782,11 +782,11 @@ func testResolveMetadataInJsonStr(t *testing.T) {
 		Deps: make(map[string]pkg.Dependency),
 	}
 
-	expectedDep.Deps["flask_demo_kcl_manifests"] = pkg.Dependency{
-		Name:          "flask_demo_kcl_manifests",
-		FullName:      "flask-demo-kcl-manifests_ade147b",
+	expectedDep.Deps["flask_manifests"] = pkg.Dependency{
+		Name:          "flask_manifests",
+		FullName:      "flask_manifests_ade147b",
 		Version:       "0.1.0",
-		LocalFullPath: filepath.Join(globalPkgPath, "flask-demo-kcl-manifests_ade147b"),
+		LocalFullPath: filepath.Join(globalPkgPath, "flask_manifests_ade147b"),
 	}
 
 	expectedDepStr, err := json.Marshal(expectedDep)
@@ -803,13 +803,13 @@ func testResolveMetadataInJsonStr(t *testing.T) {
 	res, err = kpmcli.ResolveDepsMetadataInJsonStr(kclpkg, true)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, utils.DirExists(vendorDir), true)
-	assert.Equal(t, utils.DirExists(filepath.Join(vendorDir, "flask-demo-kcl-manifests_ade147b")), true)
+	assert.Equal(t, utils.DirExists(filepath.Join(vendorDir, "flask_manifests_ade147b")), true)
 
-	expectedDep.Deps["flask_demo_kcl_manifests"] = pkg.Dependency{
-		Name:          "flask_demo_kcl_manifests",
-		FullName:      "flask-demo-kcl-manifests_ade147b",
+	expectedDep.Deps["flask_manifests"] = pkg.Dependency{
+		Name:          "flask_manifests",
+		FullName:      "flask_manifests_ade147b",
 		Version:       "0.1.0",
-		LocalFullPath: filepath.Join(vendorDir, "flask-demo-kcl-manifests_ade147b"),
+		LocalFullPath: filepath.Join(vendorDir, "flask_manifests_ade147b"),
 	}
 
 	expectedDepStr, err = json.Marshal(expectedDep)
@@ -827,12 +827,12 @@ func testResolveMetadataInJsonStr(t *testing.T) {
 	res, err = kpmcli.ResolveDepsMetadataInJsonStr(kclpkg, false)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, utils.DirExists(vendorDir), false)
-	assert.Equal(t, utils.DirExists(filepath.Join(vendorDir, "flask-demo-kcl-manifests_ade147b")), false)
+	assert.Equal(t, utils.DirExists(filepath.Join(vendorDir, "flask_manifests_ade147b")), false)
 	assert.Equal(t, err, nil)
-	expectedStr := "{\"packages\":{\"flask_demo_kcl_manifests\":{\"name\":\"flask_demo_kcl_manifests\",\"manifest_path\":\"\"}}}"
+	expectedStr := "{\"packages\":{\"flask_manifests\":{\"name\":\"flask_manifests\",\"manifest_path\":\"\"}}}"
 	assert.Equal(t, res, expectedStr)
 	defer func() {
-		if r := os.RemoveAll(filepath.Join("not_exist", "flask-demo-kcl-manifests_ade147b")); r != nil {
+		if r := os.RemoveAll(filepath.Join("not_exist", "flask_manifests_ade147b")); r != nil {
 			err = fmt.Errorf("panic: %v", r)
 		}
 	}()
