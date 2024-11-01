@@ -151,8 +151,8 @@ func (c *KpmClient) Add(options ...AddOption) error {
 					Name:    depPkg.ModFile.Pkg.Name,
 					Version: depPkg.ModFile.Pkg.Version,
 				}
+				depSource.ModSpec = modSpec
 			}
-			depSource.ModSpec = modSpec
 
 			dep := pkg.Dependency{
 				Name:          depPkg.ModFile.Pkg.Name,
