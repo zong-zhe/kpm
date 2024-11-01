@@ -4,4 +4,4 @@ edition = "0.0.1"
 version = "0.0.1"
 
 [dependencies]
-flask-demo-kcl-manifests = { git = "https://github.com/kcl-lang/flask-demo-kcl-manifests.git", branch = "main" }
+flask_manifests = { git = "https://github.com/kcl-lang/flask-demo-kcl-manifests.git", branch = "main" }
