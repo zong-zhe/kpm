@@ -63,7 +63,7 @@ func TestWithGlobalLock(t *testing.T) {
 	test.RunTestWithGlobalLock(t, "TestDownloadOci", testDownloadOci)
 	test.RunTestWithGlobalLock(t, "TestRunWithOciDownloader", testRunWithOciDownloader)
 	test.RunTestWithGlobalLock(t, "TestAddWithOciDownloader", testAddWithOciDownloader)
-	test.RunTestWithGlobalLock(t, "TestAddDefaultRegistryDep", testAddDefaultRegistryDep)
+	test.RunTestWithGlobalLock(t, "TestAddDefaultRegistryDep", TestAddDefaultRegistryDep)
 	test.RunTestWithGlobalLock(t, "TestUpdateDefaultRegistryDep", testUpdateDefaultRegistryDep)
 	test.RunTestWithGlobalLock(t, "TestRunDefaultRegistryDep", testRunDefaultRegistryDep)
 	test.RunTestWithGlobalLock(t, "TestAddWithNoSumCheck", testAddWithNoSumCheck)
@@ -1626,7 +1626,7 @@ func TestAddLocalPath(t *testing.T) {
 	}()
 }
 
-func testAddDefaultRegistryDep(t *testing.T) {
+func TestAddDefaultRegistryDep(t *testing.T) {
 	type testCase struct {
 		tag           string
 		pkgPath       string

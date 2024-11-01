@@ -29,7 +29,7 @@ type DownloadOptions struct {
 	// If `EnableCache` is false, this will not result in increasing disk usage.
 	EnableCache bool
 	// Source is the source of the package. including git, oci, local.
-	Source Source
+	Source *Source
 	// Settings is the default settings and authrization information.
 	Settings settings.Settings
 	// LogWriter is the writer to write the log.
@@ -84,7 +84,7 @@ func WithLocalPath(localPath string) Option {
 	}
 }
 
-func WithSource(source Source) Option {
+func WithSource(source *Source) Option {
 	return func(do *DownloadOptions) {
 		do.Source = source
 	}
@@ -101,6 +101,10 @@ func NewDownloadOptions(opts ...Option) *DownloadOptions {
 // Downloader is the interface for downloading a package.
 type Downloader interface {
 	Download(opts DownloadOptions) error
+	// Get the latest version of the remote source
+	// For the git source, it will return the latest commit
+	// For the OCI source, it will return the latest tag
+	LatestVersion(opts DownloadOptions) (string, error)
 }
 
 // DepDownloader is the downloader for the package.
@@ -208,6 +212,24 @@ func (d *DepDownloader) Download(opts DownloadOptions) error {
 	}
 
 	return nil
+}
+
+func (d *DepDownloader) LatestVersion(opts DownloadOptions) (string, error) {
+	if opts.Source.Oci != nil {
+		if d.OciDownloader == nil {
+			d.OciDownloader = &OciDownloader{}
+		}
+		return d.OciDownloader.LatestVersion(opts)
+	}
+
+	if opts.Source.Git != nil {
+		if d.GitDownloader == nil {
+			d.GitDownloader = &GitDownloader{}
+		}
+		return d.GitDownloader.LatestVersion(opts)
+	}
+
+	return "", errors.New("source is nil")
 }
 
 // Platform option struct.
@@ -349,6 +371,42 @@ func (d *OciDownloader) Download(opts DownloadOptions) error {
 	return err
 }
 
+func (d *OciDownloader) LatestVersion(opts DownloadOptions) (string, error) {
+	// download the package from the OCI registry
+	ociSource := opts.Source.Oci
+	if ociSource == nil {
+		return "", errors.New("oci source is nil")
+	}
+
+	repoPath := utils.JoinPath(ociSource.Reg, ociSource.Repo)
+
+	var cred *remoteauth.Credential
+	var err error
+	if opts.credsClient != nil {
+		cred, err = opts.credsClient.Credential(ociSource.Reg)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		cred = &remoteauth.Credential{}
+	}
+
+	ociCli, err := oci.NewOciClientWithOpts(
+		oci.WithCredential(cred),
+		oci.WithRepoPath(repoPath),
+		oci.WithSettings(&opts.Settings),
+		oci.WithInsecureSkipTLSverify(opts.InsecureSkipTLSverify),
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	ociCli.PullOciOptions.Platform = d.Platform
+
+	return ociCli.TheLatestTag()
+}
+
 func (d *GitDownloader) Download(opts DownloadOptions) error {
 	gitSource := opts.Source.Git
 	if gitSource == nil {
@@ -448,4 +506,10 @@ func (d *GitDownloader) Download(opts DownloadOptions) error {
 		}
 	}
 	return nil
+}
+
+func (d *GitDownloader) LatestVersion(opts DownloadOptions) (string, error) {
+	// TODO：supports fetch the latest commit from the git bare repo,
+	// after totally transfer to the new storage.
+	return "main", nil
 }
