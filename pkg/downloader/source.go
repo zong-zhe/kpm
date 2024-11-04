@@ -661,21 +661,16 @@ func (s *Source) LocalPath() string {
 	var path string
 	if s.Oci != nil && len(s.Oci.Tag) != 0 {
 		path = fmt.Sprintf("%s_%s", filepath.Base(s.Oci.Repo), s.Oci.Tag)
-	}
-
-	if s.Git != nil && len(s.Git.Tag) != 0 {
+	} else if s.Git != nil && len(s.Git.Tag) != 0 {
 		gitUrl := strings.TrimSuffix(s.Git.Url, filepath.Ext(s.Git.Url))
 		path = fmt.Sprintf("%s_%s", filepath.Base(gitUrl), s.Git.Tag)
-	}
-	if s.Git != nil && len(s.Git.Branch) != 0 {
+	} else if s.Git != nil && len(s.Git.Branch) != 0 {
 		gitUrl := strings.TrimSuffix(s.Git.Url, filepath.Ext(s.Git.Url))
 		path = fmt.Sprintf("%s_%s", filepath.Base(gitUrl), s.Git.Branch)
-	}
-	if s.Git != nil && len(s.Git.Commit) != 0 {
+	} else if s.Git != nil && len(s.Git.Commit) != 0 {
 		gitUrl := strings.TrimSuffix(s.Git.Url, filepath.Ext(s.Git.Url))
 		path = fmt.Sprintf("%s_%s", filepath.Base(gitUrl), s.Git.Commit)
-	}
-	if !s.ModSpec.IsNil() {
+	} else if !s.ModSpec.IsNil() {
 		path = fmt.Sprintf("%s_%s", s.ModSpec.Name, s.ModSpec.Version)
 	}
 

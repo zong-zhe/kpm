@@ -80,7 +80,7 @@ func TestWithGlobalLock(t *testing.T) {
 	test.RunTestWithGlobalLock(t, "TestCompileWithEntryFile", testCompileWithEntryFile)
 	test.RunTestWithGlobalLock(t, "TestDownloadLatestOci", testDownloadLatestOci)
 	test.RunTestWithGlobalLock(t, "TestDownloadGitWithPackage", testDownloadGitWithPackage)
-	test.RunTestWithGlobalLock(t, "TestModandLockFilesWithGitPackageDownload", testModandLockFilesWithGitPackageDownload)
+	test.RunTestWithGlobalLock(t, "TestModandLockFilesWithGitPackageDownload", TestModandLockFilesWithGitPackageDownload)
 	test.RunTestWithGlobalLock(t, "TestDependencyGraph", testDependencyGraph)
 	test.RunTestWithGlobalLock(t, "testAddWithModSpec", testAddWithModSpec)
 }
@@ -207,7 +207,7 @@ func testDownloadGitWithPackage(t *testing.T) {
 	assert.Equal(t, dep.Source.Git.Package, "add-ndots")
 }
 
-func testModandLockFilesWithGitPackageDownload(t *testing.T) {
+func TestModandLockFilesWithGitPackageDownload(t *testing.T) {
 	testPkgPath := getTestDir("test_mod_file_package")
 
 	if runtime.GOOS == "windows" {
