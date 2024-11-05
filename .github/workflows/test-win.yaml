@@ -35,5 +35,6 @@ jobs:
       - name: Running go tests with coverage on Windows
         env:
           GO111MODULE: on 
+          CGO_ENABLED: 0
         run : |
           make cover
