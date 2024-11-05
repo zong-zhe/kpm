@@ -55,7 +55,14 @@ func initTestDir(subDir string) string {
 	return testDir
 }
 
-func TestWithGlobalLock(t *testing.T) {
+func TestClient(t *testing.T) {
+	features.Enable(features.SupportNewStorage)
+	testWithGlobalLock(t)
+	features.Disable(features.SupportNewStorage)
+	testWithGlobalLock(t)
+}
+
+func testWithGlobalLock(t *testing.T) {
 	test.RunTestWithGlobalLock(t, "TestUpdateWithKclMod", testUpdateWithKclMod)
 	test.RunTestWithGlobalLock(t, "TestUpdateWithKclModlock", testUpdateWithKclModlock)
 	test.RunTestWithGlobalLock(t, "TestUpdateWithNoSumCheck", testUpdateWithNoSumCheck)
@@ -93,9 +100,6 @@ func TestWithGlobalLock(t *testing.T) {
 	test.RunTestWithGlobalLock(t, "TestPull", testPull)
 	test.RunTestWithGlobalLock(t, "TestPullWithInsecureSkipTLSverify", testPullWithInsecureSkipTLSverify)
 	test.RunTestWithGlobalLock(t, "TestPullWithModSpec", testPullWithModSpec)
-
-	features.Enable(features.SupportNewStorage)
-	test.RunTestWithGlobalLock(t, "testAddWithModSpec", testAddWithModSpec)
 }
 
 // TestDownloadOci test download from oci registry.
