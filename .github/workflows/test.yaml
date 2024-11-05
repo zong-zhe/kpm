@@ -1,13 +1,13 @@
 # Reference from:
 # https://github.com/c-bata/go-prompt/blob/master/.github/workflows/test.yml
 name: Test
-on:
-  pull_request:
-    branches:
-     - main
-  push:
-    branches:
-     - main
+on: push
+  # pull_request:
+  #   branches:
+  #    - main
+  # push:
+  #   branches:
+  #    - main
 
 jobs:
   Test:
@@ -28,6 +28,7 @@ jobs:
       - name: Running go tests with coverage
         env:
           GO111MODULE: on
+          CGO_ENABLED: 0
         run: |
           make cover
       - name: Send coverage
