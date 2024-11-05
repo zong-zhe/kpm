@@ -178,6 +178,7 @@ func (c *KpmClient) selectVendoredDeps(kpkg *pkg.KclPkg, vendorPath string, vend
 				InsecureSkipTLSverify: c.insecureSkipTLSverify,
 				EnableCache:           true,
 				CachePath:             c.homePath,
+				VisitedSpace:          c.homePath,
 			}, nil
 		} else if source.IsLocalTarPath() || source.IsLocalTgzPath() {
 			return visitor.NewArchiveVisitor(pkgVisitor), nil

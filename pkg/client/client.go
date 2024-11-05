@@ -1581,6 +1581,9 @@ func NewVisitor(source downloader.Source, kpmcli *KpmClient) visitor.Visitor {
 			PkgVisitor:            PkgVisitor,
 			Downloader:            kpmcli.DepDownloader,
 			InsecureSkipTLSverify: kpmcli.insecureSkipTLSverify,
+			EnableCache:           true,
+			CachePath:             kpmcli.homePath,
+			VisitedSpace:          kpmcli.homePath,
 		}
 	} else if source.IsLocalTarPath() || source.IsLocalTgzPath() {
 		return visitor.NewArchiveVisitor(PkgVisitor)
