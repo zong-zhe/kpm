@@ -120,6 +120,14 @@ func (rv *RemoteVisitor) Visit(s *downloader.Source, v visitFunc) error {
 		return fmt.Errorf("source is not remote")
 	}
 
+	if s.SpecOnly() {
+		s.Oci = &downloader.Oci{
+			Reg:  rv.Settings.DefaultOciRegistry(),
+			Repo: utils.JoinPath(rv.Settings.DefaultOciRepo(), s.ModSpec.Name),
+			Tag:  s.ModSpec.Version,
+		}
+	}
+
 	var cacheFullPath string
 	var modFullPath string
 
