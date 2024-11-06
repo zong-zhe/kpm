@@ -63,7 +63,7 @@ func testRunWithGitPackage(t *testing.T) {
 	}()
 }
 
-func testRunWithOciDownloader(t *testing.T) {
+func TestRunWithOciDownloader(t *testing.T) {
 	kpmCli, err := NewKpmClient()
 	path := getTestDir("test_oci_downloader")
 	assert.Equal(t, err, nil)

@@ -446,6 +446,7 @@ func (source *Source) FromString(sourceStr string) error {
 		// There is a case where there is only 'ModSpec'
 	} else if sourceUrl.Path != "" {
 		source.Local = &Local{}
+		fmt.Printf("sourceUrl.String(): %v\n", sourceUrl.String())
 		source.Local.FromString(sourceUrl.String())
 	}
 

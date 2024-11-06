@@ -62,7 +62,7 @@ func TestWithGlobalLock(t *testing.T) {
 	test.RunTestWithGlobalLock(t, "TestAddWithDiffVersionNoSumCheck", testAddWithDiffVersionNoSumCheck)
 	test.RunTestWithGlobalLock(t, "TestAddWithDiffVersionWithSumCheck", testAddWithDiffVersionWithSumCheck)
 	test.RunTestWithGlobalLock(t, "TestDownloadOci", testDownloadOci)
-	test.RunTestWithGlobalLock(t, "TestRunWithOciDownloader", testRunWithOciDownloader)
+	test.RunTestWithGlobalLock(t, "TestRunWithOciDownloader", TestRunWithOciDownloader)
 	test.RunTestWithGlobalLock(t, "TestAddWithOciDownloader", testAddWithOciDownloader)
 	test.RunTestWithGlobalLock(t, "TestAddDefaultRegistryDep", testAddDefaultRegistryDep)
 	test.RunTestWithGlobalLock(t, "TestUpdateDefaultRegistryDep", testUpdateDefaultRegistryDep)
