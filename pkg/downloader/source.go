@@ -180,11 +180,13 @@ func (local *Local) FindRootPath() (string, error) {
 	}
 
 	// if local.Path is a directory, judge if it has kcl.mod file
+	fmt.Printf("local.Path: %v\n", local.Path)
 	if utils.DirExists(filepath.Join(local.Path, constants.KCL_MOD)) {
 		abspath, err := filepath.Abs(local.Path)
 		if err != nil {
 			return "", err
 		}
+		fmt.Printf("abspath: %v\n", abspath)
 		return abspath, nil
 	}
 

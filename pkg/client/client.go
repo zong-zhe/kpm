@@ -1586,10 +1586,12 @@ func NewVisitor(source downloader.Source, kpmcli *KpmClient) visitor.Visitor {
 		return visitor.NewArchiveVisitor(PkgVisitor)
 	} else if source.IsLocalPath() {
 		rootPath, err := source.FindRootPath()
+		fmt.Printf("rootPath: %v\n", rootPath)
 		if err != nil {
 			return nil
 		}
 		kclmodpath := filepath.Join(rootPath, constants.KCL_MOD)
+		fmt.Printf("kclmodpath: %v\n", kclmodpath)
 		if utils.DirExists(kclmodpath) {
 			return PkgVisitor
 		} else {
