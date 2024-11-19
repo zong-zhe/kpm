@@ -505,6 +505,7 @@ func (o *RunOptions) applyCompileOptions(source downloader.Source, kclPkg *pkg.K
 	}
 
 	// Iterate all the kcl files and transform the '-' in mod relative path to '_'
+	fmt.Printf("len(o.KFilenameList): %v\n", len(o.KFilenameList))
 	for i, kfile := range o.KFilenameList {
 		fmt.Printf("kfile: %v\n", kfile)
 		fmt.Printf("utils.IsModRelativePath(kfile): %v\n", utils.IsModRelativePath(kfile))

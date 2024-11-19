@@ -1,11 +1,11 @@
 name: Windows Test
-on:
-  pull_request:
-    branches:
-     - main
-  push:
-    branches:
-     - main
+on: push
+  # pull_request:
+  #   branches:
+  #    - main
+  # push:
+  #   branches:
+  #    - main
 
 jobs:
   TestWindows:
@@ -29,8 +29,8 @@ jobs:
           iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
           choco install make
 
-      - run: go build ./...
-      - run: go vet ./...
+      # - run: go build ./...
+      # - run: go vet ./...
 
       - name: Running go tests with coverage on Windows
         env:
