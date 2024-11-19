@@ -37,6 +37,7 @@ func (pv *PkgVisitor) Visit(s *downloader.Source, v visitFunc) error {
 	// Find the root path of the source.
 	// There must be a kcl.mod file in the root path.
 	modPath, err := s.FindRootPath()
+	fmt.Printf("modPath: %v\n", modPath)
 	if err != nil {
 		return err
 	}

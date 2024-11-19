@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -132,4 +133,12 @@ func TestRunWithHyphenEntries(t *testing.T) {
 	}
 
 	RunTestWithGlobalLockAndKpmCli(t, "testRunWithHyphenEntries", testFunc)
+}
+
+func TestFuckingWindowsPath(t *testing.T) {
+	pwd, _ := os.Getwd()
+	fmt.Printf("pwd: %v\n", pwd)
+
+	absPath, _ := filepath.Abs(".")
+	fmt.Printf("absPath: %v\n", absPath)
 }
