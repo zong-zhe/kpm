@@ -443,6 +443,10 @@ func (o *RunOptions) applyCompileOptions(source downloader.Source, kclPkg *pkg.K
 			pkgHome = filepath.Join(workDir, pkgHome)
 		}
 
+		fmt.Printf("pkgHome: %v\n", pkgHome)
+		fmt.Printf("sourcePath: %v\n", sourcePath)
+		fmt.Printf("sourcePath == pkgHome: %v\n", sourcePath == pkgHome)
+
 		return sourcePath == pkgHome
 	}
 
