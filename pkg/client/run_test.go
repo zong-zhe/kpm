@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
@@ -144,6 +145,8 @@ func TestFuckingWindowsPath(t *testing.T) {
 	fmt.Printf("absPath: %v\n", absPath)
 	fmt.Printf("%v == %v: %v\n", absPath, pwd, absPath == pwd)
 	path1 := "D:\\a\\kpm\\kpm\\pkg\\client\\test_data\\test_run_hyphen_entries"
+	pathUrl, _ := url.Parse(path1)
+	fmt.Printf("pathUrl: %v\n", pathUrl.String())
 	path2 := "d:\\a\\kpm\\kpm\\pkg\\client\\test_data\\test_run_hyphen_entries"
 
 	match, _ := zglob.Match(path1, path2)
