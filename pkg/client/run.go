@@ -394,6 +394,7 @@ func (o *RunOptions) getCompileOptionsFromYaml(workdir string) *kcl.Option {
 func getCompileOptionsFromKclMod(kclPkg *pkg.KclPkg) *kcl.Option {
 	resOpts := kcl.NewOption()
 	resOpts.Merge(*kclPkg.GetKclOpts())
+	fmt.Printf("resOpts.KFilenameList: %v\n", resOpts.KFilenameList)
 	var updatedKFilenameList []string
 	// transform the relative path to the absolute path in kcl.yaml by kcl.mod path
 	for _, kfile := range resOpts.KFilenameList {
@@ -403,6 +404,7 @@ func getCompileOptionsFromKclMod(kclPkg *pkg.KclPkg) *kcl.Option {
 		updatedKFilenameList = append(updatedKFilenameList, kfile)
 	}
 	resOpts.KFilenameList = updatedKFilenameList
+	fmt.Printf("resOpts.KFilenameList: %v\n", resOpts.KFilenameList)
 	return resOpts
 }
 
