@@ -158,6 +158,7 @@ require (
 	github.com/hashicorp/go-version v1.7.0
 	github.com/jinzhu/copier v0.4.0
 	github.com/kubescape/go-git-url v0.0.30
+	github.com/mattn/go-zglob v0.0.6
 	github.com/moby/term v0.5.0
 	github.com/onsi/ginkgo/v2 v2.21.0
 	github.com/onsi/gomega v1.35.1
