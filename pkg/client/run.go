@@ -481,14 +481,17 @@ func (o *RunOptions) applyCompileOptions(source downloader.Source, kclPkg *pkg.K
 	// The options from kcl.yaml will override the options from kcl.mod
 	o.Option = kcl.NewOption()
 	o.Merge(*modOpts).Merge(*yamlOpts).Merge(*cliOpts)
+	fmt.Printf("modOpts.KFilenameList: %v\n", modOpts.KFilenameList)
 	if len(modOpts.KFilenameList) != 0 {
 		o.KFilenameList = modOpts.KFilenameList
 	}
 
+	fmt.Printf("yamlOpts.KFilenameList: %v\n", yamlOpts.KFilenameList)
 	if len(yamlOpts.KFilenameList) != 0 {
 		o.KFilenameList = yamlOpts.KFilenameList
 	}
 
+	fmt.Printf("cliOpts.KFilenameList: %v\n", cliOpts.KFilenameList)
 	if len(cliOpts.KFilenameList) != 0 {
 		o.KFilenameList = cliOpts.KFilenameList
 	}
