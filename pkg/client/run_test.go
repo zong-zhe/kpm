@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/mattn/go-zglob"
 	"github.com/otiai10/copy"
 	"gotest.tools/v3/assert"
 	"kcl-lang.io/kpm/pkg/downloader"
@@ -142,4 +143,10 @@ func TestFuckingWindowsPath(t *testing.T) {
 	absPath, _ := filepath.Abs(".")
 	fmt.Printf("absPath: %v\n", absPath)
 	fmt.Printf("%v == %v: %v\n", absPath, pwd, absPath == pwd)
+	path1 := "D:\\a\\kpm\\kpm\\pkg\\client\\test_data\\test_run_hyphen_entries"
+	path2 := "d:\\a\\kpm\\kpm\\pkg\\client\\test_data\\test_run_hyphen_entries"
+
+	match, _ := zglob.Match(path1, path2)
+
+	fmt.Println("Paths are equal:", match)
 }
