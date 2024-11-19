@@ -80,6 +80,7 @@ func (profile *Profile) IntoKclOptions() *kcl.Option {
 
 	if profile.Entries != nil {
 		for _, entry := range *profile.Entries {
+			fmt.Printf("entry: %v\n", entry)
 			ext := filepath.Ext(entry)
 			if ext == ".yaml" {
 				opts.Merge(kcl.WithSettings(entry))
