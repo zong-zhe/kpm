@@ -76,7 +76,6 @@ import (
 	pkg "kcl-lang.io/kpm/pkg/package"
 	"kcl-lang.io/kpm/pkg/reporter"
 	"kcl-lang.io/kpm/pkg/utils"
-	"github.com/mattn/go-zglob"
 )
 
 // RunOptions contains the options for running a kcl package.
@@ -448,12 +447,7 @@ func (o *RunOptions) applyCompileOptions(source downloader.Source, kclPkg *pkg.K
 		fmt.Printf("sourcePath: %v\n", sourcePath)
 		fmt.Printf("sourcePath == pkgHome: %v\n", sourcePath == pkgHome)
 
-		match, err := zglob.Match(sourcePath, pkgHome)
-		if err != nil {
-			return false
-		}
-
-		return match
+		return strings.ToLower(sourcePath) == strings.ToLower(pkgHome)
 	}
 
 	// If the sources from cli is not empty, use the sources from cli.
