@@ -141,4 +141,5 @@ func TestFuckingWindowsPath(t *testing.T) {
 
 	absPath, _ := filepath.Abs(".")
 	fmt.Printf("absPath: %v\n", absPath)
+	fmt.Printf("%v == %v: %v\n", absPath, pwd, absPath == pwd)
 }
