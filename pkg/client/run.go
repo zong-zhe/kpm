@@ -447,7 +447,7 @@ func (o *RunOptions) applyCompileOptions(source downloader.Source, kclPkg *pkg.K
 		fmt.Printf("sourcePath: %v\n", sourcePath)
 		fmt.Printf("sourcePath == pkgHome: %v\n", sourcePath == pkgHome)
 
-		return strings.ToLower(sourcePath) == strings.ToLower(pkgHome)
+		return strings.EqualFold(sourcePath, pkgHome)
 	}
 
 	// If the sources from cli is not empty, use the sources from cli.
