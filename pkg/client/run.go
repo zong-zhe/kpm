@@ -451,6 +451,8 @@ func (o *RunOptions) applyCompileOptions(source downloader.Source, kclPkg *pkg.K
 		var compiledFiles []string
 		// All the cli relative path should be transformed to the absolute path by workdir
 		for _, source := range o.Sources {
+			fmt.Printf("source: %v\n", source)
+			fmt.Printf("isSourceKclPackage: %v\n", sourceIsKclPackage(source))
 			if source.IsLocalPath() && !sourceIsKclPackage(source) {
 				sPath := source.Path
 				if !filepath.IsAbs(sPath) && !utils.IsModRelativePath(sPath) {
